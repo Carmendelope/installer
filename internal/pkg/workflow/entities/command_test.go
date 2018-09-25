@@ -16,35 +16,41 @@
 
 package entities
 
-/*
-func TestCommandResult_FromToJSON(t *testing.T) {
-	de := derrors.NewGenericError("some error")
-	cr := NewCommandResult(true, "output", de)
-	result, err := json.Marshal(cr)
-	fmt.Println(string(result))
-	assert.Nil(t, err, "marshal should not fail")
-	retrieved := &CommandResultFromJSON{}
-	err = json.Unmarshal(result, retrieved)
-	assert.Nil(t, err, "unmarshall should work")
-	toCR := retrieved.ToCommandResult()
-	assert.EqualValues(t, cr, toCR, "commands should match")
-}
+import (
+	"encoding/json"
+	"github.com/nalej/derrors"
+	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
+)
 
-func TestCommandResult_JSONString(t *testing.T) {
+var _ = ginkgo.Describe("Command structure", func(){
+	ginkgo.It("must be parsed from JSON", func(){
+		de := derrors.NewGenericError("some error")
+		cr := NewCommandResult(true, "output", de)
+		result, err := json.Marshal(cr)
+		gomega.Expect(err, gomega.BeNil())
+		retrieved := &CommandResultFromJSON{}
+		err = json.Unmarshal(result, retrieved)
+		gomega.Expect(err, gomega.BeNil())
+		toCR := retrieved.ToCommandResult()
+		gomega.Expect(toCR, gomega.Equal(cr))
+	})
 
-	toReceiveNoError := `
+	ginkgo.It("must be build from a message", func(){
+		toReceiveNoError := `
     {"success":true, "output":"output"}
 `
-	retrieved := &CommandResultFromJSON{}
-	err := json.Unmarshal([]byte(toReceiveNoError), retrieved)
-	assert.Nil(t, err, "unmarshall should work")
-	assert.True(t, retrieved.Success)
-	assert.Equal(t, "output", retrieved.Output)
-	assert.Nil(t, retrieved.Error)
-	toCR := retrieved.ToCommandResult()
-	assert.True(t, toCR.Success, "should report success")
-	assert.Equal(t, "output", toCR.Output, "output should match")
-	assert.Nil(t, toCR.Error, "error should be nil")
-}
+		retrieved := &CommandResultFromJSON{}
+		err := json.Unmarshal([]byte(toReceiveNoError), retrieved)
 
-*/
+		gomega.Expect(err, gomega.BeNil())
+		gomega.Expect(retrieved.Success, gomega.BeTrue())
+		gomega.Expect(retrieved.Output, gomega.Equal("output"))
+		gomega.Expect(retrieved.Error, gomega.BeNil())
+		toCR := retrieved.ToCommandResult()
+		gomega.Expect(toCR.Success, gomega.BeTrue())
+		gomega.Expect(toCR.Output, gomega.Equal("output"))
+		gomega.Expect(toCR.Error, gomega.BeNil())
+	})
+})
+

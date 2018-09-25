@@ -16,6 +16,12 @@
 
 package workflow
 
+import (
+	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
+	"time"
+)
+
 const basicWorkflow = `
 {
  "description": "basicWorkflow",
@@ -77,78 +83,79 @@ const parallelMaxParallelismWorkflow = `
 }
 `
 
-/*
-func getWorkflow(t *testing.T, name string, template string) *Workflow {
+func getWorkflow(name string, template string) *Workflow {
 	p := NewParser()
 	workflow, err := p.ParseWorkflow(template, name, EmptyParameters)
-	assert.Nil(t, err, "expecting workflow")
+	ginkgo.It("must be returned", func(){
+		gomega.Expect(err, gomega.BeNil())
+		gomega.Expect(workflow, gomega.Not(gomega.BeNil()))
+	})
 	return workflow
 }
 
-func TestBasicWorkflow(t *testing.T) {
-	maxWait := 5
-	w := getWorkflow(t, "TestBasicWorkflow", basicWorkflow)
-	wr := &WorkflowResult{}
-
-	exec := NewWorkflowExecutor(w, wr.Callback)
-	exec.Exec()
-	// Wait for the workflow to finish
-	for i := 0; i < maxWait && !wr.Finished(); i++ {
-		time.Sleep(time.Second * 1)
-	}
-	fmt.Println(strings.Join(exec.Log(), "\n"))
-	assert.True(t, wr.Called, "workflow should finish")
-	assert.Nil(t, wr.Error, "workflow should not fail")
+func expectSuccess(result *WorkflowResult) {
+	ginkgo.It("must finish", func(){
+		gomega.Expect(result.Called, gomega.BeTrue())
+		gomega.Expect(result.Error, gomega.BeNil())
+	})
 }
 
-func TestBasicParallel(t *testing.T) {
-	maxWait := 5
-	w := getWorkflow(t, "TestBasicParallel", basicParallelWorkflow)
-	wr := &WorkflowResult{}
+var _ = ginkgo.Describe("Executor", func() {
 
-	exec := NewWorkflowExecutor(w, wr.Callback)
-	exec.Exec()
-	// Wait for the workflow to finish
-	for i := 0; i < maxWait && !wr.Finished(); i++ {
-		time.Sleep(time.Second * 1)
-	}
-	fmt.Println(strings.Join(exec.Log(), "\n"))
+	const maxWait = 5
 
-	assert.True(t, wr.Called, "workflow should finish")
-	assert.Nil(t, wr.Error, "workflow should not fail")
-}
+	ginkgo.Context("with basic workflow", func(){
+		w := getWorkflow("TestBasicWorkflow", basicWorkflow)
+		wr := &WorkflowResult{}
+		exec := NewWorkflowExecutor(w, wr.Callback)
+		exec.Exec()
+		// Wait for the workflow to finish
+		for i := 0; i < maxWait && !wr.Finished(); i++ {
+			time.Sleep(time.Second * 1)
+		}
+		expectSuccess(wr)
+	})
 
-func TestFailParallel(t *testing.T) {
-	maxWait := 5
-	w := getWorkflow(t, "TestFailParallel", failParallelWorkflow)
-	wr := &WorkflowResult{}
+	ginkgo.Context("with a parallel construct", func(){
+		w := getWorkflow("TestBasicParallel", basicParallelWorkflow)
+		wr := &WorkflowResult{}
 
-	exec := NewWorkflowExecutor(w, wr.Callback)
-	exec.Exec()
-	// Wait for the workflow to finish
-	for i := 0; i < maxWait && !wr.Finished(); i++ {
-		time.Sleep(time.Second * 1)
-	}
-	fmt.Println(strings.Join(exec.Log(), "\n"))
+		exec := NewWorkflowExecutor(w, wr.Callback)
+		exec.Exec()
+		// Wait for the workflow to finish
+		for i := 0; i < maxWait && !wr.Finished(); i++ {
+			time.Sleep(time.Second * 1)
+		}
+		expectSuccess(wr)
+	})
 
-	assert.True(t, wr.Called, "workflow should finish")
-	assert.NotNil(t, wr.Error, "workflow should not fail")
-}
+	ginkgo.Context("with a fail command", func(){
+		w := getWorkflow("TestFailParallel", failParallelWorkflow)
+		wr := &WorkflowResult{}
 
-func TestMaxParallel(t *testing.T) {
-	maxWait := 5
-	w := getWorkflow(t, "TestMaxParallel", parallelMaxParallelismWorkflow)
-	wr := &WorkflowResult{}
+		exec := NewWorkflowExecutor(w, wr.Callback)
+		exec.Exec()
+		// Wait for the workflow to finish
+		for i := 0; i < maxWait && !wr.Finished(); i++ {
+			time.Sleep(time.Second * 1)
+		}
+		ginkgo.It("must fail", func(){
+			gomega.Expect(wr.Called, gomega.BeTrue())
+			gomega.Expect(wr.Error, gomega.Not(gomega.BeNil()))
+		})
+	})
 
-	exec := NewWorkflowExecutor(w, wr.Callback)
-	exec.Exec()
-	// Wait for the workflow to finish
-	for i := 0; i < maxWait && !wr.Finished(); i++ {
-		time.Sleep(time.Second * 1)
-	}
-	fmt.Println(strings.Join(exec.Log(), "\n"))
+	ginkgo.Context("with a max parallelism spec", func(){
+		w := getWorkflow("TestMaxParallel", parallelMaxParallelismWorkflow)
+		wr := &WorkflowResult{}
 
-	assert.True(t, wr.Called, "workflow should finish")
-	assert.Nil(t, wr.Error, "workflow should not fail")
-}
-*/
+		exec := NewWorkflowExecutor(w, wr.Callback)
+		exec.Exec()
+		// Wait for the workflow to finish
+		for i := 0; i < maxWait && !wr.Finished(); i++ {
+			time.Sleep(time.Second * 1)
+		}
+		expectSuccess(wr)
+	})
+
+})

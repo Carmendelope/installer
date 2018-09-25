@@ -17,69 +17,70 @@
 package commands
 
 import (
-	"testing"
-
 	"github.com/nalej/installer/internal/pkg/workflow/commands/async"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/sync"
-	"github.com/stretchr/testify/assert"
+	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
 )
 
-func TestTrySync(t *testing.T) {
-	utils.EnableDebug()
-	cmd1 := sync.NewLogger("cmd1")
-	cmd2 := sync.NewLogger("cmd2")
-	try := NewTry("test sync", cmd1, cmd2)
-	wID := "testWorkflow"
-	result, err := try.Run(wID)
-	assert.Nil(t, err, "Try command should be executed")
-	assert.True(t, result.Success, "Command should execute correctly")
-	assert.Equal(t, "cmd1", result.Output, "Result should match")
-}
+var _ = ginkgo.Describe("Try", func(){
+	ginkgo.Context("With SYNC commands", func(){
+		ginkgo.It("must support with two sync commands", func(){
+			cmd1 := sync.NewLogger("cmd1")
+			cmd2 := sync.NewLogger("cmd2")
+			try := NewTry("test sync", cmd1, cmd2)
+			wID := "testWorkflow"
+			result, err := try.Run(wID)
+			gomega.Expect(err, gomega.BeNil())
+			gomega.Expect(result.Success, gomega.BeTrue())
+			gomega.Expect(result.Output, gomega.Equal("cmd1"))
+		})
+		ginkgo.It("on failure must execute the second command", func(){
+			cmd1 := sync.NewFail()
+			cmd2 := sync.NewLogger("cmd2")
+			try := NewTry("test sync fail", cmd1, cmd2)
+			wID := "testWorkflow"
+			result, err := try.Run(wID)
+			gomega.Expect(err, gomega.BeNil())
+			gomega.Expect(result.Success, gomega.BeTrue())
+			gomega.Expect(result.Output, gomega.Equal("cmd2"))
+		})
+	})
 
-func TestTryFailSync(t *testing.T) {
-	utils.EnableDebug()
-	cmd1 := sync.NewFail()
-	cmd2 := sync.NewLogger("cmd2")
-	try := NewTry("test sync fail", cmd1, cmd2)
-	wID := "testWorkflow"
-	result, err := try.Run(wID)
-	assert.Nil(t, err, "Try command should be executed")
-	assert.True(t, result.Success, "Command should execute correctly")
-	assert.Equal(t, "cmd2", result.Output, "Result should match")
-}
+	ginkgo.Context("With ASYNC commands", func(){
+		ginkgo.It("must support async commands", func(){
+			cmd1 := async.NewSleep("0")
+			cmd2 := sync.NewLogger("cmd2")
+			try := NewTry("test async", cmd1, cmd2)
+			wID := "testWorkflow"
+			result, err := try.Run(wID)
+			gomega.Expect(err, gomega.BeNil())
+			gomega.Expect(result.Success, gomega.BeTrue())
+			gomega.Expect(result.Output, gomega.Equal("Slept for 0"))
+		})
+		ginkgo.It("on failure must execute the second command", func(){
+			cmd1 := async.NewFail()
+			cmd2 := async.NewSleep("0")
+			try := NewTry("test async", cmd1, cmd2)
+			wID := "testWorkflow"
+			result, err := try.Run(wID)
+			gomega.Expect(err, gomega.BeNil())
+			gomega.Expect(result.Success, gomega.BeTrue())
+			gomega.Expect(result.Output, gomega.Equal("Slept for 0"))
+		})
+	})
 
-func TestTryAsync(t *testing.T) {
-	utils.EnableDebug()
-	cmd1 := async.NewSleep("0")
-	cmd2 := sync.NewLogger("cmd2")
-	try := NewTry("test async", cmd1, cmd2)
-	wID := "testWorkflow"
-	result, err := try.Run(wID)
-	assert.Nil(t, err, "Try command should be executed")
-	assert.True(t, result.Success, "Command should execute correctly")
-	assert.Equal(t, "Slept for 0", result.Output, "Result should match")
-}
-
-func TestTryFailAsync(t *testing.T) {
-	utils.EnableDebug()
-	cmd1 := async.NewFail()
-	cmd2 := async.NewSleep("0")
-	try := NewTry("test async", cmd1, cmd2)
-	wID := "testWorkflow"
-	result, err := try.Run(wID)
-	assert.Nil(t, err, "Try command should be executed")
-	assert.True(t, result.Success, "Command should execute correctly")
-	assert.Equal(t, "Slept for 0", result.Output, "Result should match")
-}
-
-func TestNewTryFromJSON(t *testing.T) {
-	fromJSON := `
+	ginkgo.It("Must be buildable from JSON", func(){
+		fromJSON := `
 {"type":"sync", "name": "try", "description":"Try",
 "cmd": {"type":"sync", "name": "logger", "msg": "This is a logging message"},
 "onFail": {"type":"sync", "name": "logger", "msg": "This is a logging message"}}
 `
-	received, err := NewTryFromJSON([]byte(fromJSON))
-	assert.Nil(t, err, "should not fail")
-	assert.NotNil(t, (*received).(*Try).TryCommand, "try command must be present")
-	assert.NotNil(t, (*received).(*Try).OnFailCommand, "on fail command must be present")
-}
+		received, err := NewTryFromJSON([]byte(fromJSON))
+		gomega.Expect(err, gomega.BeNil())
+		gomega.Expect((*received).(*Try).TryCommand, gomega.Not(gomega.BeNil()))
+		gomega.Expect((*received).(*Try).OnFailCommand, gomega.Not(gomega.BeNil()))
+	})
+
+})
+

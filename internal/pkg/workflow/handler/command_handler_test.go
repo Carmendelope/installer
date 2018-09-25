@@ -16,110 +16,128 @@
 
 package handler
 
-/*
-type HandlerTestSuite struct {
-	suite.Suite
-	handler *commandHandler
-}
+import (
+	"github.com/nalej/derrors"
+	"github.com/nalej/installer/internal/pkg/workflow/entities"
+	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
+	"time"
+)
 
-func (suite *HandlerTestSuite) SetupTest() {
-	suite.handler = NewCommandHandler().(*commandHandler)
-}
+var _ = ginkgo.Describe("Handler", func(){
 
-func (suite *HandlerTestSuite) TestSimpleWorkflow() {
-	suite.Equal(0, len(suite.handler.resultCallbacks), "resultCallbacks map must be empty")
-	suite.Equal(0, len(suite.handler.logCallbacks), "logCallbacks map must be empty")
-	lines := 0
-	finalized := false
+	ginkgo.Context("with a basic workflow", func(){
+		handler := NewCommandHandler().(*commandHandler)
+		lines := 0
+		finalized := false
+		ginkgo.It("must support adding a command", func(){
+			gomega.Expect(len(handler.resultCallbacks), gomega.Equal(0))
+			gomega.Expect(len(handler.logCallbacks), gomega.Equal(0))
+			err := handler.AddCommand("id1",
+				func(id string, result *entities.CommandResult, error derrors.Error) {
+					finalized = true
+				},
+				func(id string, logEntry string) {
+					lines++
+				},
+			)
 
-	err := suite.handler.AddCommand("id1",
-		func(id string, result *entities.CommandResult, error derrors.Error) {
-			finalized = true
-		},
-		func(id string, logEntry string) {
-			lines++
-		},
-	)
-	suite.Nil(err, "command must be added")
-	suite.Equal(1, len(suite.handler.resultCallbacks), "resultCallbacks has one element")
-	suite.Equal(1, len(suite.handler.logCallbacks), "logCallbacks map has one element")
-	suite.handler.AddLogEntry("id1", "hello world!")
-	suite.handler.FinishCommand("id1", entities.NewSuccessCommand([]byte("OK")), nil)
-	time.Sleep(time.Second)
-	suite.Equal(1, lines, "must receive one log entry")
-	suite.True(finalized, "must finalize")
-	suite.Equal(0, len(suite.handler.resultCallbacks), "resultCallbacks map must be empty")
-	suite.Equal(0, len(suite.handler.logCallbacks), "logCallbacks map must be empty")
-}
+			gomega.Expect(err, gomega.BeNil())
+			gomega.Expect(len(handler.resultCallbacks), gomega.Equal(1))
+			gomega.Expect(len(handler.logCallbacks), gomega.Equal(1))
+		})
+		handler.AddLogEntry("id1", "hello world!")
+		handler.FinishCommand("id1", entities.NewSuccessCommand([]byte("OK")), nil)
+		time.Sleep(time.Second)
+		ginkgo.It("must receive the callbacks", func(){
+			gomega.Expect(lines, gomega.Equal(1))
+			gomega.Expect(finalized, gomega.BeTrue())
+			gomega.Expect(len(handler.resultCallbacks), gomega.Equal(0))
+			gomega.Expect(len(handler.logCallbacks), gomega.Equal(0))
+		})
+	})
 
-func (suite *HandlerTestSuite) TestDuplicatedCommand() {
-	err := suite.handler.AddCommand("id1",
-		func(id string, result *entities.CommandResult, error derrors.Error) {
+	ginkgo.Context("when adding a duplicated command", func(){
+		handler := NewCommandHandler().(*commandHandler)
+		err1 := handler.AddCommand("id1",
+			func(id string, result *entities.CommandResult, error derrors.Error) {
 
-		},
-		func(id string, logEntry string) {
+			},
+			func(id string, logEntry string) {
 
-		},
-	)
-	suite.Nil(err, "command must be added")
-	err = suite.handler.AddCommand("id1",
-		func(id string, result *entities.CommandResult, error derrors.Error) {
+			},
+		)
+		err2 := handler.AddCommand("id1",
+			func(id string, result *entities.CommandResult, error derrors.Error) {
 
-		},
-		func(id string, logEntry string) {
+			},
+			func(id string, logEntry string) {
 
-		},
-	)
-	suite.NotNil(err, "AddCommand must fail")
-}
-func (suite *HandlerTestSuite) TestTwoCallbacks() {
-	lines1 := 0
-	finalized1 := false
-	err := suite.handler.AddCommand("id1",
-		func(id string, result *entities.CommandResult, error derrors.Error) {
-			finalized1 = true
-		},
-		func(id string, logEntry string) {
-			lines1++
-		},
-	)
-	suite.Nil(err, "command must be added")
-	lines2 := 0
-	finalized2 := false
-	err = suite.handler.AddCommand("id2",
-		func(id string, result *entities.CommandResult, error derrors.Error) {
-			finalized2 = true
-		},
-		func(id string, logEntry string) {
-			lines2++
-		},
-	)
-	suite.Nil(err, "command must be added")
+			},
+		)
+		ginkgo.It("must fail on the second command", func(){
+			gomega.Expect(err1, gomega.BeNil())
+			gomega.Expect(err2, gomega.Not(gomega.BeNil()))
+		})
+	})
 
-	suite.Nil(err, "command must be added")
-	suite.Equal(2, len(suite.handler.resultCallbacks), "resultCallbacks has two elements")
-	suite.Equal(2, len(suite.handler.logCallbacks), "logCallbacks map has two elements")
-	suite.handler.AddLogEntry("id1", "hello world!")
-	suite.handler.FinishCommand("id1", entities.NewSuccessCommand([]byte("OK")), nil)
-	time.Sleep(time.Second)
-	suite.Equal(1, lines1, "must receive one log entry")
-	suite.True(finalized1, "must finalize")
-	suite.Equal(0, lines2, "must not receive log entries")
-	suite.False(finalized2, "must not finalize")
-	suite.Equal(1, len(suite.handler.resultCallbacks), "resultCallbacks has one element")
-	suite.Equal(1, len(suite.handler.logCallbacks), "logCallbacks has one element")
-}
-func (suite *HandlerTestSuite) TestFinalizeNotExistingCommand() {
-	err := suite.handler.FinishCommand("id1", entities.NewSuccessCommand([]byte("OK")), nil)
-	suite.NotNil(err, " FinishCommand must fail")
-}
+	ginkgo.Context("with two commands", func(){
+		handler := NewCommandHandler().(*commandHandler)
+		lines1 := 0
+		finalized1 := false
+		err1 := handler.AddCommand("id1",
+			func(id string, result *entities.CommandResult, error derrors.Error) {
+				finalized1 = true
+			},
+			func(id string, logEntry string) {
+				lines1++
+			},
+		)
+		lines2 := 0
+		finalized2 := false
+		err2 := handler.AddCommand("id2",
+			func(id string, result *entities.CommandResult, error derrors.Error) {
+				finalized2 = true
+			},
+			func(id string, logEntry string) {
+				lines2++
+			},
+		)
 
-func (suite *HandlerTestSuite) TestAddLogEntryNotExistingCommand() {
-	err := suite.handler.AddLogEntry("id1", "hello world!")
-	suite.NotNil(err, " FinishCommand must fail")
-}
+		ginkgo.It("must support adding two commands", func(){
+			gomega.Expect(err1, gomega.BeNil())
+			gomega.Expect(err2, gomega.BeNil())
+			gomega.Expect(len(handler.resultCallbacks), gomega.Equal(2))
+			gomega.Expect(len(handler.logCallbacks), gomega.Equal(2))
+		})
+		handler.AddLogEntry("id1", "hello world!")
+		handler.FinishCommand("id1", entities.NewSuccessCommand([]byte("OK")), nil)
+		time.Sleep(time.Second)
+		ginkgo.Specify("cmd 1 must receive the callbacks", func(){
+			gomega.Expect(lines1, gomega.Equal(1))
+			gomega.Expect(finalized1, gomega.BeTrue())
+			gomega.Expect(lines2, gomega.Equal(0))
+			gomega.Expect(finalized2, gomega.BeFalse())
+			gomega.Expect(len(handler.resultCallbacks), gomega.Equal(1))
+			gomega.Expect(len(handler.logCallbacks), gomega.Equal(1))
+		})
+	})
 
-func TestFoundation(t *testing.T) {
-	suite.Run(t, new(HandlerTestSuite))
-}
-*/
+	ginkgo.Context("receiving a finish callback on a non registered cmd", func(){
+		handler := NewCommandHandler().(*commandHandler)
+		err := handler.FinishCommand("id1", entities.NewSuccessCommand([]byte("OK")), nil)
+		ginkgo.It("must fail", func(){
+			gomega.Expect(err, gomega.Not(gomega.BeNil()))
+		})
+	})
+
+	ginkgo.Context("receiving an add log callback on a non registered cmd", func(){
+		handler := NewCommandHandler().(*commandHandler)
+		err := handler.AddLogEntry("id1", "hello world!")
+		ginkgo.It("must fail", func(){
+			gomega.Expect(err, gomega.Not(gomega.BeNil()))
+		})
+	})
+
+
+})

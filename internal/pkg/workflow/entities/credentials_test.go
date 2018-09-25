@@ -20,9 +20,8 @@ package entities
 
 import (
 	"encoding/json"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
 )
 
 const privateKeyExample = `
@@ -55,29 +54,30 @@ JqoSlfnrw6KSKFm1Cu1WqDkRNM6eIHxWw9+HOptTnRDiJRrzikkmuw==
 -----END RSA PRIVATE KEY-----
 `
 
-func TestSerializeUserNamePassword(t *testing.T) {
-	c := NewCredentials("username", "password")
-	serialized, err := json.Marshal(c)
-	assert.Nil(t, err, "expecting serialization")
-	assert.NotNil(t, serialized, "expecting JSON")
-	assert.Equal(t, "{\"username\":\"username\",\"password\":\"password\",\"privateKey\":\"\"}", string(serialized))
-	deserialized := &Credentials{}
-	err = json.Unmarshal(serialized, deserialized)
-	assert.Nil(t, err, "expecting deserialization")
-	assert.EqualValues(t, c, deserialized)
-}
+var _ = ginkgo.Context("Credentials structure", func(){
 
-func TestSerializePKI(t *testing.T) {
-	c := NewPKICredentials("username", privateKeyExample)
-	serialized, err := json.Marshal(c)
-	assert.Nil(t, err, "expecting serialization")
-	assert.NotNil(t, serialized, "expecting JSON")
-	deserialized := &Credentials{}
-	err = json.Unmarshal(serialized, deserialized)
-	assert.Nil(t, err, "expecting deserialization")
-	assert.EqualValues(t, c, deserialized)
-}
+	ginkgo.It("Must be able to serialize username and password", func(){
+		c := NewCredentials("username", "password")
+		serialized, err := json.Marshal(c)
+		gomega.Expect(err, gomega.BeNil())
+		gomega.Expect(serialized, gomega.Not(gomega.BeNil()))
+		gomega.Expect(string(serialized), gomega.Equal("{\"username\":\"username\",\"password\":\"password\",\"privateKey\":\"\"}"))
+		deserialized := &Credentials{}
+		err = json.Unmarshal(serialized, deserialized)
+		gomega.Expect(err, gomega.BeNil())
+		gomega.Expect(deserialized, gomega.Equal(c))
+	})
 
-func TestDeserializeUserNamePassword(t *testing.T) {
+	ginkgo.It("Must be able to serialize PKI", func(){
+		c := NewPKICredentials("username", privateKeyExample)
+		serialized, err := json.Marshal(c)
+		gomega.Expect(err, gomega.BeNil())
+		gomega.Expect(serialized, gomega.Not(gomega.BeNil()))
+		deserialized := &Credentials{}
+		err = json.Unmarshal(serialized, deserialized)
+		gomega.Expect(err, gomega.BeNil())
+		gomega.Expect(deserialized, gomega.Equal(c))
+	})
+})
 
-}
+
