@@ -59,24 +59,24 @@ var _ = ginkgo.Context("Credentials structure", func(){
 	ginkgo.It("Must be able to serialize username and password", func(){
 		c := NewCredentials("username", "password")
 		serialized, err := json.Marshal(c)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(serialized, gomega.Not(gomega.BeNil()))
-		gomega.Expect(string(serialized), gomega.Equal("{\"username\":\"username\",\"password\":\"password\",\"privateKey\":\"\"}"))
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(serialized).ToNot(gomega.BeNil())
+		gomega.Expect(string(serialized)).To(gomega.Equal("{\"username\":\"username\",\"password\":\"password\",\"privateKey\":\"\"}"))
 		deserialized := &Credentials{}
 		err = json.Unmarshal(serialized, deserialized)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(deserialized, gomega.Equal(c))
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(deserialized).To(gomega.Equal(c))
 	})
 
 	ginkgo.It("Must be able to serialize PKI", func(){
 		c := NewPKICredentials("username", privateKeyExample)
 		serialized, err := json.Marshal(c)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(serialized, gomega.Not(gomega.BeNil()))
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(serialized).ToNot(gomega.BeNil())
 		deserialized := &Credentials{}
 		err = json.Unmarshal(serialized, deserialized)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(deserialized, gomega.Equal(c))
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(deserialized).To(gomega.Equal(c))
 	})
 })
 

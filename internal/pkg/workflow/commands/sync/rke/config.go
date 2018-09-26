@@ -21,8 +21,6 @@ package rke
 // ClusterConfig defines the options required to generate an RKE config file.
 type ClusterConfig struct {
 	ClusterName    string   `json:"clusterName"`
-	SamuraiIP      string   `json:"samuraiIP"`
-	M2Nodes        []string `json:"m2Nodes"`
 	TargetNodes    []string `json:"targetNodes"`
 	NodeUsername   string   `json:"nodeUsername"`
 	PrivateKeyPath string   `json:"privateKeyPath"`
@@ -31,15 +29,11 @@ type ClusterConfig struct {
 // NewClusterConfig creates a new set of config parameters for creating the RKE definition file
 func NewClusterConfig(
 	clusterName string,
-	samuraiIP string,
-	m2Nodes []string,
 	targetNodes []string,
 	nodeUsername string,
 	privateKeyPath string) *ClusterConfig {
 	return &ClusterConfig{
 		clusterName,
-		samuraiIP,
-		m2Nodes,
 		targetNodes,
 		nodeUsername,
 		privateKeyPath}

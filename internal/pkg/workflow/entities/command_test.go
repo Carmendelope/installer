@@ -28,12 +28,12 @@ var _ = ginkgo.Describe("Command structure", func(){
 		de := derrors.NewGenericError("some error")
 		cr := NewCommandResult(true, "output", de)
 		result, err := json.Marshal(cr)
-		gomega.Expect(err, gomega.BeNil())
+		gomega.Expect(err).To(gomega.BeNil())
 		retrieved := &CommandResultFromJSON{}
 		err = json.Unmarshal(result, retrieved)
-		gomega.Expect(err, gomega.BeNil())
+		gomega.Expect(err).To(gomega.BeNil())
 		toCR := retrieved.ToCommandResult()
-		gomega.Expect(toCR, gomega.Equal(cr))
+		gomega.Expect(toCR).To(gomega.Equal(cr))
 	})
 
 	ginkgo.It("must be build from a message", func(){
@@ -43,14 +43,14 @@ var _ = ginkgo.Describe("Command structure", func(){
 		retrieved := &CommandResultFromJSON{}
 		err := json.Unmarshal([]byte(toReceiveNoError), retrieved)
 
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(retrieved.Success, gomega.BeTrue())
-		gomega.Expect(retrieved.Output, gomega.Equal("output"))
-		gomega.Expect(retrieved.Error, gomega.BeNil())
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(retrieved.Success).To(gomega.BeTrue())
+		gomega.Expect(retrieved.Output).To(gomega.Equal("output"))
+		gomega.Expect(retrieved.Error).To(gomega.BeNil())
 		toCR := retrieved.ToCommandResult()
-		gomega.Expect(toCR.Success, gomega.BeTrue())
-		gomega.Expect(toCR.Output, gomega.Equal("output"))
-		gomega.Expect(toCR.Error, gomega.BeNil())
+		gomega.Expect(toCR.Success).To(gomega.BeTrue())
+		gomega.Expect(toCR.Output).To(gomega.Equal("output"))
+		gomega.Expect(toCR.Error).To(gomega.BeNil())
 	})
 })
 

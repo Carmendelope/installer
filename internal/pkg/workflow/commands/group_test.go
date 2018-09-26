@@ -35,8 +35,8 @@ var _ = ginkgo.Describe("Group command", func(){
 		g := NewGroup("basicSequence", []entities.Command{cmd1, cmd2, cmd3})
 		wID := "TestBasicSequence"
 		result, err := g.Run(wID)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(result.Success, gomega.BeTrue())
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(result.Success).To(gomega.BeTrue())
 	})
 
 	ginkgo.It("Must support a basic sequence with ASYNC commands", func(){
@@ -46,8 +46,8 @@ var _ = ginkgo.Describe("Group command", func(){
 		g := NewGroup("basicSequence", []entities.Command{cmd1, cmd2, cmd3})
 		wID := "TestBasicSequence"
 		result, err := g.Run(wID)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(result.Success, gomega.BeTrue())
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(result.Success).To(gomega.BeTrue())
 	})
 
 	ginkgo.It("Must stop on fail", func(){
@@ -58,7 +58,7 @@ var _ = ginkgo.Describe("Group command", func(){
 		g := NewGroup("basicSequence", []entities.Command{cmd1, cmd2, cmd3, cmd4})
 		wID := "TestBasicSequenceFail"
 		result, err := g.Run(wID)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(result.Success, gomega.BeFalse())
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(result.Success).To(gomega.BeFalse())
 	})
 })

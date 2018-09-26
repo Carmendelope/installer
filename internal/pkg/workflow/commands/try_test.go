@@ -31,9 +31,9 @@ var _ = ginkgo.Describe("Try", func(){
 			try := NewTry("test sync", cmd1, cmd2)
 			wID := "testWorkflow"
 			result, err := try.Run(wID)
-			gomega.Expect(err, gomega.BeNil())
-			gomega.Expect(result.Success, gomega.BeTrue())
-			gomega.Expect(result.Output, gomega.Equal("cmd1"))
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(result.Success).To(gomega.BeTrue())
+			gomega.Expect(result.Output).To(gomega.Equal("cmd1"))
 		})
 		ginkgo.It("on failure must execute the second command", func(){
 			cmd1 := sync.NewFail()
@@ -41,9 +41,9 @@ var _ = ginkgo.Describe("Try", func(){
 			try := NewTry("test sync fail", cmd1, cmd2)
 			wID := "testWorkflow"
 			result, err := try.Run(wID)
-			gomega.Expect(err, gomega.BeNil())
-			gomega.Expect(result.Success, gomega.BeTrue())
-			gomega.Expect(result.Output, gomega.Equal("cmd2"))
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(result.Success).To(gomega.BeTrue())
+			gomega.Expect(result.Output).To(gomega.Equal("cmd2"))
 		})
 	})
 
@@ -54,9 +54,9 @@ var _ = ginkgo.Describe("Try", func(){
 			try := NewTry("test async", cmd1, cmd2)
 			wID := "testWorkflow"
 			result, err := try.Run(wID)
-			gomega.Expect(err, gomega.BeNil())
-			gomega.Expect(result.Success, gomega.BeTrue())
-			gomega.Expect(result.Output, gomega.Equal("Slept for 0"))
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(result.Success).To(gomega.BeTrue())
+			gomega.Expect(result.Output).To(gomega.Equal("Slept for 0"))
 		})
 		ginkgo.It("on failure must execute the second command", func(){
 			cmd1 := async.NewFail()
@@ -64,9 +64,9 @@ var _ = ginkgo.Describe("Try", func(){
 			try := NewTry("test async", cmd1, cmd2)
 			wID := "testWorkflow"
 			result, err := try.Run(wID)
-			gomega.Expect(err, gomega.BeNil())
-			gomega.Expect(result.Success, gomega.BeTrue())
-			gomega.Expect(result.Output, gomega.Equal("Slept for 0"))
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(result.Success).To(gomega.BeTrue())
+			gomega.Expect(result.Output).To(gomega.Equal("Slept for 0"))
 		})
 	})
 
@@ -77,9 +77,9 @@ var _ = ginkgo.Describe("Try", func(){
 "onFail": {"type":"sync", "name": "logger", "msg": "This is a logging message"}}
 `
 		received, err := NewTryFromJSON([]byte(fromJSON))
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect((*received).(*Try).TryCommand, gomega.Not(gomega.BeNil()))
-		gomega.Expect((*received).(*Try).OnFailCommand, gomega.Not(gomega.BeNil()))
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect((*received).(*Try).TryCommand).ToNot(gomega.BeNil())
+		gomega.Expect((*received).(*Try).OnFailCommand).ToNot(gomega.BeNil())
 	})
 
 })

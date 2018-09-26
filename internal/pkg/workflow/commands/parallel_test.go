@@ -35,8 +35,8 @@ var _ = ginkgo.Describe("Parallel command", func(){
 		p := NewParallel("test synchronous commands", 3, []entities.Command{cmd1, cmd2, cmd3})
 		wID := "testWorkflow"
 		result, err := p.Run(wID)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(result.Success, gomega.BeTrue())
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(result.Success).To(gomega.BeTrue())
 	})
 
 	ginkgo.It("Must be buildable from JSON", func(){
@@ -46,16 +46,16 @@ var _ = ginkgo.Describe("Parallel command", func(){
 {"type":"sync", "name": "logger", "msg": "This is a logging message"}]}
 `
 		received, err := NewParallelFromJSON([]byte(fromJSON))
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect((*received).(*Parallel).MaxParallelism, gomega.Equal(3))
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect((*received).(*Parallel).MaxParallelism).To(gomega.Equal(3))
 		fromJSONWithoutParallelism := `
 {"type":"sync", "name": "parallel", "commands": [
 {"type":"sync", "name": "logger", "msg": "This is a logging message"},
 {"type":"sync", "name": "logger", "msg": "This is a logging message"}]}
 `
 		received, err = NewParallelFromJSON([]byte(fromJSONWithoutParallelism))
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect((*received).(*Parallel).MaxParallelism, gomega.Equal(0))
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect((*received).(*Parallel).MaxParallelism).To(gomega.Equal(0))
 	})
 
 	ginkgo.It("Should stop on failure", func(){
@@ -66,8 +66,8 @@ var _ = ginkgo.Describe("Parallel command", func(){
 		p := NewParallel("test synchronous commands", 3, []entities.Command{cmd1, cmd2, cmd3})
 		wID := "testWorkflow"
 		result, err := p.Run(wID)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(result.Success, gomega.BeFalse())
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(result.Success).To(gomega.BeFalse())
 	})
 
 	ginkgo.It("Must support a max level", func(){
@@ -85,8 +85,8 @@ var _ = ginkgo.Describe("Parallel command", func(){
 
 		wID := "testWorkflow"
 		result, err := p.Run(wID)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(result.Success, gomega.BeTrue())
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(result.Success).To(gomega.BeTrue())
 	})
 
 	ginkgo.It("must support higher max levels - DP-1164", func(){
@@ -98,8 +98,8 @@ var _ = ginkgo.Describe("Parallel command", func(){
 
 		wID := "testWorkflow"
 		result, err := p.Run(wID)
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(result.Success, gomega.BeTrue())
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(result.Success).To(gomega.BeTrue())
 	})
 
 })

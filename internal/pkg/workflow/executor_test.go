@@ -87,16 +87,16 @@ func getWorkflow(name string, template string) *Workflow {
 	p := NewParser()
 	workflow, err := p.ParseWorkflow(template, name, EmptyParameters)
 	ginkgo.It("must be returned", func(){
-		gomega.Expect(err, gomega.BeNil())
-		gomega.Expect(workflow, gomega.Not(gomega.BeNil()))
+		gomega.Expect(err).To(gomega.BeNil())
+		gomega.Expect(workflow).ToNot(gomega.BeNil())
 	})
 	return workflow
 }
 
 func expectSuccess(result *WorkflowResult) {
 	ginkgo.It("must finish", func(){
-		gomega.Expect(result.Called, gomega.BeTrue())
-		gomega.Expect(result.Error, gomega.BeNil())
+		gomega.Expect(result.Called).To(gomega.BeTrue())
+		gomega.Expect(result.Error).To(gomega.BeNil())
 	})
 }
 
@@ -140,8 +140,8 @@ var _ = ginkgo.Describe("Executor", func() {
 			time.Sleep(time.Second * 1)
 		}
 		ginkgo.It("must fail", func(){
-			gomega.Expect(wr.Called, gomega.BeTrue())
-			gomega.Expect(wr.Error, gomega.Not(gomega.BeNil()))
+			gomega.Expect(wr.Called).To(gomega.BeTrue())
+			gomega.Expect(wr.Error).ToNot(gomega.BeNil())
 		})
 	})
 

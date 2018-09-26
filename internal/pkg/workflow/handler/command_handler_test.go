@@ -42,7 +42,7 @@ var _ = ginkgo.Describe("Handler", func(){
 				},
 			)
 
-			gomega.Expect(err, gomega.BeNil())
+			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(len(handler.resultCallbacks), gomega.Equal(1))
 			gomega.Expect(len(handler.logCallbacks), gomega.Equal(1))
 		})

@@ -139,6 +139,7 @@ func (cmd *RKEInstall) copyKubeConfig(clusterConfigFile string) (*entities.Comma
 func (cmd *RKEInstall) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 	clusterConfigPath, err := cmd.CreateClusterConfig()
 	if err != nil {
+		log.Warn().Err(err).Msg("unable to create cluster config")
 		return nil, err
 	}
 
@@ -187,12 +188,10 @@ func (cmd *RKEInstall) String() string {
 
 // PrettyPrint returns a simple space indexed string.
 func (cmd *RKEInstall) PrettyPrint(indentation int) string {
-	samuraiIP := strings.Repeat("  ", indentation) + fmt.Sprintf("  SamuraiIP: %s", cmd.SamuraiIP)
-	m2Nodes := strings.Repeat("  ", indentation) + fmt.Sprintf("  M2Nodes: %s", cmd.M2Nodes)
 	outputPath := strings.Repeat("  ", indentation) + fmt.Sprintf("  OutputPath: %s", cmd.KubeConfigOutputPath)
 	binaryPath := strings.Repeat("  ", indentation) + fmt.Sprintf("  RKE binary: %s", cmd.RkeBinaryPath)
-	return strings.Repeat(" ", indentation) + fmt.Sprintf("SYNC RKE Install on %s\n%s\n%s\n%s\n%s",
-		strings.Join(cmd.TargetNodes, ", "), binaryPath, outputPath, samuraiIP, m2Nodes)
+	return strings.Repeat(" ", indentation) + fmt.Sprintf("SYNC RKE Install on %s\n%s\n%s",
+		strings.Join(cmd.TargetNodes, ", "), binaryPath, outputPath)
 }
 
 // UserString returns a simple string representation of the command for the user.
