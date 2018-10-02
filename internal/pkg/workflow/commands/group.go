@@ -1,17 +1,5 @@
 /*
- * Copyright 2018 Nalej
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
 // Group command
@@ -85,7 +73,7 @@ func NewGroup(description string, cmds []entities.Command) *Group {
 func NewGroupFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	gfj := &GroupFromJSON{}
 	if err := json.Unmarshal(raw, &gfj); err != nil {
-		return nil, derrors.NewOperationError(errors.UnmarshalError, err)
+		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 	}
 	toGroup, err := gfj.ToGroup()
 	if err != nil {
@@ -102,7 +90,7 @@ func NewGroupFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 func (g *Group) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 
 	if len(g.Commands) == 0 {
-		return nil, derrors.NewOperationError(errors.CannotExecuteSyncCommand)
+		return nil, derrors.NewInternalError(errors.CannotExecuteSyncCommand)
 	}
 
 	g.commandHandler.AddLogEntry(g.CommandID, fmt.Sprintf("Starting sequential group execution of %d commands", len(g.Commands)))
@@ -190,11 +178,11 @@ func (g *Group) executeCommand(workflowID string, cmd entities.Command) (*entiti
 			return cmdResult, value
 		}
 		if cmdResult == nil {
-			return nil, derrors.NewOperationError(errors.InvalidWorkflowState)
+			return nil, derrors.NewInternalError(errors.InvalidWorkflowState)
 		}
 		return cmdResult, nil
 	}
-	return nil, derrors.NewOperationError(errors.InvalidWorkflowState)
+	return nil, derrors.NewInternalError(errors.InvalidWorkflowState)
 
 }
 

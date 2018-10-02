@@ -1,17 +1,5 @@
 /*
- * Copyright 2018 Nalej
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
 package handler
@@ -71,11 +59,11 @@ func (h *commandHandler) AddCommand(id string,
 	defer h.Unlock()
 	_, exist := h.resultCallbacks[id]
 	if exist {
-		return derrors.NewOperationError(errors.DuplicatedIDCommand)
+		return derrors.NewAlreadyExistsError(errors.DuplicatedIDCommand).WithParams(id)
 	}
 	_, exist = h.logCallbacks[id]
 	if exist {
-		return derrors.NewOperationError(errors.DuplicatedIDCommand)
+		return derrors.NewAlreadyExistsError(errors.DuplicatedIDCommand).WithParams(id)
 	}
 	h.resultCallbacks[id] = resultCallback
 	h.logCallbacks[id] = logCallback
@@ -87,7 +75,7 @@ func (h *commandHandler) AddLogEntry(id string, logEntry string) derrors.Error {
 	defer h.Unlock()
 	callback, exist := h.logCallbacks[id]
 	if !exist {
-		return derrors.NewOperationError(errors.NotExistCommand)
+		return derrors.NewNotFoundError(errors.NotExistCommand).WithParams(id)
 	}
 	go callback(id, logEntry)
 	listener, exists := h.logListeners[id]
@@ -107,11 +95,11 @@ func (h *commandHandler) FinishCommand(id string, result *entities.CommandResult
 	defer h.Unlock()
 	callback, exist := h.resultCallbacks[id]
 	if !exist {
-		return derrors.NewOperationError(errors.NotExistCommand)
+		return derrors.NewNotFoundError(errors.NotExistCommand).WithParams(id)
 	}
 	_, exist = h.logCallbacks[id]
 	if !exist {
-		return derrors.NewOperationError(errors.NotExistCommand)
+		return derrors.NewNotFoundError(errors.NotExistCommand).WithParams(id)
 	}
 	go callback(id, result, error)
 	delete(h.logCallbacks, id)

@@ -1,17 +1,5 @@
 /*
- * Copyright 2018 Nalej
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
 // Parallel command
@@ -87,7 +75,7 @@ func NewParallel(description string, maxParallelism int, cmds []entities.Command
 func NewParallelFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	pfj := &ParallelFromJSON{}
 	if err := json.Unmarshal(raw, &pfj); err != nil {
-		return nil, derrors.NewOperationError(errors.UnmarshalError, err)
+		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 	}
 	toParallel, err := pfj.ToParallel()
 	if err != nil {
@@ -232,7 +220,7 @@ func (p *Parallel) buildCommandResult() (*entities.CommandResult, derrors.Error)
 	log.Debug().Msg("Build final command result")
 	if len(p.executionErrors) > 0 {
 		log.Warn().Int("numErrors", len(p.executionErrors)).Msg("Execution errors")
-		toReturn := derrors.NewOperationError(errors.WorkflowExecutionFailed)
+		toReturn := derrors.NewInternalError(errors.WorkflowExecutionFailed)
 		for commandID, err := range p.executionErrors {
 			toReturn = toReturn.WithParams(commandID).WithParams(err)
 		}

@@ -1,17 +1,5 @@
 /*
- * Copyright 2018 Nalej
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
 package workflow
@@ -69,7 +57,7 @@ func (e *Executor) SetLogListener(f func(msg string)) {
 
 func (e *Executor) executeCommand(index int) derrors.Error {
 	if index >= len(e.Workflow.Commands) {
-		return derrors.NewOperationError(errors.InvalidCommandIndex).WithParams(index, e.Workflow)
+		return derrors.NewInternalError(errors.InvalidCommandIndex).WithParams(index, e.Workflow)
 	}
 	e.currentCommand = index
 	go func() {
@@ -118,7 +106,7 @@ func (e *Executor) commandCallback(cmdID string, result *entities.CommandResult,
 
 	if error != nil {
 		// Stop workflow execution
-		e.failed(derrors.NewOperationError(errors.WorkflowExecutionFailed).CausedBy(error))
+		e.failed(derrors.NewInternalError(errors.WorkflowExecutionFailed).CausedBy(error))
 		return
 	}
 
@@ -147,10 +135,10 @@ func (e *Executor) commandCallback(cmdID string, result *entities.CommandResult,
 			}
 		} else {
 			log.Warn().Str("workflowID", e.WorkflowID).Msg(result.String())
-			e.failed(derrors.NewOperationError(errors.WorkflowExecutionFailed).WithParams(result.String()))
+			e.failed(derrors.NewInternalError(errors.WorkflowExecutionFailed).WithParams(result.String()))
 		}
 	} else {
-		e.failed(derrors.NewOperationError(errors.InvalidWorkflowState))
+		e.failed(derrors.NewInternalError(errors.InvalidWorkflowState))
 	}
 
 }
@@ -171,7 +159,7 @@ func (e *Executor) Exec() {
 		}
 		return
 	}
-	e.failed(derrors.NewOperationError(errors.WorkflowWithoutCommands))
+	e.failed(derrors.NewInternalError(errors.WorkflowWithoutCommands))
 }
 
 func (e *Executor) failed(reason derrors.Error) {
@@ -220,5 +208,5 @@ func (e *Executor) ParameterGet(key string) (*WorkflowParameter, derrors.Error) 
 	if exists {
 		return NewWorkflowParameter(key, value), nil
 	}
-	return nil, derrors.NewOperationError(errors.ParameterDoesNotExists)
+	return nil, derrors.NewNotFoundError(errors.ParameterDoesNotExists).WithParams(key)
 }

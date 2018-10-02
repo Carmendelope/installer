@@ -1,17 +1,5 @@
 /*
- * Copyright 2018 Nalej
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
 package workflow
@@ -59,7 +47,7 @@ func NewParser() *Parser {
 func (p *Parser) ReadWorkflow(filePath string, name string, params Parameters) (*Workflow, derrors.Error) {
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return nil, derrors.NewOperationError(errors.CannotReadWorkflowFile, err)
+		return nil, derrors.NewUnavailableError(errors.CannotReadWorkflowFile, err)
 	}
 	return p.ParseWorkflow(string(content), name, params)
 }
@@ -88,14 +76,14 @@ func (p *Parser) ParseWorkflow(content string, name string, params Parameters) (
 	templateToParse := commentsRegex.ReplaceAllString(content, "")
 	ft, err := ft.Parse(templateToParse)
 	if err != nil {
-		return nil, derrors.NewOperationError(errors.CannotParseTemplate, err)
+		return nil, derrors.NewInternalError(errors.CannotParseTemplate, err)
 	}
 	parserLogger.Debug().Str("template", ft.Name()).Msg("Executing template")
 	// output buffer for the JSON content
 	buf := new(bytes.Buffer)
 	err = ft.Execute(buf, params)
 	if err != nil {
-		return nil, derrors.NewOperationError(errors.CannotApplyTemplate, err)
+		return nil, derrors.NewInternalError(errors.CannotApplyTemplate, err)
 	}
 	jsonPayload := buf.String()
 	return p.ParseJSON(jsonPayload, name)
@@ -117,7 +105,7 @@ func (p *Parser) ParseJSON(jsonPayload string, name string) (*Workflow, derrors.
 
 	var aux rawWorkflow
 	if err := json.Unmarshal([]byte(jsonPayload), &aux); err != nil {
-		return nil, derrors.NewOperationError(errors.UnmarshalError, err).WithParams(jsonPayload)
+		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err).WithParams(jsonPayload)
 	}
 
 	result := make([]entities.Command, 0)

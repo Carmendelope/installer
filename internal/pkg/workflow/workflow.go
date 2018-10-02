@@ -1,17 +1,5 @@
 /*
- * Copyright 2018 Nalej
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
 package workflow
@@ -20,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/utils"
 	"github.com/rs/zerolog/log"
 
@@ -180,7 +169,7 @@ func (wfj *WorkflowFromJSON) ToWorkflow() (*Workflow, derrors.Error) {
 		log.Debug().Int("index", index).Str("raw", string(raw)).Msg("processing raw command")
 		var gc entities.GenericCommand
 		if err := json.Unmarshal(raw, &gc); err != nil {
-			return nil, derrors.NewOperationError("cannot unmarshal structure", err)
+			return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 		}
 
 		cmd, err := p.ParseCommand(raw)

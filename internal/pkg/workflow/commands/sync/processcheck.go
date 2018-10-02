@@ -1,17 +1,5 @@
 /*
- * Copyright 2018 Nalej
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
 // Process check command
@@ -65,7 +53,7 @@ func NewProcessCheck(targetHost string, targetPort string, credentials entities.
 func NewProcessCheckFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	pc := &ProcessCheck{}
 	if err := json.Unmarshal(raw, &pc); err != nil {
-		return nil, derrors.NewOperationError(errors.UnmarshalError, err)
+		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 	}
 	pc.CommandID = entities.GenerateCommandID(pc.Name())
 	var r entities.Command = pc
@@ -90,14 +78,14 @@ func (pc *ProcessCheck) Run(_ string) (*entities.CommandResult, derrors.Error) {
 		pc.Credentials.Username, pc.Credentials.Password, "", pc.Credentials.PrivateKey)
 	if err != nil {
 		log.Warn().Str("targetHost", pc.TargetHost).Err(err).Msg("Cannot establish connection")
-		return nil, derrors.NewConnectionError(errors.SSHConnectionError, err)
+		return nil, derrors.NewInternalError(errors.SSHConnectionError, err)
 	}
 	cmd := fmt.Sprintf("pgrep %s || echo nf", pc.Process)
 	log.Debug().Str("cmd", cmd).Msg("ProcessCheck exec")
 	output, err := conn.Execute(cmd)
 	if err != nil {
 		log.Warn().Str("targetHost", pc.TargetHost).Err(err).Msg("Cannot execute command")
-		return nil, derrors.NewConnectionError(errors.SSHConnectionError, err)
+		return nil, derrors.NewInternalError(errors.SSHConnectionError, err)
 	}
 
 	processFound := len(output) > 0 && !strings.Contains(string(output), "nf")
@@ -120,7 +108,7 @@ func (pc *ProcessCheck) Run(_ string) (*entities.CommandResult, derrors.Error) {
 	}
 
 	return entities.NewCommandResult(false, "unexpected combination",
-		derrors.NewOperationError(errors.CannotExecuteSyncCommand)), nil
+		derrors.NewInternalError(errors.CannotExecuteSyncCommand)), nil
 }
 
 // Obtain a string representation

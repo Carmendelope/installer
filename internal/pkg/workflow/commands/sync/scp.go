@@ -1,17 +1,5 @@
 /*
- * Copyright 2018 Nalej
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
 // Copy command
@@ -67,7 +55,7 @@ func NewSCP(targetHost string, targetPort string, credentials entities.Credentia
 func NewSCPFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	scp := &SCP{}
 	if err := json.Unmarshal(raw, &scp); err != nil {
-		return nil, derrors.NewOperationError(errors.UnmarshalError, err)
+		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 	}
 	scp.CommandID = entities.GenerateCommandID(scp.Name())
 	var r entities.Command = scp
@@ -91,12 +79,12 @@ func (scp *SCP) Run(_ string) (*entities.CommandResult, derrors.Error) {
 		scp.TargetHost, scp.getTargetPort(),
 		scp.Credentials.Username, scp.Credentials.Password, "", scp.Credentials.PrivateKey)
 	if err != nil {
-		return nil, derrors.NewConnectionError(errors.SSHConnectionError, err).WithParams(scp.TargetHost)
+		return nil, derrors.NewInternalError(errors.SSHConnectionError, err).WithParams(scp.TargetHost)
 	}
 	start := time.Now()
 	err = conn.Copy(scp.Source, scp.Destination, false)
 	if err != nil {
-		return nil, derrors.NewConnectionError(errors.SSHConnectionError, err).WithParams(scp.TargetHost)
+		return nil, derrors.NewInternalError(errors.SSHConnectionError, err).WithParams(scp.TargetHost)
 	}
 
 	return entities.NewSuccessCommand([]byte(scp.String() + ": OK " + time.Since(start).String())), nil

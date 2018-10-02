@@ -1,17 +1,5 @@
 /*
- * Copyright 2018 Nalej
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
 // This file contains the command parsing facilities to avoid import cycles.
@@ -42,7 +30,7 @@ func NewCmdParser() *CmdParser {
 func (cp *CmdParser) ParseCommand(raw []byte) (*entities.Command, derrors.Error) {
 	var gc entities.GenericCommand
 	if err := json.Unmarshal(raw, &gc); err != nil {
-		return nil, derrors.NewOperationError(errors.UnmarshalError, err)
+		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 	}
 	cmd, err := cp.parseCommand(gc, raw)
 	if err != nil {
@@ -58,7 +46,7 @@ func (cp *CmdParser) parseCommand(generic entities.GenericCommand, raw []byte) (
 	case entities.AsyncCommandType:
 		return cp.parseAsyncCommand(generic, raw)
 	default:
-		return nil, derrors.NewOperationError(errors.UnsupportedCommandType).WithParams(generic)
+		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommandType).WithParams(generic)
 	}
 }
 
@@ -89,7 +77,7 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 	case entities.RKERemove:
 		return rke.NewRKERemoveFromJSON(raw)
 	default:
-		return nil, derrors.NewOperationError(errors.UnsupportedCommand).WithParams(generic)
+		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}
 }
 
@@ -100,6 +88,6 @@ func (cp *CmdParser) parseAsyncCommand(generic entities.GenericCommand, raw []by
 	case entities.Sleep:
 		return async.NewSleepFromJSON(raw)
 	default:
-		return nil, derrors.NewOperationError(errors.UnsupportedCommand).WithParams(generic)
+		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}
 }

@@ -1,6 +1,6 @@
 [[constraint]]
     name="github.com/nalej/derrors"
-    version="v1.1.1"
+    version="v2.0.0"
 
 [[constraint]]
     name="github.com/nalej/grpc-installer-go"
@@ -29,6 +29,19 @@
 [[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "v2.2.1"
+
+
+[[constraint]]
+    name="k8s.io/client-go"
+    version="v8.0.0"
+
+[[constraint]]
+    name = "k8s.io/api"
+    version="kubernetes-1.11.3"
+
+[[constraint]]
+   name = "k8s.io/apimachinery"
+   version="kubernetes-1.11.3"
 
 [[override]]
   source = "https://github.com/fsnotify/fsnotify/archive/v1.4.7.tar.gz"
