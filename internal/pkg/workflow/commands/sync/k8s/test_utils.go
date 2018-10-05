@@ -44,6 +44,22 @@ func (tc * TestCleaner) Connect() derrors.Error {
 	return nil
 }
 
+func (tc * TestCleaner) DeleteAll() derrors.Error {
+	err := tc.DeleteDeployments()
+	if err != nil {
+		return err
+	}
+	err = tc.DeleteServices()
+	if err != nil {
+		return err
+	}
+	err = tc.DeleteNamespaces()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (tc * TestCleaner) DeleteDeployments() derrors.Error {
 	if tc.Client == nil {
 		err := tc.Connect()
@@ -82,5 +98,29 @@ func (tc * TestCleaner) DeleteNamespaces() derrors.Error {
 			return derrors.AsError(err, "cannot delete namespace")
 		}
 	}
+	log.Debug().Int("deleted", len(tc.Namespaces)).Msg("namespaces deleted")
+	return nil
+}
+
+
+func (tc * TestCleaner) DeleteServices() derrors.Error {
+	numDeleted := 0
+	for _, ns := range tc.Namespaces {
+		serviceClient := tc.Client.CoreV1().Services(ns)
+		opts := metaV1.ListOptions{}
+		serviceList, err := serviceClient.List(opts)
+		if err != nil {
+			return derrors.AsError(err, "cannot list services")
+		}
+		dOpts := metaV1.DeleteOptions{}
+		for _, s := range serviceList.Items {
+			err := serviceClient.Delete(s.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete service")
+			}
+			numDeleted++
+		}
+	}
+	log.Debug().Int("deleted", numDeleted).Msg("services deleted")
 	return nil
 }

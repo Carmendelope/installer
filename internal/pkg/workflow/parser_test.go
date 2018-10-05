@@ -6,7 +6,6 @@ package workflow
 
 import (
 	"fmt"
-	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/sync"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 	"github.com/onsi/ginkgo"
@@ -46,25 +45,6 @@ const basicTemplateIteration = `
 }
 `
 
-func getTestParameters(numNodes int) *Parameters {
-	nodes := make([]string, 0)
-	for i := 0; i < numNodes; i++ {
-		toAdd := fmt.Sprintf("10.1.1.%d", i)
-		nodes = append(nodes, toAdd)
-	}
-	request := grpc_installer_go.InstallRequest{
-		InstallId: "TestInstall",
-		ClusterId: "TestCluster",
-		KubeConfig: "KubeConfigContent",
-		Nodes: nodes,
-
-	}
-
-	assets := NewAssets(make([]string, 0), make([]string, 0))
-	paths := NewPaths("assestPath", "binPath", "confPath")
-	return NewParameters(request, *assets, *paths, "inframgr.host", true)
-}
-
 var _ = ginkgo.Describe("Parser", func() {
 	var parser = NewParser()
 
@@ -81,7 +61,7 @@ var _ = ginkgo.Describe("Parser", func() {
 
 	ginkgo.Context("parses a workflow iterating through the nodes", func(){
 		numNodes := 10
-		params := getTestParameters(numNodes)
+		params := GetTestParameters(numNodes, true)
 		workflow, err := parser.ParseWorkflow(basicTemplateIteration, "TestParseWorkflow_SimpleTemplate", *params)
 		ginkgo.It("must have iterated through the nodes", func(){
 			gomega.Expect(err).To(gomega.BeNil())

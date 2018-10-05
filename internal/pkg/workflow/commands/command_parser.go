@@ -9,6 +9,7 @@ package commands
 import (
 	"encoding/json"
 	"github.com/nalej/installer/internal/pkg/errors"
+	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s"
 
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/async"
@@ -76,6 +77,12 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return rke.NewRKEInstallFromJSON(raw)
 	case entities.RKERemove:
 		return rke.NewRKERemoveFromJSON(raw)
+	case entities.CheckAsset:
+		return sync.NewCheckAssetFromJSON(raw)
+	case entities.LaunchComponents:
+		return k8s.NewLaunchComponentsFromJSON(raw)
+	case entities.CheckRequirements:
+		return k8s.NewCheckRequirementsFromJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}

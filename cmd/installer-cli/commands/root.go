@@ -43,14 +43,13 @@ var msg = `          ----------
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^`
 
 var rootCmd = &cobra.Command{
-	Use:   "example",
-	Short: "Example of a cobra command",
-	Long:  `A long explanation about what is a cobra command`,
+	Use:   "installer-cli",
+	Short: "Installer CLI",
+	Long:  `Installer CLI`,
 	Version: "unknown-version",
 	Run: func(cmd *cobra.Command, args []string) {
 		SetupLogging()
-		log.Info().Msg("You're running other example application.")
-		fmt.Println(msg)
+		cmd.Help()
 	},
 }
 

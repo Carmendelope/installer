@@ -5,7 +5,9 @@
 package workflow
 
 import (
+	"fmt"
 	"github.com/nalej/derrors"
+	"github.com/nalej/grpc-installer-go"
 )
 
 // WorkflowResult structure for testing the callback of a workflow execution.
@@ -31,4 +33,22 @@ func (wr *WorkflowResult) Callback(workflowID string, error derrors.Error,
 	wr.Error = error
 	wr.Called = true
 	wr.State = state
+}
+
+func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
+	nodes := make([]string, 0)
+	for i := 0; i < numNodes; i++ {
+		toAdd := fmt.Sprintf("10.1.1.%d", i)
+		nodes = append(nodes, toAdd)
+	}
+	request := grpc_installer_go.InstallRequest{
+		InstallId: "TestInstall",
+		ClusterId: "TestCluster",
+		KubeConfigRaw: "KubeConfigContent",
+		Nodes: nodes,
+	}
+
+	assets := NewAssets(make([]string, 0), make([]string, 0))
+	paths := NewPaths("assestPath", "binPath", "confPath")
+	return NewParameters(request, *assets, *paths, "inframgr.host", appClusterInstall)
 }

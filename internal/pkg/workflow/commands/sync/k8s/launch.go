@@ -19,22 +19,21 @@ import (
 	"k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
-
 )
 
 type LaunchComponents struct {
 	Kubernetes
-	Namespace string `json:"namespace"`
+	Namespaces []string `json:"namespaces"`
 	ComponentsDir string `json:"componentsDir"`
 }
 
-func NewLaunchComponents(kubeConfigPath string, namespace string, componentsDir string) * LaunchComponents {
+func NewLaunchComponents(kubeConfigPath string, namespaces []string, componentsDir string) * LaunchComponents {
 	return &LaunchComponents{
 		Kubernetes:    Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.LaunchComponents),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		Namespace: namespace,
+		Namespaces: namespaces,
 		ComponentsDir: componentsDir,
 	}
 }
@@ -56,9 +55,11 @@ func (lc * LaunchComponents) Run(workflowID string) (*entities.CommandResult, de
 		if connectErr != nil {
 		    return nil, connectErr
 		}
-		createErr := lc.createNamespace()
-		if createErr != nil{
-			return nil, createErr
+		for _, target := range lc.Namespaces{
+			createErr := lc.createNamespace(target)
+			if createErr != nil{
+				return nil, createErr
+			}
 		}
 
 		fileInfo, err := ioutil.ReadDir(lc.ComponentsDir)
@@ -82,8 +83,8 @@ func (lc * LaunchComponents) Run(workflowID string) (*entities.CommandResult, de
 
 func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error {
 	log.Debug().Str("path", componentPath).Msg("launch component")
-	deploymentClient := lc.Client.AppsV1().Deployments(lc.Namespace)
-	deploymentRaw, err := ioutil.ReadFile(componentPath)
+
+	raw, err := ioutil.ReadFile(componentPath)
 	if err != nil {
 		return derrors.AsError(err, "cannot read component file")
 	}
@@ -91,23 +92,48 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 
 	decode := scheme.Codecs.UniversalDeserializer().Decode
 
-	obj, _, err := decode([]byte(deploymentRaw), nil, nil)
+	obj, _, err := decode([]byte(raw), nil, nil)
 	if err != nil {
 		fmt.Printf("%#v", err)
 	}
 
-	deployment := obj.(*appsv1.Deployment)
+	switch o := obj.(type) {
+	case *appsv1.Deployment:
+		return lc.launchDeployment(obj.(*appsv1.Deployment))
+	case *appsv1.DaemonSet:
+		return derrors.NewUnimplementedError("DaemonSet launch")
+	case *v1.Service:
+		return lc.launchService(obj.(*v1.Service))
+	default:
+		return derrors.NewUnimplementedError("object not supported").WithParams(o)
+	}
 
+	return derrors.NewInternalError("no case was executed")
+}
+
+func (lc * LaunchComponents) launchDeployment(deployment *appsv1.Deployment) derrors.Error {
+	deploymentClient := lc.Client.AppsV1().Deployments(deployment.Namespace)
 	log.Debug().Interface("deployment", deployment).Msg("unmarshalled")
 	created, err := deploymentClient.Create(deployment)
 	if err != nil {
-		return derrors.AsError(err, "cannot create component")
+		return derrors.AsError(err, "cannot create deployment")
 	}
 	log.Debug().Interface("created", created).Msg("new component has been created")
 	return nil
 }
 
-func (lc * LaunchComponents) createNamespace() derrors.Error {
+func (lc * LaunchComponents) launchService(service *v1.Service) derrors.Error {
+	serviceClient := lc.Client.CoreV1().Services(service.Namespace)
+	log.Debug().Interface("service", service).Msg("unmarshalled")
+	created, err := serviceClient.Create(service)
+	if err != nil {
+		return derrors.AsError(err, "cannot create service")
+	}
+	log.Debug().Interface("created", created).Msg("new component has been created")
+	return nil
+}
+
+func (lc * LaunchComponents) createNamespace(name string) derrors.Error {
 	namespaceClient := lc.Client.CoreV1().Namespaces()
 	opts := metaV1.ListOptions{}
 	list, err := namespaceClient.List(opts)
@@ -117,7 +143,7 @@ func (lc * LaunchComponents) createNamespace() derrors.Error {
 	found := false
 	for _, n := range list.Items {
 		log.Debug().Interface("n", n).Msg("A namespace")
-		if n.Name == lc.Namespace {
+		if n.Name == name {
 			found = true
 			break
 		}
@@ -126,10 +152,16 @@ func (lc * LaunchComponents) createNamespace() derrors.Error {
 	if !found {
 		toCreate := v1.Namespace{
 			ObjectMeta: metaV1.ObjectMeta{
-				Name:                       lc.Namespace,
+				Name:                       name,
 			},
 		}
-		namespaceClient.Create(&toCreate)
+		created, err := namespaceClient.Create(&toCreate)
+		if err != nil {
+			return derrors.AsError(err,"cannot create namespace")
+		}
+		log.Debug().Interface("created", created).Msg("namespaces has been created")
+	}else{
+		log.Debug().Str("namespace", name).Msg("namespace already exists")
 	}
 	return nil
 }

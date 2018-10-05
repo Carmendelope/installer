@@ -160,12 +160,12 @@
   version = "v0.0.1"
 
 [[projects]]
-  digest = "1:2e7026e30407f78213503e041e8c3ac20e8633613ba299926306a2b3101425b3"
+  digest = "1:81e5896ad5c246f5c75e9b3ebb77ccf1699ebd85ea98678249b0b4896c17abd9"
   name = "github.com/nalej/grpc-installer-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "64c86171a130d610f49a9b140f86bf7e9e7736c4"
-  version = "v0.0.1"
+  revision = "025ca094491a2aadbde0ec53e63cbeaa1378c0f8"
+  version = "v0.0.2"
 
 [[projects]]
   digest = "1:e8ee6fede7be529e51578ac57de4b3bd26fdd50033aa9eb7e77e3ca4670fc7e4"
@@ -277,12 +277,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:dab83a1bbc7ad3d7a6ba1a1cc1760f25ac38cdf7d96a5cdd55cd915a4f5ceaf9"
+  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = "UT"
-  revision = "9a97c102cda95a86cec2345a6f09f55a939babf5"
-  version = "v1.0.2"
+  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
+  version = "v1.0.3"
 
 [[projects]]
   branch = "master"
@@ -303,7 +303,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:87ebdb5bca696b2830474067e4f661e1ebc96b7a746bf552ef4df3609a2cb4cf"
+  digest = "1:67347ca8fd5d27b838c14af5d7bbdece58b1dec052e0cffd742517fa1f9b55be"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -318,7 +318,7 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "4dfa2610cdf3b287375bbba5b8f2a14d3b01d8de"
+  revision = "f5e5bdd778241bfefa8627f7124c39cd6ad8d74f"
 
 [[projects]]
   branch = "master"
@@ -601,6 +601,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/nalej/derrors",
+    "github.com/nalej/grpc-infrastructure-go",
     "github.com/nalej/grpc-installer-go",
     "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/onsi/ginkgo",

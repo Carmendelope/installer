@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	)
+)
 
 type Kubernetes struct {
 	entities.GenericSyncCommand

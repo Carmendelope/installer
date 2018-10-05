@@ -32,6 +32,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: NAME
+  namespace: NAMESPACE
   labels:
     app: nginx
 spec:
@@ -51,8 +52,9 @@ spec:
         - containerPort: 80
 `
 
-func createDeployment(basePath string, index int) {
-	toWrite := strings.Replace(SampleDevelopment, "NAME", fmt.Sprintf("nginx-%d", index), 1)
+func createDeployment(basePath string, namespace string, index int) {
+	toWrite := strings.Replace(SampleDevelopment, "NAMESPACE", namespace, 1)
+	toWrite = strings.Replace(toWrite, "NAME", fmt.Sprintf("nginx-%d", index), 1)
 	outputPath := path.Join(basePath, fmt.Sprintf("component%d.yaml", index))
 	err := ioutil.WriteFile(outputPath, []byte(toWrite), 777)
 	gomega.Expect(err).To(gomega.Succeed())
@@ -86,19 +88,18 @@ var _ = ginkgo.Describe("A launch command", func(){
 		componentsDir = cd
 
 		for i:= 0; i< numDeployments; i++{
-			createDeployment(componentsDir, i)
+			createDeployment(componentsDir, targetNamespace, i)
 		}
 	})
 
 	ginkgo.AfterSuite(func(){
 		os.RemoveAll(componentsDir)
 		tc := NewTestCleaner(kubeConfigFile, targetNamespace)
-		gomega.Expect(tc.DeleteDeployments()).To(gomega.Succeed())
-		gomega.Expect(tc.DeleteNamespaces()).To(gomega.Succeed())
+		gomega.Expect(tc.DeleteAll()).To(gomega.Succeed())
 	})
 
 	ginkgo.It("should create the deployments on kubernetes", func(){
-	    lc := NewLaunchComponents(kubeConfigFile, targetNamespace, componentsDir)
+	    lc := NewLaunchComponents(kubeConfigFile, []string{targetNamespace}, componentsDir)
 	    result, err := lc.Run("testLaunchComponents")
 	    if err != nil {
 	    	fmt.Println(conversions.ToDerror(err))

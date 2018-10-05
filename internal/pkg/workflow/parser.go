@@ -19,8 +19,6 @@ import (
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 )
 
-var parserLogger = log.With().Str("component", "workflow.parser").Logger()
-
 type rawWorkflow struct {
 	Description string            `json:"description"`
 	Commands    []json.RawMessage `json:"commands"`
@@ -78,7 +76,7 @@ func (p *Parser) ParseWorkflow(content string, name string, params Parameters) (
 	if err != nil {
 		return nil, derrors.NewInternalError(errors.CannotParseTemplate, err)
 	}
-	parserLogger.Debug().Str("template", ft.Name()).Msg("Executing template")
+	log.Debug().Str("template", ft.Name()).Msg("Executing template")
 	// output buffer for the JSON content
 	buf := new(bytes.Buffer)
 	err = ft.Execute(buf, params)
@@ -101,7 +99,9 @@ func (p *Parser) ParseJSON(jsonPayload string, name string) (*Workflow, derrors.
 	privateKeyRegex := regexp.MustCompile("\"privateKey\":\".*\"")
 	redactedJSON := passwordRegex.ReplaceAllString(jsonPayload, "\"password\":\"REDACTED\",")
 	redactedJSON = privateKeyRegex.ReplaceAllString(redactedJSON, "\"privateKey\":\"REDACTED\"")
-	parserLogger.Debug().Str("redactedJSON", redactedJSON).Msg("Workflow to be parsed")
+	redactedJSON = strings.Replace(redactedJSON, "\n", "", -1)
+	redactedJSON = strings.Replace(redactedJSON, "\t", "", -1)
+	log.Debug().Str("redactedJSON", redactedJSON).Msg("Workflow to be parsed")
 
 	var aux rawWorkflow
 	if err := json.Unmarshal([]byte(jsonPayload), &aux); err != nil {
@@ -113,7 +113,7 @@ func (p *Parser) ParseJSON(jsonPayload string, name string) (*Workflow, derrors.
 		toShow := string(raw)
 		toShow = passwordRegex.ReplaceAllString(toShow, "\"password\":\"REDACTED\",")
 		toShow = privateKeyRegex.ReplaceAllString(toShow, "\"privateKey\":\"REDACTED\"")
-		parserLogger.Debug().Int("index", index).Str("cmd", toShow).Msg("processing cmd")
+		log.Debug().Int("index", index).Str("cmd", toShow).Msg("processing cmd")
 		cmd, err := p.cmdParser.ParseCommand(raw)
 		if err != nil {
 			return nil, err
