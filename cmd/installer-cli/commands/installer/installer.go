@@ -1,0 +1,115 @@
+/*
+ * Copyright (C) 2018 Nalej - All Rights Reserved
+ */
+
+package installer
+
+import (
+	"fmt"
+	"github.com/nalej/derrors"
+	"github.com/nalej/grpc-infrastructure-go"
+	"github.com/nalej/grpc-installer-go"
+	"github.com/nalej/installer/internal/pkg/templates"
+	"github.com/nalej/installer/internal/pkg/workflow"
+	"github.com/rs/zerolog/log"
+	"time"
+)
+
+type Installer struct {
+	Params workflow.Parameters
+	Workflow * workflow.Workflow
+}
+
+func NewInstallerFromCLI(
+	installId string,
+	installK8s bool,
+	kubeConfigPath string,
+	username string,
+	privateKeyPath string,
+	nodes []string,
+	paths workflow.Paths,
+	appClusterInstall bool,
+	) (* Installer, derrors.Error){
+
+		kubeConfigContent, err := GetKubeConfigContent(kubeConfigPath)
+		if err != nil {
+		    return nil, err
+		}
+
+		privateKeyContent, err := GetPrivateKeyContent(privateKeyPath)
+		if err != nil {
+		    return nil, err
+		}
+
+		request := grpc_installer_go.InstallRequest{
+			InstallId:            installId,
+			OrganizationId:       "nalej",
+			ClusterId:            "nalej-management-cluster",
+			ClusterType:          grpc_infrastructure_go.ClusterType_KUBERNETES,
+			InstallBaseSystem: installK8s,
+			KubeConfigRaw:           kubeConfigContent,
+			Username : username,
+			PrivateKey:           privateKeyContent,
+			Nodes:                nodes,
+		}
+
+	params := workflow.NewParameters(request, workflow.Assets{}, paths, "localhost", appClusterInstall)
+	return NewInstaller(*params), nil
+}
+
+func NewInstaller(params workflow.Parameters) * Installer {
+	return &Installer{
+		Params: params,
+	}
+}
+
+func (i * Installer) logListener(msg string) {
+	log.Info().Msg(msg)
+}
+
+// Load all the credentials and associated workflow into the installer.
+func (i * Installer) Load() {
+	i.exitOnError(i.Params.LoadCredentials())
+	i.exitOnError(i.Params.Validate())
+	p := workflow.NewParser()
+	workflow, err := p.ParseWorkflow(templates.InstallManagementCluster, "install-management-cluster", i.Params)
+	i.exitOnError(err)
+	i.Workflow = workflow
+}
+
+func (i * Installer) exitOnError(err derrors.Error) {
+	if err != nil {
+		log.Panic().Str("error", err.DebugReport()).Msg("installation exit with error")
+	}
+}
+
+// Run the install process.
+func (i * Installer) Run() {
+	i.Load()
+	wr := &workflow.WorkflowResult{}
+	execHandler := workflow.GetExecutorHandler()
+	exec, err := execHandler.Add(i.Workflow, wr.Callback)
+	i.exitOnError(err)
+	exec.SetLogListener(i.logListener)
+	start := time.Now()
+	exec, err = execHandler.Execute(i.Workflow.WorkflowID)
+	i.exitOnError(err)
+	checks := 0
+	for !wr.Called {
+		time.Sleep(time.Second * 15)
+		if checks%4 == 0 {
+			if i.Params.AppClusterInstall {
+				fmt.Println("AppCluster installation", string(exec.State), "-", time.Since(start).String())
+			} else {
+				fmt.Println("Management cluster installation", string(exec.State), "-", time.Since(start).String())
+			}
+		}
+		checks++
+	}
+	elapsed := time.Since(start)
+	fmt.Println("Installation took ", elapsed)
+	if wr.Error != nil {
+		fmt.Println("Installation failed ", wr.Error.Error())
+		log.Info().Str("error", wr.Error.DebugReport()).Msg("Installation failed")
+	}
+}

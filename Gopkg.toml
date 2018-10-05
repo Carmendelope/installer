@@ -1,0 +1,52 @@
+[[constraint]]
+    name="github.com/nalej/derrors"
+    version="v2.0.0"
+
+[[constraint]]
+    name="github.com/nalej/grpc-installer-go"
+    version="v0.0.2"
+
+[[constraint]]
+    name="github.com/rs/zerolog"
+    version="v1.8.0"
+
+[[constraint]]
+    name="github.com/spf13/cobra"
+    version="v0.0.3"
+
+[[constraint]]
+    name="github.com/onsi/ginkgo"
+    version="v1.6.0"
+
+[[constraint]]
+    name="github.com/onsi/gomega"
+    version="v1.4.2"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "gopkg.in/yaml.v2"
+  version = "v2.2.1"
+
+
+[[constraint]]
+    name="k8s.io/client-go"
+    version="v8.0.0"
+
+[[constraint]]
+    name = "k8s.io/api"
+    version="kubernetes-1.11.3"
+
+[[constraint]]
+   name = "k8s.io/apimachinery"
+   version="kubernetes-1.11.3"
+
+[[override]]
+  source = "https://github.com/fsnotify/fsnotify/archive/v1.4.7.tar.gz"
+  name = "gopkg.in/fsnotify.v1"
+
+[prune]
+  go-tests = true
+  unused-packages = true
