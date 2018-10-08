@@ -100,12 +100,12 @@ func NewParametersFromFile(filepath string) (*Parameters, derrors.Error) {
 
 // Validate checks the parameters to determine if the workflow can be executed.
 func (p *Parameters) Validate() derrors.Error {
-	if len(p.InstallRequest.Nodes) == 0 {
-		return derrors.NewInternalError(errors.InvalidNumMaster)
-	}
-
 	if p.Credentials.Username == "" && p.Credentials.PrivateKeyPath == "" && p.Credentials.KubeConfigPath == "" {
 		return derrors.NewInternalError("credentials have not been loaded. Call LoadCredentials() before Validate()")
+	}
+
+	if p.Credentials.KubeConfigPath == "" && len(p.InstallRequest.Nodes) == 0 {
+		return derrors.NewInternalError(errors.InvalidNumMaster)
 	}
 
 	return nil

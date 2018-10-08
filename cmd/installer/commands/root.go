@@ -37,7 +37,7 @@ var rootCmd = &cobra.Command{
 
 	Run: func(cmd *cobra.Command, args []string) {
 		SetupLogging()
-		log.Info().Msg("This is a root message")
+		cmd.Help()
 	},
 }
 

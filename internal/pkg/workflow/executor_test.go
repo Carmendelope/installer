@@ -73,7 +73,7 @@ const parallelMaxParallelismWorkflow = `
 
 func getWorkflow(name string, template string) *Workflow {
 	p := NewParser()
-	workflow, err := p.ParseWorkflow(template, name, EmptyParameters)
+	workflow, err := p.ParseWorkflow(name, template, name, EmptyParameters)
 	ginkgo.It("must be returned", func(){
 		gomega.Expect(err).To(gomega.BeNil())
 		gomega.Expect(workflow).ToNot(gomega.BeNil())

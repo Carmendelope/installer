@@ -49,7 +49,7 @@ var _ = ginkgo.Describe("Parser", func() {
 	var parser = NewParser()
 
 	ginkgo.Context("parses a workflow not requiring the template", func(){
-		workflow, err := parser.ParseWorkflow(basicDefinitionNoTemplate, "TestParseWorkflow_Basic", EmptyParameters)
+		workflow, err := parser.ParseWorkflow("test", basicDefinitionNoTemplate, "TestParseWorkflow_Basic", EmptyParameters)
 		ginkgo.It("must contain cmd1", func(){
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(workflow).ToNot(gomega.BeNil())
@@ -62,7 +62,7 @@ var _ = ginkgo.Describe("Parser", func() {
 	ginkgo.Context("parses a workflow iterating through the nodes", func(){
 		numNodes := 10
 		params := GetTestParameters(numNodes, true)
-		workflow, err := parser.ParseWorkflow(basicTemplateIteration, "TestParseWorkflow_SimpleTemplate", *params)
+		workflow, err := parser.ParseWorkflow("test", basicTemplateIteration, "TestParseWorkflow_SimpleTemplate", *params)
 		ginkgo.It("must have iterated through the nodes", func(){
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(workflow, gomega.Not(gomega.BeNil()))
@@ -80,7 +80,7 @@ var _ = ginkgo.Describe("Parser", func() {
 	})
 
 	ginkgo.Context("parses a simple workflow with two different commands", func(){
-		workflow, err := parser.ParseWorkflow(basicDefinitionTwoCommands, "TestParseWorkflow_TwoCommands", EmptyParameters)
+		workflow, err := parser.ParseWorkflow("test", basicDefinitionTwoCommands, "TestParseWorkflow_TwoCommands", EmptyParameters)
 		ginkgo.It("must be returned and contain the Exec and SCP commands", func(){
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(workflow, gomega.Not(gomega.BeNil()))
