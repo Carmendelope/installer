@@ -42,17 +42,12 @@ func NewParser() *Parser {
 //   returns:
 //     A Workflow structure.
 //     An error if the workflow cannot be generated.
-func (p *Parser) ReadWorkflow(filePath string, name string, params Parameters) (*Workflow, derrors.Error) {
+func (p *Parser) ReadWorkflow(workflowID string, filePath string, name string, params Parameters) (*Workflow, derrors.Error) {
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, derrors.NewUnavailableError(errors.CannotReadWorkflowFile, err)
 	}
-	return p.ParseWorkflow(string(content), name, params)
-}
-
-// ParseWorkflowWithRequest processes an incoming parser workflow request.
-func (p *Parser) ParseWorkflowWithRequest(request *ParseWorkflowRequest) (*Workflow, derrors.Error) {
-	return p.ParseWorkflow(request.Template, request.Name, request.Parameters)
+	return p.ParseWorkflow(workflowID, string(content), name, params)
 }
 
 // ParseWorkflow reads a workflow from a string, parsing the data and applying the template.
@@ -63,7 +58,7 @@ func (p *Parser) ParseWorkflowWithRequest(request *ParseWorkflowRequest) (*Workf
 //   returns:
 //     A Workflow structure.
 //     An error if the workflow cannot be generated.
-func (p *Parser) ParseWorkflow(content string, name string, params Parameters) (*Workflow, derrors.Error) {
+func (p *Parser) ParseWorkflow(workflowID string, content string, name string, params Parameters) (*Workflow, derrors.Error) {
 	ft := template.New("Workflow: " + name).Funcs(template.FuncMap{
 		"joinStringArray": func(elements []string) string {
 			return "\"" + strings.Join(elements, "\",\"") + "\""
@@ -84,7 +79,7 @@ func (p *Parser) ParseWorkflow(content string, name string, params Parameters) (
 		return nil, derrors.NewInternalError(errors.CannotApplyTemplate, err)
 	}
 	jsonPayload := buf.String()
-	return p.ParseJSON(jsonPayload, name)
+	return p.ParseJSON(workflowID, jsonPayload, name)
 }
 
 // ParseJSON reads a workflow from a JSON string, parsing the data and applying the template.
@@ -94,7 +89,7 @@ func (p *Parser) ParseWorkflow(content string, name string, params Parameters) (
 //   returns:
 //     A Workflow structure.
 //     An error if the workflow cannot be generated.
-func (p *Parser) ParseJSON(jsonPayload string, name string) (*Workflow, derrors.Error) {
+func (p *Parser) ParseJSON(workflowID string, jsonPayload string, name string) (*Workflow, derrors.Error) {
 	passwordRegex := regexp.MustCompile("\"password\":\".*\",")
 	privateKeyRegex := regexp.MustCompile("\"privateKey\":\".*\"")
 	redactedJSON := passwordRegex.ReplaceAllString(jsonPayload, "\"password\":\"REDACTED\",")
@@ -121,5 +116,5 @@ func (p *Parser) ParseJSON(jsonPayload string, name string) (*Workflow, derrors.
 		result = append(result, *cmd)
 	}
 
-	return NewWorkflow(name, aux.Description, result), nil
+	return NewWorkflow(workflowID, name, aux.Description, result), nil
 }

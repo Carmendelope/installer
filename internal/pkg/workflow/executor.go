@@ -210,3 +210,9 @@ func (e *Executor) ParameterGet(key string) (*WorkflowParameter, derrors.Error) 
 	}
 	return nil, derrors.NewNotFoundError(errors.ParameterDoesNotExists).WithParams(key)
 }
+
+func (e *Executor) Stop() {
+	log.Debug().Msg("Stopping after last command is executed")
+	e.currentCommand = len(e.Workflow.Commands)-1
+	e.workflowCallback(e.Workflow.WorkflowID, nil, e.State)
+}

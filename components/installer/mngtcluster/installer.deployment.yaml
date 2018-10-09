@@ -6,27 +6,30 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: application
-    component: example
-  name: example
-  namespace: default
+    cluster: management
+    component: installer
+  name: installer
+  namespace: nalej
 spec:
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: application
-      component: example
+      cluster: management
+      component: installer
   template:
     metadata:
       labels:
-        app: application
-        component: example
+        cluster: management
+        component: installer
     spec:
       containers:
-      - name: example
-        image: nalej/example-app:v0.0.1
+      - name: installer
+        image: nalej/installer:VERSION
         imagePullPolicy: Always
+        args:
+          - "run"
+          - "--debug"
         securityContext:
           runAsUser: 2000
       imagePullSecrets:

@@ -10,6 +10,7 @@ import (
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/installer/internal/pkg/templates"
+	"github.com/nalej/installer/internal/pkg/utils"
 	"github.com/nalej/installer/internal/pkg/workflow"
 	"github.com/rs/zerolog/log"
 	"time"
@@ -31,12 +32,12 @@ func NewInstallerFromCLI(
 	appClusterInstall bool,
 	) (* Installer, derrors.Error){
 
-		kubeConfigContent, err := GetKubeConfigContent(kubeConfigPath)
+		kubeConfigContent, err := utils.GetKubeConfigContent(kubeConfigPath)
 		if err != nil {
 		    return nil, err
 		}
 
-		privateKeyContent, err := GetPrivateKeyContent(privateKeyPath)
+		privateKeyContent, err := utils.GetPrivateKeyContent(privateKeyPath)
 		if err != nil {
 		    return nil, err
 		}
@@ -72,7 +73,7 @@ func (i * Installer) Load() {
 	i.exitOnError(i.Params.LoadCredentials())
 	i.exitOnError(i.Params.Validate())
 	p := workflow.NewParser()
-	workflow, err := p.ParseWorkflow(templates.InstallManagementCluster, "install-management-cluster", i.Params)
+	workflow, err := p.ParseWorkflow("cli-install", templates.InstallManagementCluster, "install-management-cluster", i.Params)
 	i.exitOnError(err)
 	i.Workflow = workflow
 }

@@ -6,7 +6,7 @@ package commands
 
 import (
 	"github.com/nalej/derrors"
-	"github.com/nalej/installer/cmd/installer-cli/commands/installer"
+	"github.com/nalej/installer/internal/pkg/utils"
 	"github.com/nalej/installer/internal/pkg/workflow"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -32,7 +32,7 @@ var cliCmd = &cobra.Command{
 	Long:  `Install the Nalej platform`,
 	Run: func(cmd *cobra.Command, args []string) {
 		SetupLogging()
-		log.Info().Msg("Launching API!")
+		cmd.Help()
 	},
 }
 
@@ -70,9 +70,9 @@ func CheckExists(path string) bool {
 
 func GetPaths() (* workflow.Paths, derrors.Error) {
 
-	components := installer.GetPath(componentsPath)
-	binary := installer.GetPath(binaryPath)
-	temp := installer.GetPath(tempPath)
+	components := utils.ExtendComponentsPath(utils.GetPath(componentsPath), false)
+	binary := utils.GetPath(binaryPath)
+	temp := utils.GetPath(tempPath)
 
 	if !CheckExists(components) {
 		return nil, derrors.NewNotFoundError("components directory does not exist").WithParams(components)

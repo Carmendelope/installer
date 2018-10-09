@@ -19,10 +19,13 @@
 package commands
 
 import (
+	"github.com/nalej/installer/internal/pkg/server"
+	cfg "github.com/nalej/installer/internal/pkg/server/config"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
+var config = cfg.Config{}
 
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -31,9 +34,20 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		SetupLogging()
 		log.Info().Msg("Launching API!")
+		server := server.NewService(config)
+		server.Run()
 	},
 }
 
 func init() {
+
+	runCmd.Flags().IntVar(&config.Port, "port", 8900, "Port to launch the Installer")
+	runCmd.PersistentFlags().StringVar(&config.ComponentsPath, "componentsPath", "./assets/",
+		"Directory with the components to be installed")
+	runCmd.PersistentFlags().StringVar(&config.BinaryPath, "binaryPath", "./bin/",
+		"Directory with the binary executables")
+	runCmd.PersistentFlags().StringVar(&config.TempPath, "tempPath", "./temp/",
+		"Directory to store temporal files")
+
 	rootCmd.AddCommand(runCmd)
 }

@@ -9,13 +9,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nalej/installer/internal/pkg/errors"
-	"github.com/nalej/installer/internal/pkg/utils"
 	"github.com/rs/zerolog/log"
 
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/workflow/commands"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
-
 )
 
 // Prefix for workflow identifiers.
@@ -58,8 +56,7 @@ type Workflow struct {
 //     commands The list of commands.
 //   returns:
 //     A GenericWorkflow.
-func NewWorkflow(name string, description string, commands []entities.Command) *Workflow {
-	workflowID := utils.GenerateUUID(Prefix)
+func NewWorkflow(workflowID string, name string, description string, commands []entities.Command) *Workflow {
 	return &Workflow{
 		WorkflowID:  workflowID,
 		Name:        name,

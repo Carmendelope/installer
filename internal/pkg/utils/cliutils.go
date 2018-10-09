@@ -2,7 +2,7 @@
  * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
-package installer
+package utils
 
 import (
 	"github.com/nalej/derrors"
@@ -22,6 +22,13 @@ func GetPath(path string) string {
 		return strings.Replace(path, ".", abs, 1)
 	}
 	return path
+}
+
+func ExtendComponentsPath(path string, appClusterInstall bool) string {
+	if appClusterInstall {
+		return filepath.Join(path, "appcluster")
+	}
+	return filepath.Join(path, "mngtcluster")
 }
 
 func GetKubeConfigContent(kubeConfigPath string) (string, derrors.Error) {

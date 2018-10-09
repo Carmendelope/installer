@@ -20,7 +20,7 @@ var _ = ginkgo.Describe("Templates", func() {
 		ginkgo.Context("installing the management cluster", func() {
 			ginkgo.It("should be able to parse the template", func(){
 				params := workflow.GetTestParameters(numNodes, false)
-				workflow, err := parser.ParseWorkflow(InstallManagementCluster, "InstallManagement", *params)
+				workflow, err := parser.ParseWorkflow("test", InstallManagementCluster, "InstallManagement", *params)
 				gomega.Expect(err).To(gomega.Succeed())
 				gomega.Expect(workflow).ShouldNot(gomega.BeNil())
 			})
