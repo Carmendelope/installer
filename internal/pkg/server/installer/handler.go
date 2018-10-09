@@ -102,7 +102,11 @@ func (h *Handler) RemoveInstall(ctx context.Context, removeRequest *grpc_install
 	if err != nil {
 		return nil, conversions.ToGRPCError(err)
 	}
-	panic("implement me")
+	err = h.Manager.RemoveInstall(removeRequest.InstallId)
+	if err != nil {
+		return nil, conversions.ToGRPCError(err)
+	}
+	return &grpc_common_go.Success{}, nil
 }
 
 

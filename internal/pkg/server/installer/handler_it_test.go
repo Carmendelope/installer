@@ -20,8 +20,8 @@ import (
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/grpc-utils/pkg/test"
-	"github.com/nalej/installer/internal/pkg/utils"
 	cfg "github.com/nalej/installer/internal/pkg/server/config"
+	"github.com/nalej/installer/internal/pkg/utils"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
@@ -31,6 +31,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -82,9 +83,10 @@ var _ = ginkgo.Describe("Installer", func(){
 	}
 	var (
 		kubeConfigFile = os.Getenv("IT_K8S_KUBECONFIG")
+		rkeBinary = os.Getenv("IT_RKE_BINARY")
 	)
 
-	if kubeConfigFile == "" {
+	if kubeConfigFile == "" || rkeBinary == "" {
 		ginkgo.Fail("missing environment variables")
 	}
 
@@ -114,12 +116,16 @@ var _ = ginkgo.Describe("Installer", func(){
 		td, err := ioutil.TempDir("", "installITTemp")
 		gomega.Expect(err).To(gomega.Succeed())
 		tempDir = td
-		// TODO copy RKE binary for raw install.
-		binaryDir = td
+
+		binaryDir = filepath.Dir(rkeBinary)
 
 		for i:= 0; i< numDeployments; i++{
 			createDeployment(componentsDir, targetNamespace, i)
 		}
+
+		tu := k8s.NewTestK8sUtils(kubeConfigFile)
+		gomega.Expect(tu.Connect()).To(gomega.Succeed())
+		gomega.Expect(tu.CreateNamespace(targetNamespace)).To(gomega.Succeed())
 
 		config := cfg.Config{
 			ComponentsPath: componentsDir,
@@ -145,6 +151,8 @@ var _ = ginkgo.Describe("Installer", func(){
 	})
 
 	ginkgo.AfterSuite(func(){
+		server.Stop()
+		listener.Close()
 		os.RemoveAll(componentsDir)
 		tc := k8s.NewTestCleaner(kubeConfigFile, targetNamespace)
 		gomega.Expect(tc.DeleteAll()).To(gomega.Succeed())
@@ -180,21 +188,27 @@ var _ = ginkgo.Describe("Installer", func(){
 				InstallId:            installRequest.InstallId,
 			}
 			ginkgo.By("checking the install progress")
+			log.Info().Msg("Checking progress")
 			for i := 0; i < maxWait && !finished; i++ {
 				time.Sleep(time.Second)
 				progress, err := client.CheckProgress(context.Background(), installID)
 				gomega.Expect(err).To(gomega.Succeed())
+				log.Debug().Interface("progress", progress).Msg("Check progress")
 				finished = (progress.State == grpc_installer_go.InstallProgress_FINISHED) ||
 					(progress.State == grpc_installer_go.InstallProgress_ERROR)
+				log.Debug().Bool("finished", finished).Msg("workflow has finished?")
 			}
+			log.Info().Msg("obtain final progress")
 			progress, err := client.CheckProgress(context.Background(), installID)
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(progress.State).Should(gomega.Equal(grpc_installer_go.InstallProgress_FINISHED))
 			ginkgo.By("removing the install")
+			log.Info().Msg("removing the install")
 			removeRequest := &grpc_installer_go.RemoveInstallRequest{
 				InstallId:            installRequest.InstallId,
 			}
 			client.RemoveInstall(context.Background(), removeRequest)
+			log.Info().Msg("Finished!!!!!!")
 		})
 	})
 

@@ -21,7 +21,7 @@ type Manager struct {
 	ExecHandler workflow.ExecutorHandler
 	Parser * workflow.Parser
 	Requests map[string]grpc_installer_go.InstallRequest
-	Status map[string]InstallStatus
+	Status map[string]*InstallStatus
 }
 
 func NewManager(config config.Config) Manager {
@@ -31,7 +31,7 @@ func NewManager(config config.Config) Manager {
 		ExecHandler: workflow.GetExecutorHandler(),
 		Parser: workflow.NewParser(),
 		Requests: make(map[string]grpc_installer_go.InstallRequest, 0),
-		Status: make(map[string]InstallStatus, 0),
+		Status: make(map[string]*InstallStatus, 0),
 	}
 }
 
@@ -42,7 +42,7 @@ func (m * Manager) unsafeExist(installID string) bool {
 
 func (m *Manager) unsafeRegister(installRequest grpc_installer_go.InstallRequest) {
 	m.Requests[installRequest.InstallId] = installRequest
-	m.Status[installRequest.InstallId] = * NewInstallStatus(installRequest.InstallId)
+	m.Status[installRequest.InstallId] = NewInstallStatus(installRequest.InstallId)
 }
 
 func (m * Manager) InstallCluster(installRequest grpc_installer_go.InstallRequest) (* InstallStatus, derrors.Error) {
@@ -118,6 +118,7 @@ func (m * Manager) GetProgress(installID string) (* InstallStatus, derrors.Error
 		return nil, derrors.NewNotFoundError("installID").WithParams(installID)
 	}
 	status, _ := m.Status[installID]
+	log.Debug().Interface("status", status).Msg("GetProgress()")
 	return status.Clone(), nil
 }
 
@@ -125,9 +126,10 @@ func (m * Manager) WorkflowCallback(
 	workflowID string,
 	error derrors.Error,
 	state workflow.WorkflowState) {
-	log.Debug().Str("workflowID", workflowID).Err(error).Interface("state", state).Msg("workflow callback received")
+	log.Debug().Str("workflowID", workflowID).Err(error).Interface("state", state).Msg("WorkflowCallback()")
 
 	m.Lock()
+	defer m.Unlock()
 	status, exist := m.Status[workflowID]
 	if !exist {
 		log.Warn().Str("workflowID", workflowID).Msg("received callback for unregistered workflow")
@@ -149,14 +151,37 @@ func (m * Manager) WorkflowCallback(
 	case workflow.FinishedState:
 		status.UpdateState(grpc_installer_go.InstallProgress_FINISHED)
 		return
+	case workflow.ErrorState:
+		status.UpdateState(grpc_installer_go.InstallProgress_ERROR)
 	default:
 		log.Warn().Interface("state", state).Msg("State not recognized")
 	}
-
-	m.Unlock()
 }
 
 func (m * Manager) logListener(msg string) {
 	// TODO store the information on the install status
 	log.Info().Msg(msg)
+}
+
+func (m * Manager) RemoveInstall(installID string) derrors.Error {
+	m.Lock()
+	_, exitsRequest := m.Requests[installID]
+	if exitsRequest {
+		log.Debug().Str("installID", installID).Msg("Removing request")
+		delete(m.Requests, installID)
+	}
+	_, existStatus := m.Status[installID]
+	m.Unlock()
+
+	if existStatus {
+		err := m.ExecHandler.Stop(installID)
+		if err != nil {
+			return err
+		}
+		m.Lock()
+		delete(m.Status, installID)
+		m.Unlock()
+	}
+
+	return nil
 }

@@ -6,6 +6,7 @@ package workflow
 
 import (
 	"github.com/nalej/installer/internal/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"sync"
 
 	"github.com/nalej/derrors"
@@ -21,6 +22,7 @@ type ExecutorHandler interface {
 			state WorkflowState)) (*Executor, derrors.Error)
 	Execute(workflowID string) (*Executor, derrors.Error)
 	Get(workflowID string) (*Executor, derrors.Error)
+	Stop(workflowID string) derrors.Error
 }
 
 type executorHandler struct {
@@ -71,4 +73,15 @@ func (handler *executorHandler) Execute(workflowID string) (*Executor, derrors.E
 	}
 	exe.Exec()
 	return exe, nil
+}
+
+func (handler *executorHandler) Stop(workflowID string) derrors.Error {
+	log.Debug().Str("workflowID", workflowID).Msg("ExecutorHandler stop request")
+	exe, err := handler.Get(workflowID)
+	if err != nil {
+		return err
+	}
+	exe.Stop()
+	delete(handler.executorMap, workflowID)
+	return nil
 }
