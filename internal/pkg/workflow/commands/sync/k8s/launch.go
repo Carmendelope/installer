@@ -13,10 +13,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes/scheme"
 	"path"
+	"reflect"
 
 	"io/ioutil"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 )
@@ -101,10 +104,23 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 	case *appsv1.Deployment:
 		return lc.launchDeployment(obj.(*appsv1.Deployment))
 	case *appsv1.DaemonSet:
-		return derrors.NewUnimplementedError("DaemonSet launch")
+		return lc.launchDaemonSet(obj.(*appsv1.DaemonSet))
 	case *v1.Service:
 		return lc.launchService(obj.(*v1.Service))
+	case *v1.ServiceAccount:
+		return lc.launchServiceAccount(obj.(*v1.ServiceAccount))
+	case *v1.ConfigMap:
+		return lc.launchConfigMap(obj.(*v1.ConfigMap))
+	case *rbacv1.RoleBinding:
+		return lc.launchRoleBinding(obj.(*rbacv1.RoleBinding))
+	case *rbacv1.ClusterRole:
+		return lc.launchClusterRole(obj.(*rbacv1.ClusterRole))
+	case *rbacv1.ClusterRoleBinding:
+		return lc.launchClusterRoleBinding(obj.(*rbacv1.ClusterRoleBinding))
+	case *policyv1beta1.PodSecurityPolicy:
+		return lc.launchPodSecurityPolicy(obj.(*policyv1beta1.PodSecurityPolicy))
 	default:
+		log.Warn().Str("type", reflect.TypeOf(o).String()).Msg("Unknown entity")
 		return derrors.NewUnimplementedError("object not supported").WithParams(o)
 	}
 
@@ -118,7 +134,18 @@ func (lc * LaunchComponents) launchDeployment(deployment *appsv1.Deployment) der
 	if err != nil {
 		return derrors.AsError(err, "cannot create deployment")
 	}
-	log.Debug().Interface("created", created).Msg("new component has been created")
+	log.Debug().Interface("created", created).Msg("new deployment has been created")
+	return nil
+}
+
+func (lc * LaunchComponents) launchDaemonSet(daemonSet *appsv1.DaemonSet) derrors.Error {
+	client := lc.Client.AppsV1().DaemonSets(daemonSet.Namespace)
+	log.Debug().Interface("daemonSet", daemonSet).Msg("unmarshalled")
+	created, err := client.Create(daemonSet)
+	if err != nil {
+		return derrors.AsError(err, "cannot create daemon set")
+	}
+	log.Debug().Interface("created", created).Msg("new daemon set has been created")
 	return nil
 }
 
@@ -129,9 +156,79 @@ func (lc * LaunchComponents) launchService(service *v1.Service) derrors.Error {
 	if err != nil {
 		return derrors.AsError(err, "cannot create service")
 	}
-	log.Debug().Interface("created", created).Msg("new component has been created")
+	log.Debug().Interface("created", created).Msg("new service has been created")
 	return nil
 }
+
+func (lc * LaunchComponents) launchConfigMap(configMap *v1.ConfigMap) derrors.Error {
+	cfClient := lc.Client.CoreV1().ConfigMaps(configMap.Namespace)
+	log.Debug().Interface("configMap", configMap).Msg("unmarshalled")
+	created, err := cfClient.Create(configMap)
+	if err != nil {
+		return derrors.AsError(err, "cannot create config map")
+	}
+	log.Debug().Interface("created", created).Msg("new config map has been created")
+	return nil
+}
+
+func (lc * LaunchComponents) launchServiceAccount(serviceAccount *v1.ServiceAccount) derrors.Error {
+	client := lc.Client.CoreV1().ServiceAccounts(serviceAccount.Namespace)
+	log.Debug().Interface("serviceAccount", serviceAccount).Msg("unmarshalled")
+	created, err := client.Create(serviceAccount)
+	if err != nil {
+		return derrors.AsError(err, "cannot create service account")
+	}
+	log.Debug().Interface("created", created).Msg("new service account has been created")
+	return nil
+}
+
+
+func (lc * LaunchComponents) launchClusterRole(clusterRole *rbacv1.ClusterRole) derrors.Error {
+	client := lc.Client.RbacV1().ClusterRoles()
+	log.Debug().Interface("clusterRole", clusterRole).Msg("unmarshalled")
+	created, err := client.Create(clusterRole)
+	if err != nil {
+		return derrors.AsError(err, "cannot create cluster role")
+	}
+	log.Debug().Interface("created", created).Msg("new cluster role has been created")
+	return nil
+}
+
+func (lc * LaunchComponents) launchClusterRoleBinding(clusterRoleBinding *rbacv1.ClusterRoleBinding) derrors.Error {
+	client := lc.Client.RbacV1().ClusterRoleBindings()
+	log.Debug().Interface("clusterRoleBinding", clusterRoleBinding).Msg("unmarshalled")
+	created, err := client.Create(clusterRoleBinding)
+	if err != nil {
+		return derrors.AsError(err, "cannot create cluster role binding")
+	}
+	log.Debug().Interface("created", created).Msg("new cluster role binding has been created")
+	return nil
+}
+
+func (lc * LaunchComponents) launchRoleBinding(roleBinding *rbacv1.RoleBinding) derrors.Error {
+	client := lc.Client.RbacV1().RoleBindings(roleBinding.Namespace)
+	log.Debug().Interface("roleBinding", roleBinding).Msg("unmarshalled")
+	created, err := client.Create(roleBinding)
+	if err != nil {
+		return derrors.AsError(err, "cannot create role binding")
+	}
+	log.Debug().Interface("created", created).Msg("new role binding has been created")
+	return nil
+}
+
+
+
+func (lc * LaunchComponents) launchPodSecurityPolicy(policy *policyv1beta1.PodSecurityPolicy) derrors.Error {
+	client := lc.Client.PolicyV1beta1().PodSecurityPolicies()
+	log.Debug().Interface("policy", policy).Msg("unmarshalled")
+	created, err := client.Create(policy)
+	if err != nil {
+		return derrors.AsError(err, "cannot create pod security policy")
+	}
+	log.Debug().Interface("created", created).Msg("new pod security policy has been created")
+	return nil
+}
+
 
 func (lc * LaunchComponents) createNamespace(name string) derrors.Error {
 	namespaceClient := lc.Client.CoreV1().Namespaces()
