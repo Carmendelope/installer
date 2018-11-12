@@ -107,6 +107,8 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 		return lc.launchDaemonSet(obj.(*appsv1.DaemonSet))
 	case *v1.Service:
 		return lc.launchService(obj.(*v1.Service))
+	case *v1.Secret:
+		return lc.launchSecret(obj.(*v1.Secret))
 	case *v1.ServiceAccount:
 		return lc.launchServiceAccount(obj.(*v1.ServiceAccount))
 	case *v1.ConfigMap:
@@ -182,7 +184,6 @@ func (lc * LaunchComponents) launchServiceAccount(serviceAccount *v1.ServiceAcco
 	return nil
 }
 
-
 func (lc * LaunchComponents) launchClusterRole(clusterRole *rbacv1.ClusterRole) derrors.Error {
 	client := lc.Client.RbacV1().ClusterRoles()
 	log.Debug().Interface("clusterRole", clusterRole).Msg("unmarshalled")
@@ -216,8 +217,6 @@ func (lc * LaunchComponents) launchRoleBinding(roleBinding *rbacv1.RoleBinding) 
 	return nil
 }
 
-
-
 func (lc * LaunchComponents) launchPodSecurityPolicy(policy *policyv1beta1.PodSecurityPolicy) derrors.Error {
 	client := lc.Client.PolicyV1beta1().PodSecurityPolicies()
 	log.Debug().Interface("policy", policy).Msg("unmarshalled")
@@ -229,6 +228,16 @@ func (lc * LaunchComponents) launchPodSecurityPolicy(policy *policyv1beta1.PodSe
 	return nil
 }
 
+func (lc * LaunchComponents) launchSecret(secret *v1.Secret) derrors.Error {
+	client := lc.Client.CoreV1().Secrets(secret.Namespace)
+	log.Debug().Interface("secret", secret).Msg("unmarshalled")
+	created, err := client.Create(secret)
+	if err != nil {
+		return derrors.AsError(err, "cannot create secret")
+	}
+	log.Debug().Interface("created", created).Msg("new secret has been created")
+	return nil
+}
 
 func (lc * LaunchComponents) createNamespace(name string) derrors.Error {
 	namespaceClient := lc.Client.CoreV1().Namespaces()
