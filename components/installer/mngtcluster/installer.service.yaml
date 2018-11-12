@@ -1,0 +1,17 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: installer
+  namespace: nalej
+  labels:
+    cluster: management
+    component: installer
+spec:
+  selector:
+    cluster: management
+    component: installer
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 8900
+    targetPort: 8900
