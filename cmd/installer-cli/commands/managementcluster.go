@@ -44,6 +44,7 @@ func LaunchManagementInstall() {
 		privateKeyPath,
 		strings.Split(nodes, ","),
 		*paths,
+		managementPublicHost,
 		false)
 
 	if err != nil {

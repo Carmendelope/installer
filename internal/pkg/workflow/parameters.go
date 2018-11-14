@@ -13,6 +13,7 @@ import (
 	"github.com/nalej/grpc-installer-go"
 )
 
+const DefaultManagementPort = "80"
 
 // Parameters required to transform a template into a workflow.
 type Parameters struct {
@@ -22,12 +23,12 @@ type Parameters struct {
 	Assets Assets `json:"assets"`
 	// Paths defines a set of paths for assets, binaries, and configuration.
 	Paths Paths `json:"paths"`
-	//InframgrHost is the host where the inframgr is accepting callback requests.
-	InframgrHost string `json:"inframgrHost"`
-	//InframgrPort is the port where the inframgr is accepting requests.
-	InframgrPort string `json:"inframgrPort"`
+	//ManagementClusterHost is the host where the management cluster is accepting callback requests.
+	ManagementClusterHost string `json:"management_cluster_host"`
+	//InframgrPort is the port where the management cluster is accepting requests.
+	ManagementClusterPort string `json:"management_cluster_port"`
 	//AppClusterInstall indicates if an application cluster is being installed.
-	AppClusterInstall bool `json:"appClusterInstall"`
+	AppClusterInstall bool `json:"app_cluster_install"`
 }
 
 // TODO Remove assets if not used anymore
@@ -75,18 +76,22 @@ func NewParameters(
 	request grpc_installer_go.InstallRequest,
 	assets Assets,
 	paths Paths,
-	inframgrHost string, appClusterInstall bool) *Parameters {
+	managementClusterHost string,
+	managementClusterPort string,
+	appClusterInstall bool) *Parameters {
 	return &Parameters{
 		request,
 		InstallCredentials{},
 		assets,
 		paths,
-		inframgrHost, "8860", appClusterInstall}
+		managementClusterHost, managementClusterPort,
+		appClusterInstall,
+	}
 }
 
 // NewParametersFromFile extract a parameters object from a file.
-func NewParametersFromFile(filepath string) (*Parameters, derrors.Error) {
-	content, err := ioutil.ReadFile(filepath)
+func NewParametersFromFile(filePath string) (*Parameters, derrors.Error) {
+	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, derrors.NewInternalError(errors.CannotParseParameters, err)
 	}

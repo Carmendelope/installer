@@ -42,6 +42,13 @@ var runCmd = &cobra.Command{
 func init() {
 
 	runCmd.Flags().IntVar(&config.Port, "port", 8900, "Port to launch the Installer")
+	runCmd.PersistentFlags().StringVar(&config.ManagementClusterHost, "managementClusterPublicHost", "",
+		"Public FQDN where the management cluster is reachable by the application clusters")
+	runCmd.MarkPersistentFlagRequired("managementClusterPublicHost")
+	runCmd.PersistentFlags().StringVar(&config.ManagementClusterPort, "managementClusterPublicPort", "",
+		"Public port where the management cluster is reachable by the application clusters")
+	runCmd.MarkPersistentFlagRequired("managementClusterPublicPort")
+
 	runCmd.PersistentFlags().StringVar(&config.ComponentsPath, "componentsPath", "./assets/",
 		"Directory with the components to be installed")
 	runCmd.PersistentFlags().StringVar(&config.BinaryPath, "binaryPath", "./bin/",

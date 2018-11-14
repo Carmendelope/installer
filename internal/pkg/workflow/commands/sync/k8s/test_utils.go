@@ -90,13 +90,39 @@ func (tc * TestCleaner) DeleteDeployments() derrors.Error {
 	return nil
 }
 
+func (tc * TestCleaner) existNamespace(name string) (bool, derrors.Error) {
+	namespaceClient := tc.Client.CoreV1().Namespaces()
+	opts := metaV1.ListOptions{}
+	list, err := namespaceClient.List(opts)
+	if err != nil{
+		return false, derrors.AsError(err, "cannot obtain the namespace list")
+	}
+	found := false
+	for _, n := range list.Items {
+		log.Debug().Interface("n", n).Msg("A namespace")
+		if n.Name == name {
+			found = true
+			break
+		}
+	}
+	return found, nil
+}
+
 func (tc * TestCleaner) DeleteNamespaces() derrors.Error {
 	dOpts := metaV1.DeleteOptions{}
 	namespaceClient := tc.Client.CoreV1().Namespaces()
 	for _, ns := range tc.Namespaces {
-		err := namespaceClient.Delete(ns, &dOpts)
-		if err != nil{
-			return derrors.AsError(err, "cannot delete namespace")
+
+		found, fErr := tc.existNamespace(ns)
+		if fErr != nil{
+			return fErr
+		}
+		if found {
+			err := namespaceClient.Delete(ns, &dOpts)
+			if err != nil{
+				return derrors.AsError(err, "cannot delete namespace")
+			}
+			log.Debug().Str("namespace", ns).Msg("deleted")
 		}
 	}
 	log.Debug().Int("deleted", len(tc.Namespaces)).Msg("namespaces deleted")

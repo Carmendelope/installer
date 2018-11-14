@@ -80,7 +80,9 @@ func (m * Manager) launchInstall(installID string) {
 	}
 
 	// Create Parameters
-	params := workflow.NewParameters(request, workflow.Assets{}, m.Paths, "localhost", true)
+	params := workflow.NewParameters(
+		request, workflow.Assets{}, m.Paths,
+		m.Config.ManagementClusterHost, m.Config.ManagementClusterPort, true)
 	status.Params = params
 	err := status.Params.LoadCredentials()
 	if err != nil {

@@ -45,3 +45,7 @@ const RKERemove = "rkeRemove"
 const LaunchComponents = "launchComponents"
 
 const CheckRequirements = "checkRequirements"
+
+const CreateClusterConfig = "createClusterConfig"
+
+const CreateManagementConfig = "createManagementConfig"

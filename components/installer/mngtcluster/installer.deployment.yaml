@@ -26,11 +26,39 @@ spec:
       containers:
       - name: installer
         image: nalej/installer:VERSION
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: installer-config
+          mountPath: "/nalej/assets/appcluster"
+          readOnly: true
+        - name: temp-dir
+          mountPath: "/tmp/nalej"
+        env:
+        - name: MNGT_PUBLIC_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: management-config
+              key: public_host
+        - name: MNGT_PUBLIC_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: management-config
+              key: public_port
         args:
           - "run"
           - "--debug"
+          - "--managementClusterPublicHost=$(MNGT_PUBLIC_HOST)"
+          - "--managementClusterPublicPort=$(MNGT_PUBLIC_PORT)"
+          - "--componentsPath=/nalej/assets/"
+          - "--binaryPath=/nalej/bin/"
+          - "--tempPath=/tmp/nalej/"
         securityContext:
           runAsUser: 2000
+      volumes:
+      - name: installer-config
+        configMap:
+          name: installer-config
+      - name: temp-dir
+        emptyDir: {}
       imagePullSecrets:
       - name: myregistrykey

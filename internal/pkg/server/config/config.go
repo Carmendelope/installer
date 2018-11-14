@@ -7,6 +7,7 @@ package config
 import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/utils"
+	"github.com/nalej/installer/version"
 	"github.com/rs/zerolog/log"
 	"os"
 )
@@ -17,14 +18,24 @@ type Config struct {
 	ComponentsPath string
 	BinaryPath string
 	TempPath string
+	ManagementClusterHost string
+	ManagementClusterPort string
 }
 
-func NewConfiguration(port int, componentsPath string, binaryPath string, tempPath string) * Config {
+func NewConfiguration(
+	port int,
+	componentsPath string,
+	binaryPath string,
+	tempPath string,
+	managementClusterHost string,
+	managementClusterPort string) * Config {
 	return &Config{
 		Port: port,
 		ComponentsPath: componentsPath,
 		BinaryPath:     binaryPath,
 		TempPath:       tempPath,
+		ManagementClusterHost: managementClusterHost,
+		ManagementClusterPort: managementClusterPort,
 	}
 }
 
@@ -56,13 +67,21 @@ func (conf * Config) Validate() derrors.Error {
 	if conf.Port == 0 {
 		return derrors.NewInvalidArgumentError("port must be set")
 	}
+	if conf.ManagementClusterHost == "" {
+		return derrors.NewInvalidArgumentError("managementClusterHost")
+	}
+	if conf.ManagementClusterPort == "" {
+		return derrors.NewInvalidArgumentError("managementClusterPort")
+	}
 
 	return nil
 }
 
 func (conf *Config) Print() {
+	log.Info().Str("app", version.AppVersion).Str("commit", version.Commit).Msg("Version")
 	log.Info().Int("port", conf.Port).Msg("gRPC Service")
 	log.Info().Str("path", conf.ComponentsPath).Msg("Components")
 	log.Info().Str("path", conf.BinaryPath).Msg("Binaries")
 	log.Info().Str("path", conf.TempPath).Msg("Temporal files")
+	log.Info().Str("host", conf.ManagementClusterHost).Str("port", conf.ManagementClusterPort).Msg("Management cluster")
 }
