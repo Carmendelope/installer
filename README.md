@@ -16,6 +16,70 @@ Assuming all YAML files are in `./assets/appcluster` use:
 kubectl create configmap installer-configmap --from-file=assets/appcluster/ -nnalej -o yaml --dry-run > ./assets/mngtcluster/installer.configmap.yaml
 ```
 
+## Installing the platform (local development environment)
+
+Prerequirements:
+1. Minikube
+2. Signup component
+3. Rke downloaded
+4. Kubectl
+5. Public api cli
+
+
+Steps:
+
+1. Compile all repositories manually.
+2. Copy the yaml files to the assets directory
+
+```
+$ mkdir -p installer/assets/mngtcluster
+$ mkdir -p installer/assets/appcluster
+$ cp */bin/yaml/mngtcluster/* installer/assets/mngtcluster/.
+$ kubectl create configmap installer-config --from-file=installer/assets/appcluster/ -nnalej -o yaml --dry-run > installer/bin/yaml/mngtcluster/installer.configmap.yaml
+```
+
+3. Load the images in the local minikube environment
+
+```
+./scripts/loadImagesInMinikube.sh
+```
+
+4. Launch the installer
+
+```
+$ cd installer
+$ ./bin/installer-cli install management --debug --consoleLogging --binaryPath ~/development/rke/ --managementClusterPublicHost=192.168.99.100
+```
+
+5. Create a test organization
+
+```
+$ ../signup/bin/signup-cli signup --debug --signupAddress=192.168.99.100:32180 --orgName=nalej --ownerEmail=admin1@nalej.com --ownerName=Admin --ownerPassword=password
+```
+
+6. Setup the options (Optional step)
+
+Notice: You may need to open nodeports for the login and public api components.
+
+```
+$ cd public-api
+$ ./bin/public-api-cli options set --key=organizationID --value=<your_organization>
+$ ./bin/public-api-cli options set --key=nalejAddress --value=192.168.99.100
+$ ./bin/public-api-cli options set --key=port --value=31405
+```
+
+7. Login
+
+```
+$ ./bin/public-api-cli login --debug --consoleLogging --nalejAddress=192.168.99.100 --loginPort=30211 --email=admin1@nalej.com --password=password
+```
+
+8. Test
+
+```
+./bin/public-api-cli org info
+```
+
 ## Installing an application cluster
 
 # Integration tests
