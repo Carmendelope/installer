@@ -8,6 +8,14 @@ This repository contains the installer component in charge of installing new clu
 $ ./bin/installer-cli install management --debug --consoleLogging
 ```
 
+## Creating the config map with the YAMLs for the application cluster
+
+Assuming all YAML files are in `./assets/appcluster` use:
+
+```
+kubectl create configmap installer-configmap --from-file=assets/appcluster/ -nnalej -o yaml --dry-run > ./assets/mngtcluster/installer.configmap.yaml
+```
+
 ## Installing an application cluster
 
 # Integration tests

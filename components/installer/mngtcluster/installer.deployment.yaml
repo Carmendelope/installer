@@ -26,11 +26,26 @@ spec:
       containers:
       - name: installer
         image: nalej/installer:VERSION
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: installer-config
+          mountPath: "/nalej/assets/appcluster"
+          readOnly: true
+        - name: temp-dir
+          mountPath: "/tmp/nalej"
         args:
           - "run"
           - "--debug"
+          - "--componentsPath=/nalej/assets/"
+          - "--binaryPath=/nalej/bin/"
+          - "--tempPath=/tmp/nalej/"
         securityContext:
           runAsUser: 2000
+      volumes:
+      - name: installer-config
+        configMap:
+          name: installer-config
+      - name: temp-dir
+        emptyDir: {}
       imagePullSecrets:
       - name: myregistrykey

@@ -16,13 +16,11 @@ package k8s
 
 import (
 	"fmt"
-	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/nalej/installer/internal/pkg/utils"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
-	"os"
 	"path"
 	"strings"
 )
@@ -66,17 +64,13 @@ func createDeployment(basePath string, namespace string, index int) {
 var _ = ginkgo.Describe("A launch command", func(){
 
 	const numDeployments = 2
-	const targetNamespace = "test-it-launch"
 
 	if ! utils.RunIntegrationTests() {
 		log.Warn().Msg("Integration tests are skipped")
 		return
 	}
-	var (
-		kubeConfigFile = os.Getenv("IT_K8S_KUBECONFIG")
-	)
 
-	if kubeConfigFile == "" {
+	if itKubeConfigFile == "" {
 		ginkgo.Fail("missing environment variables")
 	}
 
@@ -88,23 +82,13 @@ var _ = ginkgo.Describe("A launch command", func(){
 		componentsDir = cd
 
 		for i:= 0; i< numDeployments; i++{
-			createDeployment(componentsDir, targetNamespace, i)
+			createDeployment(componentsDir, itAuxNamespace, i)
 		}
-	})
-
-	ginkgo.AfterSuite(func(){
-		os.RemoveAll(componentsDir)
-		tc := NewTestCleaner(kubeConfigFile, targetNamespace)
-		gomega.Expect(tc.DeleteAll()).To(gomega.Succeed())
 	})
 
 	ginkgo.It("should create the deployments on kubernetes", func(){
-	    lc := NewLaunchComponents(kubeConfigFile, []string{targetNamespace}, componentsDir)
+	    lc := NewLaunchComponents(itKubeConfigFile, []string{itAuxNamespace}, componentsDir)
 	    result, err := lc.Run("testLaunchComponents")
-	    if err != nil {
-	    	fmt.Println(conversions.ToDerror(err))
-		}
-	    fmt.Println(result.String())
 	    gomega.Expect(err).To(gomega.Succeed())
 	    gomega.Expect(result).ShouldNot(gomega.BeNil())
 	    gomega.Expect(result.Success).Should(gomega.BeTrue())

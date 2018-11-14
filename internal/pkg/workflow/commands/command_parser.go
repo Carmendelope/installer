@@ -83,6 +83,8 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return k8s.NewLaunchComponentsFromJSON(raw)
 	case entities.CheckRequirements:
 		return k8s.NewCheckRequirementsFromJSON(raw)
+	case entities.CreateClusterConfig:
+		return k8s.NewCreateClusterConfigFromJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}

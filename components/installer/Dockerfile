@@ -6,9 +6,11 @@
 FROM iron/go
 
 # Now just add the binary\
-RUN mkdir /nalej
+RUN mkdir -p /nalej/bin
 
-# Now just add the binary
+COPY dockerenv/rke /nalej/bin/
 COPY installer /nalej/
+
+RUN chmod +x /nalej/bin/rke
 
 ENTRYPOINT ["./nalej/installer"]
