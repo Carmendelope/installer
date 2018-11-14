@@ -50,5 +50,5 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 
 	assets := NewAssets(make([]string, 0), make([]string, 0))
 	paths := NewPaths("assestPath", "binPath", "confPath")
-	return NewParameters(request, *assets, *paths, "inframgr.host", appClusterInstall)
+	return NewParameters(request, *assets, *paths, "mngtcluster_host", "80", appClusterInstall)
 }

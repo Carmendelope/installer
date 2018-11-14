@@ -25,7 +25,15 @@ const InstallManagementCluster = `
 			{"type":"sync", "name":"createClusterConfig",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"organization_id":"{{$.InstallRequest.OrganizationId}}",
-				"cluster_id":"{{$.InstallRequest.ClusterId}}"
+				"cluster_id":"{{$.InstallRequest.ClusterId}}",
+				"management_public_host":"{{$.ManagementClusterHost}}",
+				"management_public_port":"{{$.ManagementClusterPort}}"
+			},
+		{{else}}
+			{"type":"sync", "name":"createManagementConfig",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"public_host":"{{$.ManagementClusterHost}}",
+				"public_port":"{{$.ManagementClusterHost}}"
 			},
 		{{end}}
 		{"type":"sync", "name": "launchComponents",

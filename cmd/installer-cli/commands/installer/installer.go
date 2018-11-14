@@ -29,6 +29,7 @@ func NewInstallerFromCLI(
 	privateKeyPath string,
 	nodes []string,
 	paths workflow.Paths,
+	managementClusterHost string,
 	appClusterInstall bool,
 	) (* Installer, derrors.Error){
 
@@ -54,7 +55,8 @@ func NewInstallerFromCLI(
 			Nodes:                nodes,
 		}
 
-	params := workflow.NewParameters(request, workflow.Assets{}, paths, "localhost", appClusterInstall)
+	params := workflow.NewParameters(request, workflow.Assets{},
+		paths, managementClusterHost, workflow.DefaultManagementPort, appClusterInstall)
 	return NewInstaller(*params), nil
 }
 

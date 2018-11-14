@@ -47,3 +47,5 @@ const LaunchComponents = "launchComponents"
 const CheckRequirements = "checkRequirements"
 
 const CreateClusterConfig = "createClusterConfig"
+
+const CreateManagementConfig = "createManagementConfig"

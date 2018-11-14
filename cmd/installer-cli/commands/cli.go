@@ -21,6 +21,8 @@ var username string
 var privateKeyPath string
 var nodes string
 
+var managementPublicHost string
+
 var componentsPath string
 var binaryPath string
 var confPath string
@@ -39,7 +41,6 @@ var cliCmd = &cobra.Command{
 func init() {
 	cliCmd.PersistentFlags().BoolVar(&explainPlan, "explainPlan", false,
 		"Show install plan instead of performing the install")
-
 	cliCmd.PersistentFlags().BoolVar(&installKubernetes, "installK8s", false,
 		"Whether kubernetes should be installed")
 	cliCmd.PersistentFlags().StringVar(&kubeConfigPath, "kubeConfigPath", "~/.kube/config",
@@ -50,6 +51,10 @@ func init() {
 		"Specify the private key path to connect to the remote machine (Only if installK8s is selected)")
 	cliCmd.PersistentFlags().StringVar(&nodes, "nodes", "",
 		"List of IPs of the nodes to be installed separated by comma (Only if installK8s is selected)")
+	cliCmd.PersistentFlags().StringVar(&managementPublicHost, "managementClusterPublicHost", "",
+		"Public FQDN where the management cluster is reachable by the application clusters")
+	cliCmd.MarkPersistentFlagRequired("managementClusterPublicHost")
+
 
 	cliCmd.PersistentFlags().StringVar(&componentsPath, "componentsPath", "./assets/",
 		"Directory with the components to be installed")

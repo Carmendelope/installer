@@ -10,6 +10,7 @@ import (
 	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
+	"github.com/rs/zerolog/log"
 )
 
 type Handler struct {
@@ -74,14 +75,18 @@ func (h * Handler) ValidRemoveInstallRequest(removeRequest *grpc_installer_go.Re
 }
 
 func (h *Handler) InstallCluster(ctx context.Context, installRequest *grpc_installer_go.InstallRequest) (*grpc_installer_go.InstallResponse, error) {
+	log.Debug().Str("organizationID", installRequest.OrganizationId).Str("installID", installRequest.InstallId).Msg("install cluster")
 	err := h.ValidInstallRequest(installRequest)
 	if err != nil {
+		log.Warn().Str("trace", err.DebugReport()).Msg(err.Error())
 		return nil, conversions.ToGRPCError(err)
 	}
 	status, err := h.Manager.InstallCluster(*installRequest)
 	if err != nil {
+		log.Warn().Str("trace", err.DebugReport()).Msg(err.Error())
 		return nil, conversions.ToGRPCError(err)
 	}
+	log.Debug().Str("organizationID", installRequest.OrganizationId).Str("installID", installRequest.InstallId).Msg("install launched")
 	return status.ToGRPCInstallResponse(), nil
 }
 

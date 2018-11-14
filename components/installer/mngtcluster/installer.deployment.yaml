@@ -33,9 +33,22 @@ spec:
           readOnly: true
         - name: temp-dir
           mountPath: "/tmp/nalej"
+        env:
+        - name: MNGT_PUBLIC_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: management-config
+              key: public_host
+        - name: MNGT_PUBLIC_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: management-config
+              key: public_port
         args:
           - "run"
           - "--debug"
+          - "--managementClusterPublicHost=$(MNGT_PUBLIC_HOST)"
+          - "--managementClusterPublicPort=$(MNGT_PUBLIC_PORT)"
           - "--componentsPath=/nalej/assets/"
           - "--binaryPath=/nalej/bin/"
           - "--tempPath=/tmp/nalej/"

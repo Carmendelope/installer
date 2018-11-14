@@ -20,12 +20,14 @@ type CreateClusterConfig struct {
 	Kubernetes
 	OrganizationID string `json:"organization_id"`
 	ClusterID string `json:"cluster_id"`
+	ManagementPublicHost string `json:"management_public_host"`
+	ManagementPublicPort string `json:"management_public_port"`
 }
 
 func NewCreateClusterConfig(kubeConfigPath string, organizationID string, clusterID string) * CreateClusterConfig {
 	return &CreateClusterConfig{
 		Kubernetes:    Kubernetes{
-			GenericSyncCommand: *entities.NewSyncCommand(entities.LaunchComponents),
+			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateClusterConfig),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		OrganizationID: organizationID,
@@ -64,7 +66,12 @@ func (ccc * CreateClusterConfig) Run(workflowID string) (*entities.CommandResult
 			Namespace:                  "nalej",
 			Labels:          map[string]string{"cluster":"application"},
 		},
-		Data:       map[string]string{"organization_id":ccc.OrganizationID, "cluster_id":ccc.ClusterID},
+		Data:       map[string]string{
+			"organization_id":ccc.OrganizationID,
+			"cluster_id":ccc.ClusterID,
+			"management_public_host": ccc.ManagementPublicHost,
+			"management_public_port": ccc.ManagementPublicPort,
+		},
 	}
 
 	client := ccc.Client.CoreV1().ConfigMaps(config.Namespace)
@@ -74,7 +81,7 @@ func (ccc * CreateClusterConfig) Run(workflowID string) (*entities.CommandResult
 		return entities.NewCommandResult(
 			false, "cannot create cluster config", derrors.AsError(err, "cannot create configmap")), nil
 	}
-	log.Debug().Interface("created", created).Msg("new service account has been created")
+	log.Debug().Interface("created", created).Msg("new config map has been created")
 	return entities.NewSuccessCommand([]byte("cluster config has been created")), nil
 }
 
