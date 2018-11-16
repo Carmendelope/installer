@@ -18,7 +18,7 @@ const InstallManagementCluster = `
 		{"type":"sync", "name": "logger", "msg": "Checking requirements"},
 		{"type":"sync", "name": "checkRequirements",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-			"minVersion":"1.9"
+			"minVersion":"1.11"
 		},
 		{"type":"sync", "name": "logger", "msg": "Installing components"},
 		{{if $.AppClusterInstall }}
@@ -28,6 +28,10 @@ const InstallManagementCluster = `
 				"cluster_id":"{{$.InstallRequest.ClusterId}}",
 				"management_public_host":"{{$.ManagementClusterHost}}",
 				"management_public_port":"{{$.ManagementClusterPort}}"
+			},
+			{"type":"sync", "name":"updateCoreDNS",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"management_public_host":"{{$.ManagementClusterHost}}"
 			},
 		{{else}}
 			{"type":"sync", "name":"createManagementConfig",

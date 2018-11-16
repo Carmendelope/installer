@@ -25,5 +25,13 @@ var _ = ginkgo.Describe("Templates", func() {
 				gomega.Expect(workflow).ShouldNot(gomega.BeNil())
 			})
 		})
+		ginkgo.Context("installing an application cluster", func(){
+			ginkgo.It("should be able to parse the template", func(){
+				params := workflow.GetTestParameters(numNodes, true)
+				workflow, err := parser.ParseWorkflow("test", InstallManagementCluster, "InstallAppCluster", *params)
+				gomega.Expect(err).To(gomega.Succeed())
+				gomega.Expect(workflow).ShouldNot(gomega.BeNil())
+			})
+		})
 	})
 })

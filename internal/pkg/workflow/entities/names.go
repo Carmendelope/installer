@@ -49,3 +49,5 @@ const CheckRequirements = "checkRequirements"
 const CreateClusterConfig = "createClusterConfig"
 
 const CreateManagementConfig = "createManagementConfig"
+
+const UpadateCoreDNS = "updateCoreDNS"
