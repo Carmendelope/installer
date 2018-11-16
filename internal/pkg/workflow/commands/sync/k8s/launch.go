@@ -121,6 +121,14 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 		return lc.launchClusterRoleBinding(obj.(*rbacv1.ClusterRoleBinding))
 	case *policyv1beta1.PodSecurityPolicy:
 		return lc.launchPodSecurityPolicy(obj.(*policyv1beta1.PodSecurityPolicy))
+	case *v1.PersistentVolume:
+		return lc.launchPersistentVolume(obj.(*v1.PersistentVolume))
+	case *v1.PersistentVolumeClaim:
+		return lc.launchPersistentVolumeClaim(obj.(*v1.PersistentVolumeClaim))
+	case *policyv1beta1.PodDisruptionBudget:
+		return lc.launchPodDisruptionBudget(obj.(*policyv1beta1.PodDisruptionBudget))
+	case *appsv1.StatefulSet:
+		return lc.launchStatefulSet(obj.(*appsv1.StatefulSet))
 	default:
 		log.Warn().Str("type", reflect.TypeOf(o).String()).Msg("Unknown entity")
 		return derrors.NewUnimplementedError("object not supported").WithParams(o)
@@ -271,6 +279,53 @@ func (lc * LaunchComponents) createNamespace(name string) derrors.Error {
 	}
 	return nil
 }
+
+func (lc * LaunchComponents) launchPersistentVolume(pv *v1.PersistentVolume) derrors.Error {
+	client := lc.Client.CoreV1().PersistentVolumes()
+	log.Debug().Interface("pv", pv).Msg("unmarshalled")
+	created, err := client.Create(pv)
+	if err != nil {
+		return derrors.AsError(err, "cannot create persistent volume")
+	}
+	log.Debug().Interface("created", created).Msg("new persistent volume has been created")
+	return nil
+}
+
+func (lc * LaunchComponents) launchPersistentVolumeClaim(pvc *v1.PersistentVolumeClaim) derrors.Error {
+	client := lc.Client.CoreV1().PersistentVolumeClaims(pvc.Namespace)
+	log.Debug().Interface("pvc", pvc).Msg("unmarshalled")
+	created, err := client.Create(pvc)
+	if err != nil {
+		return derrors.AsError(err, "cannot create persistent volume claim")
+	}
+	log.Debug().Interface("created", created).Msg("new persistent volume claim has been created")
+	return nil
+}
+
+func (lc * LaunchComponents) launchPodDisruptionBudget(pdb *policyv1beta1.PodDisruptionBudget) derrors.Error {
+	client := lc.Client.PolicyV1beta1().PodDisruptionBudgets(pdb.Namespace)
+	log.Debug().Interface("pdb", pdb).Msg("unmarshalled")
+	created, err := client.Create(pdb)
+	if err != nil {
+		return derrors.AsError(err, "cannot create pod disruption budget")
+	}
+	log.Debug().Interface("created", created).Msg("new pod disruption budget")
+	return nil
+}
+
+func (lc * LaunchComponents) launchStatefulSet(ss *appsv1.StatefulSet) derrors.Error {
+	client := lc.Client.AppsV1().StatefulSets(ss.Namespace)
+	log.Debug().Interface("pdb", ss).Msg("unmarshalled")
+	created, err := client.Create(ss)
+	if err != nil {
+		return derrors.AsError(err, "cannot create stateful set")
+	}
+	log.Debug().Interface("created", created).Msg("new stateful set")
+	return nil
+}
+
+
+
 
 func (lc * LaunchComponents) String() string {
 	return fmt.Sprintf("SYNC LaunchComponents from %s", lc.ComponentsDir)
