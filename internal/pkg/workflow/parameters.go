@@ -17,7 +17,9 @@ const DefaultManagementPort = "80"
 
 // Parameters required to transform a template into a workflow.
 type Parameters struct {
+	// InstallRequest with the details of the installation to be performed.
 	InstallRequest grpc_installer_go.InstallRequest
+	// Credentials required for the installation of the cluster.
 	Credentials InstallCredentials `json:"credentials"`
 	// Assets to be installed
 	Assets Assets `json:"assets"`
@@ -29,6 +31,8 @@ type Parameters struct {
 	ManagementClusterPort string `json:"management_cluster_port"`
 	//AppClusterInstall indicates if an application cluster is being installed.
 	AppClusterInstall bool `json:"app_cluster_install"`
+	//Registry contains the credentials to access the docker registry to download internal images.
+	Registry RegistryCredentials `json:"registry"`
 }
 
 // TODO Remove assets if not used anymore
@@ -56,6 +60,20 @@ func NewPaths(componentsPath string, binaryPath string, tempPath string) *Paths 
 	return &Paths{componentsPath, binaryPath, tempPath}
 }
 
+type RegistryCredentials struct {
+	//Username to access the docker registry
+	Username string `json:"username"`
+	//Password to access the docker registry
+	Password string `json:"password"`
+}
+
+func NewRegistryCredentials(username string, password string) *RegistryCredentials {
+	return &RegistryCredentials{
+		Username: username,
+		Password: password,
+	}
+}
+
 type InstallCredentials struct {
 	// Username for the SSH credentials.
 	Username string `json:"username"`
@@ -67,7 +85,6 @@ type InstallCredentials struct {
 	RemoveCredentials bool `json:"removeCredentials"`
 }
 
-
 // EmptyParameters structure that can be used whenever no parameters are passed to the parser.
 var EmptyParameters = Parameters{}
 
@@ -78,7 +95,8 @@ func NewParameters(
 	paths Paths,
 	managementClusterHost string,
 	managementClusterPort string,
-	appClusterInstall bool) *Parameters {
+	appClusterInstall bool,
+	registryCredentials RegistryCredentials) *Parameters {
 	return &Parameters{
 		request,
 		InstallCredentials{},
@@ -86,6 +104,7 @@ func NewParameters(
 		paths,
 		managementClusterHost, managementClusterPort,
 		appClusterInstall,
+		registryCredentials,
 	}
 }
 
@@ -117,7 +136,7 @@ func (p *Parameters) Validate() derrors.Error {
 }
 
 // writeTempFile writes a content to a temporal file
-func (p * Parameters) writeTempFile(content string, prefix string) (*string, derrors.Error) {
+func (p *Parameters) writeTempFile(content string, prefix string) (*string, derrors.Error) {
 	tmpfile, err := ioutil.TempFile(p.Paths.TempPath, prefix)
 	if err != nil {
 		return nil, derrors.AsError(err, "cannot create temporal file")
@@ -134,7 +153,7 @@ func (p * Parameters) writeTempFile(content string, prefix string) (*string, der
 	return &tmpName, nil
 }
 
-func (p * Parameters) LoadCredentials() derrors.Error {
+func (p *Parameters) LoadCredentials() derrors.Error {
 
 	p.Credentials.Username = p.InstallRequest.Username
 
@@ -156,5 +175,3 @@ func (p * Parameters) LoadCredentials() derrors.Error {
 
 	return nil
 }
-
-

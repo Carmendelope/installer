@@ -56,5 +56,10 @@ func init() {
 	runCmd.PersistentFlags().StringVar(&config.TempPath, "tempPath", "./temp/",
 		"Directory to store temporal files")
 
+	runCmd.PersistentFlags().StringVar(&config.DockerRegistryUsername, "dockerUsername", "",
+		"Username to download internal images from the docker repository")
+	runCmd.PersistentFlags().StringVar(&config.DockerRegistryPassword, "dockerPassword", "",
+		"Password to download internal images from the docker repository")
+
 	rootCmd.AddCommand(runCmd)
 }

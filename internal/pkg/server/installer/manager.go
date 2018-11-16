@@ -16,26 +16,26 @@ import (
 
 type Manager struct {
 	sync.Mutex
-	Config config.Config
-	Paths workflow.Paths
+	Config      config.Config
+	Paths       workflow.Paths
 	ExecHandler workflow.ExecutorHandler
-	Parser * workflow.Parser
-	Requests map[string]grpc_installer_go.InstallRequest
-	Status map[string]*InstallStatus
+	Parser      *workflow.Parser
+	Requests    map[string]grpc_installer_go.InstallRequest
+	Status      map[string]*InstallStatus
 }
 
 func NewManager(config config.Config) Manager {
 	return Manager{
-		Config: config,
-		Paths: *workflow.NewPaths(config.ComponentsPath, config.BinaryPath, config.TempPath),
+		Config:      config,
+		Paths:       *workflow.NewPaths(config.ComponentsPath, config.BinaryPath, config.TempPath),
 		ExecHandler: workflow.GetExecutorHandler(),
-		Parser: workflow.NewParser(),
-		Requests: make(map[string]grpc_installer_go.InstallRequest, 0),
-		Status: make(map[string]*InstallStatus, 0),
+		Parser:      workflow.NewParser(),
+		Requests:    make(map[string]grpc_installer_go.InstallRequest, 0),
+		Status:      make(map[string]*InstallStatus, 0),
 	}
 }
 
-func (m * Manager) unsafeExist(installID string) bool {
+func (m *Manager) unsafeExist(installID string) bool {
 	_, exists := m.Status[installID]
 	return exists
 }
@@ -45,10 +45,10 @@ func (m *Manager) unsafeRegister(installRequest grpc_installer_go.InstallRequest
 	m.Status[installRequest.InstallId] = NewInstallStatus(installRequest.InstallId)
 }
 
-func (m * Manager) InstallCluster(installRequest grpc_installer_go.InstallRequest) (* InstallStatus, derrors.Error) {
-	var result * InstallStatus
+func (m *Manager) InstallCluster(installRequest grpc_installer_go.InstallRequest) (*InstallStatus, derrors.Error) {
+	var result *InstallStatus
 	m.Lock()
-	if m.unsafeExist(installRequest.InstallId){
+	if m.unsafeExist(installRequest.InstallId) {
 		m.Unlock()
 		return nil, derrors.NewAlreadyExistsError("installID").WithParams(installRequest.InstallId)
 	}
@@ -60,7 +60,7 @@ func (m * Manager) InstallCluster(installRequest grpc_installer_go.InstallReques
 	return result, nil
 }
 
-func (m * Manager) markInstallAsFailed(installID string, error derrors.Error){
+func (m *Manager) markInstallAsFailed(installID string, error derrors.Error) {
 	m.Lock()
 	status, _ := m.Status[installID]
 	status.UpdateError(error)
@@ -68,7 +68,7 @@ func (m * Manager) markInstallAsFailed(installID string, error derrors.Error){
 	m.Unlock()
 }
 
-func (m * Manager) launchInstall(installID string) {
+func (m *Manager) launchInstall(installID string) {
 	m.Lock()
 	request, exitsRequest := m.Requests[installID]
 	status, existStatus := m.Status[installID]
@@ -79,10 +79,12 @@ func (m * Manager) launchInstall(installID string) {
 		return
 	}
 
+	registryCredentials := workflow.NewRegistryCredentials(
+		m.Config.DockerRegistryUsername, m.Config.DockerRegistryPassword)
 	// Create Parameters
 	params := workflow.NewParameters(
 		request, workflow.Assets{}, m.Paths,
-		m.Config.ManagementClusterHost, m.Config.ManagementClusterPort, true)
+		m.Config.ManagementClusterHost, m.Config.ManagementClusterPort, true, *registryCredentials)
 	status.Params = params
 	err := status.Params.LoadCredentials()
 	if err != nil {
@@ -113,10 +115,10 @@ func (m * Manager) launchInstall(installID string) {
 	exec.Exec()
 }
 
-func (m * Manager) GetProgress(installID string) (* InstallStatus, derrors.Error) {
+func (m *Manager) GetProgress(installID string) (*InstallStatus, derrors.Error) {
 	m.Lock()
 	defer m.Unlock()
-	if ! m.unsafeExist(installID) {
+	if !m.unsafeExist(installID) {
 		return nil, derrors.NewNotFoundError("installID").WithParams(installID)
 	}
 	status, _ := m.Status[installID]
@@ -124,7 +126,7 @@ func (m * Manager) GetProgress(installID string) (* InstallStatus, derrors.Error
 	return status.Clone(), nil
 }
 
-func (m * Manager) WorkflowCallback(
+func (m *Manager) WorkflowCallback(
 	workflowID string,
 	error derrors.Error,
 	state workflow.WorkflowState) {
@@ -141,7 +143,7 @@ func (m * Manager) WorkflowCallback(
 	}
 	status.UpdateWorkflowState(state)
 	switch state {
-	case workflow.InitState :
+	case workflow.InitState:
 		log.Warn().Msg("Not expecting init update")
 		return
 	case workflow.RegisteredState:
@@ -160,12 +162,12 @@ func (m * Manager) WorkflowCallback(
 	}
 }
 
-func (m * Manager) logListener(msg string) {
+func (m *Manager) logListener(msg string) {
 	// TODO store the information on the install status
 	log.Info().Msg(msg)
 }
 
-func (m * Manager) RemoveInstall(installID string) derrors.Error {
+func (m *Manager) RemoveInstall(installID string) derrors.Error {
 	m.Lock()
 	_, exitsRequest := m.Requests[installID]
 	if exitsRequest {

@@ -18,8 +18,8 @@ import (
 
 type CreateClusterConfig struct {
 	Kubernetes
-	OrganizationID string `json:"organization_id"`
-	ClusterID string `json:"cluster_id"`
+	OrganizationID       string `json:"organization_id"`
+	ClusterID            string `json:"cluster_id"`
 	ManagementPublicHost string `json:"management_public_host"`
 	ManagementPublicPort string `json:"management_public_port"`
 }
@@ -27,14 +27,14 @@ type CreateClusterConfig struct {
 func NewCreateClusterConfig(
 	kubeConfigPath string,
 	organizationID string, clusterID string,
-	managementPublicHost string, managementPublicPort string) * CreateClusterConfig {
+	managementPublicHost string, managementPublicPort string) *CreateClusterConfig {
 	return &CreateClusterConfig{
-		Kubernetes:    Kubernetes{
+		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateClusterConfig),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		OrganizationID: organizationID,
-		ClusterID: clusterID,
+		OrganizationID:       organizationID,
+		ClusterID:            clusterID,
 		ManagementPublicHost: managementPublicHost,
 		ManagementPublicPort: managementPublicPort,
 	}
@@ -50,30 +50,30 @@ func NewCreateClusterConfigFromJSON(raw []byte) (*entities.Command, derrors.Erro
 	return &r, nil
 }
 
-func (ccc * CreateClusterConfig) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
+func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 	connectErr := ccc.Connect()
 	if connectErr != nil {
 		return nil, connectErr
 	}
 
 	cErr := ccc.createNamespacesIfNotExist("nalej")
-	if cErr != nil{
+	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}
 
 	config := &v1.ConfigMap{
-		TypeMeta:   v12.TypeMeta{
+		TypeMeta: v12.TypeMeta{
 			Kind:       "ConfigMap",
 			APIVersion: "v1",
 		},
 		ObjectMeta: v12.ObjectMeta{
-			Name:                       "cluster-config",
-			Namespace:                  "nalej",
-			Labels:          map[string]string{"cluster":"application"},
+			Name:      "cluster-config",
+			Namespace: "nalej",
+			Labels:    map[string]string{"cluster": "application"},
 		},
-		Data:       map[string]string{
-			"organization_id":ccc.OrganizationID,
-			"cluster_id":ccc.ClusterID,
+		Data: map[string]string{
+			"organization_id":        ccc.OrganizationID,
+			"cluster_id":             ccc.ClusterID,
 			"management_public_host": ccc.ManagementPublicHost,
 			"management_public_port": ccc.ManagementPublicPort,
 		},
@@ -90,14 +90,14 @@ func (ccc * CreateClusterConfig) Run(workflowID string) (*entities.CommandResult
 	return entities.NewSuccessCommand([]byte("cluster config has been created")), nil
 }
 
-func (ccc * CreateClusterConfig) String() string {
+func (ccc *CreateClusterConfig) String() string {
 	return fmt.Sprintf("SYNC CreateClusterConfig organizationID: %s, clusterID: %s", ccc.OrganizationID, ccc.ClusterID)
 }
 
-func (ccc * CreateClusterConfig) PrettyPrint(indentation int) string {
+func (ccc *CreateClusterConfig) PrettyPrint(indentation int) string {
 	return strings.Repeat(" ", indentation) + ccc.String()
 }
 
-func (ccc * CreateClusterConfig) UserString() string {
+func (ccc *CreateClusterConfig) UserString() string {
 	return fmt.Sprintf("Creating cluster config for %s", ccc.ClusterID)
 }

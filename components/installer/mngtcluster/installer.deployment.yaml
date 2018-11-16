@@ -44,6 +44,16 @@ spec:
             configMapKeyRef:
               name: management-config
               key: public_port
+        - name: DOCKER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: docker-credentials
+              key: username
+        - name: DOCKER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: docker-credentials
+              key: password
         args:
           - "run"
           - "--debug"
@@ -52,6 +62,8 @@ spec:
           - "--componentsPath=/nalej/assets/"
           - "--binaryPath=/nalej/bin/"
           - "--tempPath=/tmp/nalej/"
+          - "--dockerUsername=$(DOCKER_USERNAME)"
+          - "--dockerPassword=$(DOCKER_PASSWORD)"
         securityContext:
           runAsUser: 2000
       volumes:

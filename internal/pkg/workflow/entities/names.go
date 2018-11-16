@@ -51,3 +51,7 @@ const CreateClusterConfig = "createClusterConfig"
 const CreateManagementConfig = "createManagementConfig"
 
 const UpadateCoreDNS = "updateCoreDNS"
+
+const CreateCredentials = "createCredentials"
+
+const CreateAuthxSecret = "createAuthxSecret"

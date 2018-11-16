@@ -95,3 +95,5 @@ The following table contains the variables that activate the integration tests
 | IT_RKE_BINARY | /Users/<yourUser>/Downloads/rke_darwin-amd64 | Path of the RKE binary |
 | IT_RKE_TARGET_NODES | 172.28.128.3 | List of nodes to be installed |
 | IT_K8S_KUBECONFIG | /Users/daniel/.kube/config| KubeConfig for the minikube credentials |
+| IT_REGISTRY_USERNAME | <k8s_service_account_login.user_id> | Username to access the nalej repository. Use terraform output to obtain the value |
+| IT_REGISTRY_PASSWORD | <k8s_service_account_login.password> | Password to access the nalej repository. Use terraform output to obtain the value |

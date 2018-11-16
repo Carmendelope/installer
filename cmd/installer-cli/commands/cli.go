@@ -28,6 +28,9 @@ var binaryPath string
 var confPath string
 var tempPath string
 
+var dockerRegistryUsername string
+var dockerRegistryPassword string
+
 var cliCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install the Nalej platform",
@@ -64,6 +67,11 @@ func init() {
 		"Directory with the configuration files")
 	cliCmd.PersistentFlags().StringVar(&tempPath, "tempPath", "./temp/",
 		"Directory to store temporal files")
+
+	cliCmd.PersistentFlags().StringVar(&dockerRegistryUsername, "dockerUsername", "",
+		"Username to download internal images from the docker repository. Alternatively you may use DOCKER_USER")
+	cliCmd.PersistentFlags().StringVar(&dockerRegistryPassword, "dockerPassword", "",
+		"Password to download internal images from the docker repository. Alternatively you may use DOCKER_PASSWORD")
 
 	rootCmd.AddCommand(cliCmd)
 }

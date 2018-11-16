@@ -9,6 +9,7 @@ import (
 	"github.com/nalej/installer/cmd/installer-cli/commands/installer"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"os"
 	"strings"
 )
 
@@ -24,6 +25,30 @@ var managementClusterCmd = &cobra.Command{
 
 func init() {
 	cliCmd.AddCommand(managementClusterCmd)
+}
+
+func getDockerUsername() string {
+	if dockerRegistryUsername != "" {
+		return dockerRegistryUsername
+	}
+	fromEnv := os.Getenv("DOCKER_USER")
+	if fromEnv != "" {
+		return fromEnv
+	}
+	log.Fatal().Msg("docker username must be set either by parameter or as env variable")
+	return ""
+}
+
+func getDockerPassword() string {
+	if dockerRegistryPassword != "" {
+		return dockerRegistryPassword
+	}
+	fromEnv := os.Getenv("DOCKER_PASSWORD")
+	if fromEnv != "" {
+		return fromEnv
+	}
+	log.Fatal().Msg("docker password must be set either by parameter or as env variable")
+	return ""
 }
 
 func LaunchManagementInstall() {
@@ -45,7 +70,8 @@ func LaunchManagementInstall() {
 		strings.Split(nodes, ","),
 		*paths,
 		managementPublicHost,
-		false)
+		false,
+		getDockerUsername(), getDockerPassword())
 
 	if err != nil {
 		log.Panic().Str("error", err.DebugReport()).Msg("cannot generate installer")
@@ -55,10 +81,8 @@ func LaunchManagementInstall() {
 
 	if explainPlan {
 		fmt.Println(inst.Workflow.PrettyPrint())
-	}else{
+	} else {
 		inst.Run()
 	}
 
-
 }
-
