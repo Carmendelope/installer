@@ -16,7 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var _ = ginkgo.Describe("A create cluster config command", func(){
+var _ = ginkgo.Describe("An update CoreDNS config command", func(){
 
 	if ! utils.RunIntegrationTests() {
 		log.Warn().Msg("Integration tests are skipped")
@@ -27,11 +27,11 @@ var _ = ginkgo.Describe("A create cluster config command", func(){
 		ginkgo.Fail("missing environment variables")
 	}
 
-	ginkgo.It("should be able to create the config map", func(){
-	    ccc := NewCreateClusterConfig(itKubeConfigFile, "testOrg", "testCluster", "managementPublicHost", "managementPublicPort")
-	    result, err := ccc.Run("createClusterConfig")
-	    gomega.Expect(err).To(gomega.Succeed())
-	    gomega.Expect(result.Success).Should(gomega.BeTrue())
+	ginkgo.It("should be able to update the config map", func(){
+		uc := NewUpdateCoreDNS(itKubeConfigFile, "managementPublicHost")
+		result, err := uc.Run("updateCoreDNS")
+		gomega.Expect(err).To(gomega.Succeed())
+		gomega.Expect(result.Success).Should(gomega.BeTrue())
 	})
 
 })

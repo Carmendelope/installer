@@ -24,7 +24,10 @@ type CreateClusterConfig struct {
 	ManagementPublicPort string `json:"management_public_port"`
 }
 
-func NewCreateClusterConfig(kubeConfigPath string, organizationID string, clusterID string) * CreateClusterConfig {
+func NewCreateClusterConfig(
+	kubeConfigPath string,
+	organizationID string, clusterID string,
+	managementPublicHost string, managementPublicPort string) * CreateClusterConfig {
 	return &CreateClusterConfig{
 		Kubernetes:    Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateClusterConfig),
@@ -32,6 +35,8 @@ func NewCreateClusterConfig(kubeConfigPath string, organizationID string, cluste
 		},
 		OrganizationID: organizationID,
 		ClusterID: clusterID,
+		ManagementPublicHost: managementPublicHost,
+		ManagementPublicPort: managementPublicPort,
 	}
 }
 
