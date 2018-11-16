@@ -37,9 +37,16 @@ const InstallManagementCluster = `
 			{"type":"sync", "name":"createManagementConfig",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"public_host":"{{$.ManagementClusterHost}}",
-				"public_port":"{{$.ManagementClusterHost}}"
+				"public_port":"{{$.ManagementClusterHost}}",
+				"docker_username":"{{$.Registry.Username}}",
+				"docker_password":"{{$.Registry.Password}}"
 			},
 		{{end}}
+		{"type":"sync", "name":"createCredentials",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"username":"{{$.Registry.Username}}",
+				"password":"{{$.Registry.Password}}"
+		},
 		{"type":"sync", "name": "launchComponents",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespaces":["nalej", "ingress-nginx"],

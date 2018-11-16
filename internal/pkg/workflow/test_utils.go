@@ -42,13 +42,20 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		nodes = append(nodes, toAdd)
 	}
 	request := grpc_installer_go.InstallRequest{
-		InstallId: "TestInstall",
-		ClusterId: "TestCluster",
+		InstallId:     "TestInstall",
+		ClusterId:     "TestCluster",
 		KubeConfigRaw: "KubeConfigContent",
-		Nodes: nodes,
+		Nodes:         nodes,
 	}
 
 	assets := NewAssets(make([]string, 0), make([]string, 0))
 	paths := NewPaths("assestPath", "binPath", "confPath")
-	return NewParameters(request, *assets, *paths, "mngtcluster_host", "80", appClusterInstall)
+	registryCredentials := NewRegistryCredentials("dockerUsername", "dockerPassword")
+	return NewParameters(
+		request,
+		*assets,
+		*paths,
+		"mngtcluster_host", "80",
+		appClusterInstall,
+		*registryCredentials)
 }

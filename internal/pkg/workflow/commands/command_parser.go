@@ -89,6 +89,8 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return k8s.NewCreateManagementConfigFromJSON(raw)
 	case entities.UpadateCoreDNS:
 		return k8s.NewUpdateCoreDNSFromJSON(raw)
+	case entities.CreateCredentials:
+		return k8s.NewCreateCredentialsJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}

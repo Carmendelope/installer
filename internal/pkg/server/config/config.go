@@ -10,6 +10,7 @@ import (
 	"github.com/nalej/installer/version"
 	"github.com/rs/zerolog/log"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -20,6 +21,8 @@ type Config struct {
 	TempPath string
 	ManagementClusterHost string
 	ManagementClusterPort string
+	DockerRegistryUsername string
+	DockerRegistryPassword string
 }
 
 func NewConfiguration(
@@ -73,6 +76,9 @@ func (conf * Config) Validate() derrors.Error {
 	if conf.ManagementClusterPort == "" {
 		return derrors.NewInvalidArgumentError("managementClusterPort")
 	}
+	if conf.DockerRegistryUsername == "" || conf.DockerRegistryPassword == "" {
+		return derrors.NewInvalidArgumentError("docker credentials must be set")
+	}
 
 	return nil
 }
@@ -83,5 +89,8 @@ func (conf *Config) Print() {
 	log.Info().Str("path", conf.ComponentsPath).Msg("Components")
 	log.Info().Str("path", conf.BinaryPath).Msg("Binaries")
 	log.Info().Str("path", conf.TempPath).Msg("Temporal files")
-	log.Info().Str("host", conf.ManagementClusterHost).Str("port", conf.ManagementClusterPort).Msg("Management cluster")
+	log.Info().Str("host", conf.ManagementClusterHost).
+		Str("port", conf.ManagementClusterPort).Msg("Management cluster")
+	log.Info().Str("username", conf.DockerRegistryUsername).
+		Str("password", strings.Repeat("*", len(conf.DockerRegistryPassword))).Msg("Docker registry")
 }

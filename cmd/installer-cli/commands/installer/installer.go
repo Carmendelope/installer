@@ -17,8 +17,8 @@ import (
 )
 
 type Installer struct {
-	Params workflow.Parameters
-	Workflow * workflow.Workflow
+	Params   workflow.Parameters
+	Workflow *workflow.Workflow
 }
 
 func NewInstallerFromCLI(
@@ -31,47 +31,51 @@ func NewInstallerFromCLI(
 	paths workflow.Paths,
 	managementClusterHost string,
 	appClusterInstall bool,
-	) (* Installer, derrors.Error){
+	dockerUsername string,
+	dockerPassword string,
+) (*Installer, derrors.Error) {
 
-		kubeConfigContent, err := utils.GetKubeConfigContent(kubeConfigPath)
-		if err != nil {
-		    return nil, err
-		}
+	kubeConfigContent, err := utils.GetKubeConfigContent(kubeConfigPath)
+	if err != nil {
+		return nil, err
+	}
 
-		privateKeyContent, err := utils.GetPrivateKeyContent(privateKeyPath)
-		if err != nil {
-		    return nil, err
-		}
+	privateKeyContent, err := utils.GetPrivateKeyContent(privateKeyPath)
+	if err != nil {
+		return nil, err
+	}
 
-		request := grpc_installer_go.InstallRequest{
-			InstallId:            installId,
-			OrganizationId:       "nalej",
-			ClusterId:            "nalej-management-cluster",
-			ClusterType:          grpc_infrastructure_go.ClusterType_KUBERNETES,
-			InstallBaseSystem: installK8s,
-			KubeConfigRaw:           kubeConfigContent,
-			Username : username,
-			PrivateKey:           privateKeyContent,
-			Nodes:                nodes,
-		}
+	request := grpc_installer_go.InstallRequest{
+		InstallId:         installId,
+		OrganizationId:    "nalej",
+		ClusterId:         "nalej-management-cluster",
+		ClusterType:       grpc_infrastructure_go.ClusterType_KUBERNETES,
+		InstallBaseSystem: installK8s,
+		KubeConfigRaw:     kubeConfigContent,
+		Username:          username,
+		PrivateKey:        privateKeyContent,
+		Nodes:             nodes,
+	}
+
+	registryCredentials := workflow.NewRegistryCredentials(dockerUsername, dockerPassword)
 
 	params := workflow.NewParameters(request, workflow.Assets{},
-		paths, managementClusterHost, workflow.DefaultManagementPort, appClusterInstall)
+		paths, managementClusterHost, workflow.DefaultManagementPort, appClusterInstall, *registryCredentials)
 	return NewInstaller(*params), nil
 }
 
-func NewInstaller(params workflow.Parameters) * Installer {
+func NewInstaller(params workflow.Parameters) *Installer {
 	return &Installer{
 		Params: params,
 	}
 }
 
-func (i * Installer) logListener(msg string) {
+func (i *Installer) logListener(msg string) {
 	log.Info().Msg(msg)
 }
 
 // Load all the credentials and associated workflow into the installer.
-func (i * Installer) Load() {
+func (i *Installer) Load() {
 	i.exitOnError(i.Params.LoadCredentials())
 	i.exitOnError(i.Params.Validate())
 	p := workflow.NewParser()
@@ -80,14 +84,14 @@ func (i * Installer) Load() {
 	i.Workflow = workflow
 }
 
-func (i * Installer) exitOnError(err derrors.Error) {
+func (i *Installer) exitOnError(err derrors.Error) {
 	if err != nil {
 		log.Panic().Str("error", err.DebugReport()).Msg("installation exit with error")
 	}
 }
 
 // Run the install process.
-func (i * Installer) Run() {
+func (i *Installer) Run() {
 	i.Load()
 	wr := &workflow.WorkflowResult{}
 	execHandler := workflow.GetExecutorHandler()

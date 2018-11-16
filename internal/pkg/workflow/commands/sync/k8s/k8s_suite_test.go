@@ -18,6 +18,8 @@ const itNalejNamespace = "nalej"
 var itComponentsDir string
 var itKubeConfigFile = os.Getenv("IT_K8S_KUBECONFIG")
 var itTargetNamespaces = []string {itAuxNamespace, itNalejNamespace}
+var itRegistryUsername = os.Getenv("IT_REGISTRY_USERNAME")
+var itRegistryPassword = os.Getenv("IT_REGISTRY_PASSWORD")
 
 func TestK8sPackage(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
