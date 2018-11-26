@@ -11,6 +11,7 @@ import (
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 	"github.com/rs/zerolog/log"
+	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"path"
 	"reflect"
@@ -129,6 +130,8 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 		return lc.launchPodDisruptionBudget(obj.(*policyv1beta1.PodDisruptionBudget))
 	case *appsv1.StatefulSet:
 		return lc.launchStatefulSet(obj.(*appsv1.StatefulSet))
+	case *v1beta1.Ingress:
+		return lc.launchIngress(obj.(*v1beta1.Ingress))
 	default:
 		log.Warn().Str("type", reflect.TypeOf(o).String()).Msg("Unknown entity")
 		return derrors.NewUnimplementedError("object not supported").WithParams(o)
@@ -324,8 +327,16 @@ func (lc * LaunchComponents) launchStatefulSet(ss *appsv1.StatefulSet) derrors.E
 	return nil
 }
 
-
-
+func (lc * LaunchComponents) launchIngress(ingress *v1beta1.Ingress) derrors.Error {
+	client := lc.Client.ExtensionsV1beta1().Ingresses(ingress.Namespace)
+	log.Debug().Interface("ingress", ingress).Msg("unmarshalled")
+	created, err := client.Create(ingress)
+	if err != nil {
+		return derrors.AsError(err, "cannot create ingress")
+	}
+	log.Debug().Interface("created", created).Msg("new ingress set")
+	return nil
+}
 
 func (lc * LaunchComponents) String() string {
 	return fmt.Sprintf("SYNC LaunchComponents from %s", lc.ComponentsDir)
