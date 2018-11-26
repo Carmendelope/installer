@@ -6,6 +6,7 @@ package k8s
 
 import (
 	"github.com/nalej/derrors"
+	"github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -215,3 +216,42 @@ func (tu * TestK8sUtils) CreateNamespace(name string) derrors.Error {
 	}
 	return nil
 }
+
+type TestChecker struct {
+	KubeConfigPath string `json:"kubeConfig"`
+	Client * kubernetes.Clientset `json:"-"`
+}
+
+func NewTestChecker(kubeConfigPath string) * TestChecker {
+	return &TestChecker{
+		KubeConfigPath: kubeConfigPath,
+	}
+}
+
+func (tc * TestChecker) Connect() derrors.Error {
+
+	config, err := clientcmd.BuildConfigFromFlags("", tc.KubeConfigPath)
+	if err != nil {
+		log.Error().Err(err).Msg("error building configuration from kubeconfig")
+		return derrors.AsError(err, "error building configuration from kubeconfig")
+	}
+
+	// create the clientset
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Error().Err(err).Msg("error using configuration to build k8s clientset")
+		return derrors.AsError(err,"error using configuration to build k8s clientset")
+	}
+
+	tc.Client = clientset
+	return nil
+}
+
+func (tc * TestChecker) GetSecret(secretName string, namespace string) *v1.Secret {
+	sc := tc.Client.CoreV1().Secrets(namespace)
+	opts := metaV1.GetOptions{}
+	found, err := sc.Get(secretName, opts)
+	gomega.Expect(err).To(gomega.Succeed())
+	return found
+}
+

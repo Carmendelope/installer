@@ -7,6 +7,10 @@
     version="v0.0.2"
 
 [[constraint]]
+    name="github.com/nalej/grpc-user-manager-go"
+    version="v0.0.12"
+
+[[constraint]]
     name="github.com/rs/zerolog"
     version="v1.8.0"
 
@@ -29,7 +33,6 @@
 [[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "v2.2.1"
-
 
 [[constraint]]
     name="k8s.io/client-go"
