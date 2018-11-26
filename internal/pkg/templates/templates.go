@@ -33,6 +33,12 @@ const InstallManagementCluster = `
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"management_public_host":"{{$.ManagementClusterHost}}"
 			},
+			{"type":"sync", "name":"addClusterUser",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"organization_id":"{{$.InstallRequest.OrganizationId}}",
+				"cluster_id":"{{$.InstallRequest.ClusterId}}",
+				"user_manager_address":"user-manager.nalej:8920"
+			},
 		{{else}}
 			{"type":"sync", "name":"createManagementConfig",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",

@@ -55,3 +55,5 @@ const UpadateCoreDNS = "updateCoreDNS"
 const CreateCredentials = "createCredentials"
 
 const CreateAuthxSecret = "createAuthxSecret"
+
+const AddClusterUser = "addClusterUser"
