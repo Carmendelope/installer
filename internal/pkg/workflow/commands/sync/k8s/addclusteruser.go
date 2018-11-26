@@ -45,7 +45,7 @@ func NewAddClusterUser(kubeConfigPath string, organizationID string, clusterID s
 
 // NewAddClusterUserFromJSON creates an AddClusterUser command from a JSON object.
 func NewAddClusterUserFromJSON(raw []byte) (*entities.Command, derrors.Error) {
-	lc := &LaunchComponents{}
+	lc := &AddClusterUser{}
 	if err := json.Unmarshal(raw, &lc); err != nil {
 		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 	}
