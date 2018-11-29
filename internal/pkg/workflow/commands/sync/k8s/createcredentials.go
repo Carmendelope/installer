@@ -28,7 +28,7 @@ type CreateCredentials struct {
 func NewCreateCredentials(kubeConfigPath string, username string, password string) *CreateCredentials {
 	return &CreateCredentials{
 		Kubernetes: Kubernetes{
-			GenericSyncCommand: *entities.NewSyncCommand(entities.UpadateCoreDNS),
+			GenericSyncCommand: *entities.NewSyncCommand(entities.UpdateCoreDNS),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		Username: username,

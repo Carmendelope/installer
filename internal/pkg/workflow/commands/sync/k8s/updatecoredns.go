@@ -49,7 +49,7 @@ type UpdateCoreDNS struct {
 func NewUpdateCoreDNS(kubeConfigPath string, managementPublicHost string) * UpdateCoreDNS {
 	return &UpdateCoreDNS{
 		Kubernetes:    Kubernetes{
-			GenericSyncCommand: *entities.NewSyncCommand(entities.UpadateCoreDNS),
+			GenericSyncCommand: *entities.NewSyncCommand(entities.UpdateCoreDNS),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		ManagementPublicHost: managementPublicHost,

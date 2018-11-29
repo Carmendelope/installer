@@ -107,13 +107,13 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 	case *appsv1.DaemonSet:
 		return lc.launchDaemonSet(obj.(*appsv1.DaemonSet))
 	case *v1.Service:
-		return lc.launchService(obj.(*v1.Service))
+		return lc.createService(obj.(*v1.Service))
 	case *v1.Secret:
 		return lc.launchSecret(obj.(*v1.Secret))
 	case *v1.ServiceAccount:
 		return lc.launchServiceAccount(obj.(*v1.ServiceAccount))
 	case *v1.ConfigMap:
-		return lc.launchConfigMap(obj.(*v1.ConfigMap))
+		return lc.createConfigMap(obj.(*v1.ConfigMap))
 	case *rbacv1.RoleBinding:
 		return lc.launchRoleBinding(obj.(*rbacv1.RoleBinding))
 	case *rbacv1.ClusterRole:
@@ -162,27 +162,7 @@ func (lc * LaunchComponents) launchDaemonSet(daemonSet *appsv1.DaemonSet) derror
 	return nil
 }
 
-func (lc * LaunchComponents) launchService(service *v1.Service) derrors.Error {
-	serviceClient := lc.Client.CoreV1().Services(service.Namespace)
-	log.Debug().Interface("service", service).Msg("unmarshalled")
-	created, err := serviceClient.Create(service)
-	if err != nil {
-		return derrors.AsError(err, "cannot create service")
-	}
-	log.Debug().Interface("created", created).Msg("new service has been created")
-	return nil
-}
 
-func (lc * LaunchComponents) launchConfigMap(configMap *v1.ConfigMap) derrors.Error {
-	cfClient := lc.Client.CoreV1().ConfigMaps(configMap.Namespace)
-	log.Debug().Interface("configMap", configMap).Msg("unmarshalled")
-	created, err := cfClient.Create(configMap)
-	if err != nil {
-		return derrors.AsError(err, "cannot create config map")
-	}
-	log.Debug().Interface("created", created).Msg("new config map has been created")
-	return nil
-}
 
 func (lc * LaunchComponents) launchServiceAccount(serviceAccount *v1.ServiceAccount) derrors.Error {
 	client := lc.Client.CoreV1().ServiceAccounts(serviceAccount.Namespace)

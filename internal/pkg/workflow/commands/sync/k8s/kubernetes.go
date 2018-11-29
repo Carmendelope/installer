@@ -9,6 +9,7 @@ import (
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -88,5 +89,38 @@ func (k *Kubernetes) createNamespacesIfNotExist(name string) derrors.Error {
 	} else {
 		log.Debug().Str("namespace", name).Msg("namespace already exists")
 	}
+	return nil
+}
+
+func (k *Kubernetes) createService(service *v1.Service) derrors.Error {
+	serviceClient := k.Client.CoreV1().Services(service.Namespace)
+	log.Debug().Interface("service", service).Msg("unmarshalled")
+	created, err := serviceClient.Create(service)
+	if err != nil {
+		return derrors.AsError(err, "cannot create service")
+	}
+	log.Debug().Interface("created", created).Msg("new service has been created")
+	return nil
+}
+
+func (k *Kubernetes) createConfigMap(configMap *v1.ConfigMap) derrors.Error {
+	cfClient := k.Client.CoreV1().ConfigMaps(configMap.Namespace)
+	log.Debug().Interface("configMap", configMap).Msg("unmarshalled")
+	created, err := cfClient.Create(configMap)
+	if err != nil {
+		return derrors.AsError(err, "cannot create config map")
+	}
+	log.Debug().Interface("created", created).Msg("new config map has been created")
+	return nil
+}
+
+func (k *Kubernetes) createIngress(ingress *v1beta1.Ingress) derrors.Error {
+	client := k.Client.ExtensionsV1beta1().Ingresses(ingress.Namespace)
+	log.Debug().Interface("ingress", ingress).Msg("unmarshalled")
+	created, err := client.Create(ingress)
+	if err != nil {
+		return derrors.AsError(err, "cannot create ingress")
+	}
+	log.Debug().Interface("created", created).Msg("new ingress set")
 	return nil
 }
