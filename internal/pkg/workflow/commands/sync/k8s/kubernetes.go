@@ -11,6 +11,8 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	batchV1 "k8s.io/api/batch/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -122,5 +124,27 @@ func (k *Kubernetes) createIngress(ingress *v1beta1.Ingress) derrors.Error {
 		return derrors.AsError(err, "cannot create ingress")
 	}
 	log.Debug().Interface("created", created).Msg("new ingress set")
+	return nil
+}
+
+func (k *Kubernetes) createDeployment(deployment *appsv1.Deployment) derrors.Error {
+	deploymentClient := k.Client.AppsV1().Deployments(deployment.Namespace)
+	log.Debug().Interface("deployment", deployment).Msg("unmarshalled")
+	created, err := deploymentClient.Create(deployment)
+	if err != nil {
+		return derrors.AsError(err, "cannot create deployment")
+	}
+	log.Debug().Interface("created", created).Msg("new deployment has been created")
+	return nil
+}
+
+func (k *Kubernetes) createJob(job *batchV1.Job) derrors.Error {
+	client := k.Client.BatchV1().Jobs(job.Namespace)
+	log.Debug().Interface("job", job).Msg("unmarshalled")
+	created, err := client.Create(job)
+	if err != nil {
+		return derrors.AsError(err, "cannot create job")
+	}
+	log.Debug().Interface("created", created).Msg("new job has been created")
 	return nil
 }

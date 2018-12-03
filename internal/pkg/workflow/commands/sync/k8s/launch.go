@@ -18,6 +18,7 @@ import (
 
 	"io/ioutil"
 	appsv1 "k8s.io/api/apps/v1"
+	batchV1 "k8s.io/api/batch/v1"
 	"k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -102,8 +103,10 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 	}
 
 	switch o := obj.(type) {
+	case *batchV1.Job:
+		return lc.createJob(obj.(*batchV1.Job))
 	case *appsv1.Deployment:
-		return lc.launchDeployment(obj.(*appsv1.Deployment))
+		return lc.createDeployment(obj.(*appsv1.Deployment))
 	case *appsv1.DaemonSet:
 		return lc.launchDaemonSet(obj.(*appsv1.DaemonSet))
 	case *v1.Service:
@@ -140,16 +143,7 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 	return derrors.NewInternalError("no case was executed")
 }
 
-func (lc * LaunchComponents) launchDeployment(deployment *appsv1.Deployment) derrors.Error {
-	deploymentClient := lc.Client.AppsV1().Deployments(deployment.Namespace)
-	log.Debug().Interface("deployment", deployment).Msg("unmarshalled")
-	created, err := deploymentClient.Create(deployment)
-	if err != nil {
-		return derrors.AsError(err, "cannot create deployment")
-	}
-	log.Debug().Interface("created", created).Msg("new deployment has been created")
-	return nil
-}
+
 
 func (lc * LaunchComponents) launchDaemonSet(daemonSet *appsv1.DaemonSet) derrors.Error {
 	client := lc.Client.AppsV1().DaemonSets(daemonSet.Namespace)

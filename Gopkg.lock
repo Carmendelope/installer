@@ -554,13 +554,12 @@
   version = "kubernetes-1.12.0"
 
 [[projects]]
-  digest = "1:0f52fab415e2c84592a7a61c92f12b2f289011caba4bd5813735a4512a8915db"
+  digest = "1:18f352651d6e8578fdbaf29c68334b042439b288b8ae4112c2b2ba9a6e35ced0"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
-    "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
     "pkg/apis/meta/v1beta1",
@@ -661,20 +660,6 @@
   revision = "1638f8970cefaa404ff3a62950f88b08292b2696"
   version = "v9.0.0"
 
-[[projects]]
-  digest = "1:ac85ee7409f4948501f85905a37b1331279f0500fe5d681b9c512c00bab6dd14"
-  name = "k8s.io/kubernetes"
-  packages = [
-    "pkg/apis/autoscaling",
-    "pkg/apis/core",
-    "pkg/apis/extensions",
-    "pkg/apis/networking",
-    "pkg/apis/policy",
-  ]
-  pruneopts = "UT"
-  revision = "435f92c719f279a3a67808c80521ea17d5715c66"
-  version = "v1.12.3"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -700,16 +685,17 @@
     "google.golang.org/grpc/test/bufconn",
     "gopkg.in/yaml.v2",
     "k8s.io/api/apps/v1",
+    "k8s.io/api/batch/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
     "k8s.io/api/policy/v1beta1",
     "k8s.io/api/rbac/v1",
+    "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/util/intstr",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/tools/clientcmd",
-    "k8s.io/kubernetes/pkg/apis/extensions",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

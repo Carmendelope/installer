@@ -87,7 +87,7 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return k8s.NewCreateClusterConfigFromJSON(raw)
 	case entities.CreateManagementConfig:
 		return k8s.NewCreateManagementConfigFromJSON(raw)
-	case entities.UpadateCoreDNS:
+	case entities.UpdateCoreDNS:
 		return k8s.NewUpdateCoreDNSFromJSON(raw)
 	case entities.CreateCredentials:
 		return k8s.NewCreateCredentialsJSON(raw)

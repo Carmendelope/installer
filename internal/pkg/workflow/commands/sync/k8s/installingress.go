@@ -2,18 +2,22 @@
  * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
+// References
+// https://github.com/kubernetes/minikube/blob/master/deploy/addons/ingress/ingress-dp.yaml
+
 package k8s
 
 import (
 	"encoding/json"
 	"fmt"
-	"k8s.io/kubernetes/pkg/apis/extensions"
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 	"github.com/rs/zerolog/log"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"strings"
@@ -41,65 +45,66 @@ spec:
     - name: https
       port: 443
       targetPort: https
- */
+*/
 var HttpPort = v1.ServicePort{
 	Name:       "http",
 	Protocol:   v1.ProtocolTCP,
 	Port:       80,
-	TargetPort: intstr.IntOrString{StrVal:"http"},
+	TargetPort: intstr.IntOrString{StrVal: "http"},
 }
 var HttpsPort = v1.ServicePort{
 	Name:       "https",
 	Protocol:   v1.ProtocolTCP,
 	Port:       443,
-	TargetPort: intstr.IntOrString{StrVal:"https"},
+	TargetPort: intstr.IntOrString{StrVal: "https"},
 }
 
 // CloudGenericService ingress config based on https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml
 var CloudGenericService = v1.Service{
-	TypeMeta:   metaV1.TypeMeta{
-		Kind: "Service",
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Service",
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:                       "ingress-nginx",
-		Namespace:                  "nalej",
+		Name:      "ingress-nginx",
+		Namespace: "nalej",
 		Labels: map[string]string{
-			"app.kubernetes.io/name":"ingress-nginx",
-			"app.kubernetes.io/part-of":"ingress-nginx",
+			"cluster":                   "management",
+			"app.kubernetes.io/name":    "ingress-nginx",
+			"app.kubernetes.io/part-of": "ingress-nginx",
 		},
 	},
-	Spec:       v1.ServiceSpec{
-		Ports:                    []v1.ServicePort{HttpPort, HttpsPort},
+	Spec: v1.ServiceSpec{
+		Ports: []v1.ServicePort{HttpPort, HttpsPort},
 		Selector: map[string]string{
-			"app.kubernetes.io/name":"ingress-nginx",
-			"app.kubernetes.io/part-of":"ingress-nginx",
+			"app.kubernetes.io/name":    "ingress-nginx",
+			"app.kubernetes.io/part-of": "ingress-nginx",
 		},
-		Type:                     v1.ServiceTypeLoadBalancer,
-		ExternalTrafficPolicy:    v1.ServiceExternalTrafficPolicyTypeLocal,
+		Type: v1.ServiceTypeLoadBalancer,
+		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeLocal,
 	},
 }
 
 // IngressRulesPaths contains the rules for the ingress redirection.
-var IngressRulesPaths = &extensions.HTTPIngressRuleValue{
-	Paths: []extensions.HTTPIngressPath{
-		extensions.HTTPIngressPath{
-			Path:    "/",
-			Backend: extensions.IngressBackend{
+var IngressRulesPaths = &v1beta1.HTTPIngressRuleValue{
+	Paths: []v1beta1.HTTPIngressPath{
+		v1beta1.HTTPIngressPath{
+			Path: "/",
+			Backend: v1beta1.IngressBackend{
 				ServiceName: "web",
 				ServicePort: intstr.IntOrString{IntVal: 80},
 			},
 		},
-		extensions.HTTPIngressPath{
-			Path:    "/v1/login",
-			Backend: extensions.IngressBackend{
+		v1beta1.HTTPIngressPath{
+			Path: "/v1/login",
+			Backend: v1beta1.IngressBackend{
 				ServiceName: "login-api",
 				ServicePort: intstr.IntOrString{IntVal: 8443},
 			},
 		},
-		extensions.HTTPIngressPath{
-			Path:    "/v1",
-			Backend: extensions.IngressBackend{
+		v1beta1.HTTPIngressPath{
+			Path: "/v1",
+			Backend: v1beta1.IngressBackend{
 				ServiceName: "public-api",
 				ServicePort: intstr.IntOrString{IntVal: 8082},
 			},
@@ -107,35 +112,226 @@ var IngressRulesPaths = &extensions.HTTPIngressRuleValue{
 	},
 }
 
-var IngressRules = extensions.Ingress{
-	TypeMeta:   metaV1.TypeMeta{
-		Kind: "Ingress",
+var IngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
 		APIVersion: "extensions/v1beta1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:                       "ingress-nginx",
-		Namespace:                  "nalej",
+		Name:      "ingress-nginx",
+		Namespace: "nalej",
 		Labels: map[string]string{
-			"cluster":"management",
-			"component":"ingress-nginx",
+			"cluster":   "management",
+			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"nginx.ingress.kubernetes.io/rewrite-target":"/",
+			"nginx.ingress.kubernetes.io/rewrite-target": "/",
 		},
 	},
-	Spec:       extensions.IngressSpec{
-		TLS:     []extensions.IngressTLS{
-			extensions.IngressTLS{
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			v1beta1.IngressTLS{
 				Hosts:      []string{"MANAGEMENT_HOST"},
 				SecretName: "ingress-tls",
 			},
 		},
-		Rules:   []extensions.IngressRule{
-			extensions.IngressRule{
-				Host:             "MANAGEMENT_HOST",
-				IngressRuleValue: extensions.IngressRuleValue{
+		Rules: []v1beta1.IngressRule{
+			v1beta1.IngressRule{
+				Host: "MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
 					HTTP: IngressRulesPaths,
 				},
+			},
+		},
+	},
+}
+
+// Adapt num replicas to num nodes.
+var IngressNumReplicas int32 = 1
+
+// Ingress deployment based on https://github.com/kubernetes/minikube/blob/master/deploy/addons/ingress/ingress-dp.yaml
+var IngressDeployment = appsv1.Deployment{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Deployment",
+		APIVersion: "apps/v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "nginx-ingress-controller",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":                         "management",
+			"app.kubernetes.io/name":          "nginx-ingress-controller",
+			"app.kubernetes.io/part-of":       "ingress-nginx",
+			"addonmanager.kubernetes.io/mode": "Reconcile",
+		},
+	},
+	Spec: appsv1.DeploymentSpec{
+		Replicas: &IngressNumReplicas,
+		Selector: &metaV1.LabelSelector{
+			MatchLabels: map[string]string{
+				"app.kubernetes.io/name":          "nginx-ingress-controller",
+				"app.kubernetes.io/part-of":       "ingress-nginx",
+				"addonmanager.kubernetes.io/mode": "Reconcile",
+			},
+		},
+		Template: v1.PodTemplateSpec{
+			ObjectMeta: metaV1.ObjectMeta{
+				Labels: map[string]string{
+					"app.kubernetes.io/name":          "nginx-ingress-controller",
+					"app.kubernetes.io/part-of":       "ingress-nginx",
+					"addonmanager.kubernetes.io/mode": "Reconcile",
+				},
+				Annotations: map[string]string{
+					"prometheus.io/port":   "10254",
+					"prometheus.io/scrape": "true",
+				},
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					v1.Container{
+						Name:  "nginx-ingress-controller",
+						Image: "quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0",
+						Args: []string{
+							"/nginx-ingress-controller",
+							"--default-backend-service=nalej/default-http-backend",
+							"--configmap=nalej/nginx-load-balancer-conf",
+							"--tcp-services-configmap=nalej/tcp-services",
+							"--udp-services-configmap=nalej/udp-services",
+							"--annotations-prefix=nginx.ingress.kubernetes.io",
+						},
+						Ports: []v1.ContainerPort{
+							v1.ContainerPort{
+								Name:          "Port 80",
+								HostPort:      80,
+								ContainerPort: 80,
+							},
+							v1.ContainerPort{
+								Name:          "Port 443",
+								HostPort:      443,
+								ContainerPort: 443,
+							},
+						},
+						Env: []v1.EnvVar{
+							v1.EnvVar{
+								Name: "POD_NAME",
+								ValueFrom: &v1.EnvVarSource{
+									FieldRef: &v1.ObjectFieldSelector{
+										FieldPath: "metadata.name",
+									},
+								},
+							},
+							v1.EnvVar{
+								Name: "POD_NAMESPACE",
+								ValueFrom: &v1.EnvVarSource{
+									FieldRef: &v1.ObjectFieldSelector{
+										FieldPath: "metadata.namespace",
+									},
+								},
+							},
+						},
+						LivenessProbe: &v1.Probe{
+							Handler: v1.Handler{
+								HTTPGet: &v1.HTTPGetAction{
+									Path:   "/healthz",
+									Port:   intstr.IntOrString{IntVal: 10254},
+									Scheme: "HTTP",
+								},
+							},
+							InitialDelaySeconds: 10,
+							TimeoutSeconds:      1,
+						},
+						ReadinessProbe: &v1.Probe{
+							Handler: v1.Handler{
+								HTTPGet: &v1.HTTPGetAction{
+									Path:   "/healthz",
+									Port:   intstr.IntOrString{IntVal: 10254},
+									Scheme: "HTTP",
+								},
+							},
+						},
+						ImagePullPolicy: "IfNotPresent",
+						SecurityContext: &v1.SecurityContext{
+							Capabilities: &v1.Capabilities{
+								Add:  []v1.Capability{"NET_BIND_SERVICE"},
+								Drop: []v1.Capability{"ALL"},
+							},
+							RunAsUser: &[]int64{33}[0],
+						},
+					},
+				},
+				TerminationGracePeriodSeconds: &[]int64{60}[0], // Golang sucks creating literals...
+			},
+		},
+	},
+}
+
+// Ingress deployment based on https://github.com/kubernetes/minikube/blob/master/deploy/addons/ingress/ingress-dp.yaml
+var IngressDefaultBackend = appsv1.Deployment{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Deployment",
+		APIVersion: "apps/v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "default-http-backend",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":                         "management",
+			"app.kubernetes.io/name":          "default-http-backend",
+			"app.kubernetes.io/part-of":       "ingress-nginx",
+			"addonmanager.kubernetes.io/mode": "Reconcile",
+		},
+	},
+	Spec: appsv1.DeploymentSpec{
+		Replicas: &[]int32{1}[0],
+		Selector: &metaV1.LabelSelector{
+			MatchLabels: map[string]string{
+				"app.kubernetes.io/name":          "default-http-backend",
+				"addonmanager.kubernetes.io/mode": "Reconcile",
+			},
+		},
+		Template: v1.PodTemplateSpec{
+			ObjectMeta: metaV1.ObjectMeta{
+				Labels: map[string]string{
+					"app.kubernetes.io/name":          "default-http-backend",
+					"addonmanager.kubernetes.io/mode": "Reconcile",
+				},
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					v1.Container{
+						Name:  "default-http-backend",
+						Image: "gcr.io/google_containers/defaultbackend:1.4",
+						Ports: []v1.ContainerPort{
+							v1.ContainerPort{
+								Name:          "Port 8080",
+								ContainerPort: 8080,
+							},
+						},
+						LivenessProbe: &v1.Probe{
+							Handler: v1.Handler{
+								HTTPGet: &v1.HTTPGetAction{
+									Path:   "/healthz",
+									Port:   intstr.IntOrString{IntVal: 8080},
+									Scheme: "HTTP",
+								},
+							},
+							InitialDelaySeconds: 30,
+							TimeoutSeconds:      5,
+						},
+						ImagePullPolicy: "IfNotPresent",
+						Resources: v1.ResourceRequirements{
+							Limits: map[v1.ResourceName]resource.Quantity{
+								"cpu":    resource.MustParse("20m"),
+								"memory": resource.MustParse("30Mi"),
+							},
+							Requests: map[v1.ResourceName]resource.Quantity{
+								"cpu":    resource.MustParse("20m"),
+								"memory": resource.MustParse("30Mi"),
+							},
+						},
+					},
+				},
+				TerminationGracePeriodSeconds: &[]int64{60}[0], // Golang sucks creating literals...
 			},
 		},
 	},
@@ -173,7 +369,7 @@ func NewInstallIngressJSON(raw []byte) (*entities.Command, derrors.Error) {
 	return &r, nil
 }
 
-func (ii * InstallIngress) getIngressRules() *extensions.Ingress {
+func (ii *InstallIngress) getIngressRules() *v1beta1.Ingress {
 	toReturn := IngressRules
 	toReturn.Spec.TLS[0].Hosts[0] = ii.ManagementPublicHost
 	toReturn.Spec.Rules[0].Host = ii.ManagementPublicHost
@@ -181,11 +377,11 @@ func (ii * InstallIngress) getIngressRules() *extensions.Ingress {
 }
 
 // GetExistingIngressOnNamespace checks if an ingress exists on a given namespace.
-func (ii * InstallIngress) GetExistingIngressOnNamespace(namespace string) (*v1beta1.Ingress, derrors.Error){
+func (ii *InstallIngress) GetExistingIngressOnNamespace(namespace string) (*v1beta1.Ingress, derrors.Error) {
 	client := ii.Client.ExtensionsV1beta1().Ingresses(namespace)
 	opts := metaV1.ListOptions{}
 	ingresses, err := client.List(opts)
-	if err != nil{
+	if err != nil {
 		return nil, derrors.NewInternalError("cannot retrieve ingresses", err)
 	}
 	if len(ingresses.Items) > 0 {
@@ -195,44 +391,83 @@ func (ii * InstallIngress) GetExistingIngressOnNamespace(namespace string) (*v1b
 }
 
 // GetExistingIngress retrieves an ingress if it exists on the system.
-func (ii *InstallIngress) GetExistingIngress() (*v1beta1.Ingress, derrors.Error){
+func (ii *InstallIngress) GetExistingIngress() (*v1beta1.Ingress, derrors.Error) {
 	opts := metaV1.ListOptions{}
 	namespaces, err := ii.Client.CoreV1().Namespaces().List(opts)
-	if err != nil{
+	if err != nil {
 		return nil, derrors.NewInternalError("cannot retrieve namespaces", err)
 	}
-	for _, ns := range namespaces.Items{
+	for _, ns := range namespaces.Items {
 		found, err := ii.GetExistingIngressOnNamespace(ns.Name)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
-		if found != nil{
+		if found != nil {
 			return found, nil
 		}
 	}
 	return nil, nil
 }
 
-func (ii * InstallIngress) triggerInstall(_ InstallTargetType) derrors.Error{
+func (ii *InstallIngress) triggerInstall(installType InstallTargetType) derrors.Error {
+	log.Debug().Msg("Installing ingress service")
 	err := ii.createService(&CloudGenericService)
-	if err != nil{
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress service")
+		return err
+	}
+	log.Debug().Msg("Installing ingress rules")
+	err = ii.createIngress(ii.getIngressRules())
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress rules")
+		return err
+	}
+
+	var ingressDeployment = IngressDeployment
+
+	if installType == MinikubeCluster {
+		log.Debug().Msg("Adding extra arguments and ports for Minikube dev install")
+		// args - --report-node-internal-ip-address
+		args := ingressDeployment.Spec.Template.Spec.Containers[0].Args
+		args = append(args, "--report-node-internal-ip-address")
+		ingressDeployment.Spec.Template.Spec.Containers[0].Args = args
+		statusPort := v1.ContainerPort{
+			Name:          "Stats on /nginx-status",
+			HostPort:      18080,
+			ContainerPort: 18080,
+		}
+		ports := ingressDeployment.Spec.Template.Spec.Containers[0].Ports
+		ports = append(ports, statusPort)
+		ingressDeployment.Spec.Template.Spec.Containers[0].Ports = ports
+	}
+
+	log.Debug().Msg("installing ingress deployment")
+	err = ii.createDeployment(&ingressDeployment)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress deployment")
+		return err
+	}
+	log.Debug().Msg("installing default ingress backend")
+	err = ii.createDeployment(&IngressDefaultBackend)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress backend")
 		return err
 	}
 
 	return nil
 }
 
-func (ii * InstallIngress) DetectInstallType(nodes *v1.NodeList) InstallTargetType {
+func (ii *InstallIngress) DetectInstallType(nodes *v1.NodeList) InstallTargetType {
 	// Check images for minikube
-	for _, n := range nodes.Items{
+	for _, n := range nodes.Items {
 		log.Debug().Interface("node", n).Msg("Analyzing node to detect install")
 		for k, _ := range n.Labels {
-			if strings.Contains(k, "kubernetes.azure.com"){
+			if strings.Contains(k, "kubernetes.azure.com") {
 				return AzureCluster
 			}
 		}
-		for _, img := range n.Status.Images{
-			if strings.Contains(img.Names[0], "k8s-minikube"){
+		for _, img := range n.Status.Images {
+			if strings.Contains(img.Names[0], "k8s-minikube") {
 				return MinikubeCluster
 			}
 		}
@@ -240,12 +475,12 @@ func (ii * InstallIngress) DetectInstallType(nodes *v1.NodeList) InstallTargetTy
 	return Unknown
 }
 
-func (ii * InstallIngress) InstallIngress() derrors.Error{
+func (ii *InstallIngress) InstallIngress() derrors.Error {
 	// Detect the type of target install
 	opts := metaV1.ListOptions{}
 	client := ii.Client.CoreV1().Nodes()
 	nodes, err := client.List(opts)
-	if err != nil{
+	if err != nil {
 		return derrors.AsError(err, "cannot obtain server nodes")
 	}
 	detected := ii.DetectInstallType(nodes)
@@ -267,10 +502,10 @@ func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derro
 		return nil, connectErr
 	}
 	existingIngress, err := ii.GetExistingIngress()
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
-	if existingIngress != nil{
+	if existingIngress != nil {
 		log.Warn().Interface("ingress", existingIngress).Msg("An ingress has been found")
 		return entities.NewSuccessCommand([]byte("[WARN] Ingress has not been installed as it already exists")), nil
 	}
