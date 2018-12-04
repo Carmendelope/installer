@@ -23,7 +23,7 @@ var _ = ginkgo.Describe("A install ingress command", func(){
 	}
 
 	ginkgo.FIt("should be able to install an ingress", func(){
-		ii := NewInstallIngress(itKubeConfigFile)
+		ii := NewInstallIngress(itKubeConfigFile, "nalej.cluster.local")
 		result, err := ii.Run("installIngress")
 		gomega.Expect(err).To(gomega.Succeed())
 		gomega.Expect(result.Success).Should(gomega.BeTrue())

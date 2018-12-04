@@ -14,6 +14,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+const KubeSystemNamespace = "kube-system"
+
 type TestCleaner struct {
 	Namespaces []string `json:"namespace"`
 	KubeConfigPath string `json:"kubeConfig"`
@@ -55,6 +57,30 @@ func (tc * TestCleaner) DeleteAll() derrors.Error {
 	if err != nil {
 		return err
 	}
+	err = tc.DeleteServiceAccounts()
+	if err != nil {
+		return err
+	}
+	err = tc.DeleteClusterRoles()
+	if err != nil{
+		return err
+	}
+	err = tc.DeleteRoles()
+	if err != nil{
+		return err
+	}
+	err = tc.DeleteRoleBindings()
+	if err != nil{
+		return err
+	}
+	err = tc.DeleteClusterRoleBindings()
+	if err != nil{
+		return err
+	}
+	err = tc.DeleteConfigMaps()
+	if err != nil{
+		return err
+	}
 	err = tc.DeleteNamespaces()
 	if err != nil {
 		return err
@@ -70,16 +96,17 @@ func (tc * TestCleaner) DeleteDeployments() derrors.Error {
 		}
 	}
 
+	opts := metaV1.ListOptions{}
+	dOpts := metaV1.DeleteOptions{}
 	numDeleted := 0
 	for _, ns := range tc.Namespaces {
 		deploymentClient := tc.Client.AppsV1().Deployments(ns)
-		opts := metaV1.ListOptions{}
 		deploymentList, err := deploymentClient.List(opts)
 		if err != nil {
 			return derrors.AsError(err, "cannot list deployments")
 		}
-		dOpts := metaV1.DeleteOptions{}
 		for _, d := range deploymentList.Items {
+			log.Debug().Str("name", d.Name).Msg("deleting deployment")
 			err := deploymentClient.Delete(d.Name, &dOpts)
 			if err != nil {
 				return derrors.AsError(err, "cannot delete deployment")
@@ -87,6 +114,25 @@ func (tc * TestCleaner) DeleteDeployments() derrors.Error {
 			numDeleted++
 		}
 	}
+
+	// Kube-System
+	client := tc.Client.AppsV1().Deployments(KubeSystemNamespace)
+	ds, err := client.List(opts)
+	if err != nil {
+		return derrors.AsError(err, "cannot list config maps")
+	}
+	for _, d := range ds.Items {
+		_, exists := d.Labels["cluster"]
+		if exists {
+			log.Debug().Str("name", d.Name).Msg("deleting deployment")
+			err := client.Delete(d.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete deployment")
+			}
+			numDeleted++
+		}
+	}
+
 	log.Debug().Int("deleted", numDeleted).Msg("deployments deleted")
 	return nil
 }
@@ -100,7 +146,6 @@ func (tc * TestCleaner) existNamespace(name string) (bool, derrors.Error) {
 	}
 	found := false
 	for _, n := range list.Items {
-		log.Debug().Interface("n", n).Msg("A namespace")
 		if n.Name == name {
 			found = true
 			break
@@ -142,6 +187,26 @@ func (tc * TestCleaner) DeleteServices() derrors.Error {
 		}
 		dOpts := metaV1.DeleteOptions{}
 		for _, s := range serviceList.Items {
+			log.Debug().Str("name", s.Name).Msg("deleting service")
+			err := serviceClient.Delete(s.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete service")
+			}
+			numDeleted++
+		}
+	}
+	// Kube-System
+	serviceClient := tc.Client.CoreV1().Services(KubeSystemNamespace)
+	opts := metaV1.ListOptions{}
+	serviceList, err := serviceClient.List(opts)
+	if err != nil {
+		return derrors.AsError(err, "cannot list services")
+	}
+	dOpts := metaV1.DeleteOptions{}
+	for _, s := range serviceList.Items {
+		_, exists := s.Labels["cluster"]
+		if exists {
+			log.Debug().Str("name", s.Name).Msg("deleting service")
 			err := serviceClient.Delete(s.Name, &dOpts)
 			if err != nil {
 				return derrors.AsError(err, "cannot delete service")
@@ -152,6 +217,233 @@ func (tc * TestCleaner) DeleteServices() derrors.Error {
 	log.Debug().Int("deleted", numDeleted).Msg("services deleted")
 	return nil
 }
+
+func (tc * TestCleaner) DeleteServiceAccounts() derrors.Error {
+	numDeleted := 0
+	for _, ns := range tc.Namespaces {
+		client := tc.Client.CoreV1().ServiceAccounts(ns)
+		opts := metaV1.ListOptions{}
+		accounts, err := client.List(opts)
+		if err != nil {
+			return derrors.AsError(err, "cannot list services")
+		}
+		dOpts := metaV1.DeleteOptions{}
+		for _, acc := range accounts.Items{
+			log.Debug().Str("name", acc.Name).Msg("deleting service account")
+			err := client.Delete(acc.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete service account")
+			}
+			numDeleted++
+		}
+	}
+
+	// Kube-System
+	client := tc.Client.CoreV1().ServiceAccounts(KubeSystemNamespace)
+	opts := metaV1.ListOptions{}
+	serviceList, err := client.List(opts)
+	if err != nil {
+		return derrors.AsError(err, "cannot list services")
+	}
+	dOpts := metaV1.DeleteOptions{}
+	for _, s := range serviceList.Items {
+		_, exists := s.Labels["cluster"]
+		if exists {
+			log.Debug().Str("name", s.Name).Msg("deleting service account")
+			err := client.Delete(s.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete service")
+			}
+			numDeleted++
+		}
+	}
+	log.Debug().Int("deleted", numDeleted).Msg("service accounts deleted")
+	return nil
+}
+
+func (tc * TestCleaner) DeleteClusterRoles() derrors.Error {
+	numDeleted := 0
+
+	client := tc.Client.RbacV1().ClusterRoles()
+	opts := metaV1.ListOptions{}
+	roles, err := client.List(opts)
+	if err != nil {
+		return derrors.AsError(err, "cannot list services")
+	}
+	dOpts := metaV1.DeleteOptions{}
+
+		for _, cr := range roles.Items{
+			_, exists := cr.Labels["cluster"]
+			if exists {
+				log.Debug().Str("name", cr.Name).Msg("deleting cluster role")
+				err := client.Delete(cr.Name, &dOpts)
+				if err != nil {
+					return derrors.AsError(err, "cannot delete cluster role")
+				}
+				numDeleted++
+			}
+		}
+
+
+
+	log.Debug().Int("deleted", numDeleted).Msg("service cluster roles deleted")
+	return nil
+}
+
+func (tc * TestCleaner) DeleteRoles() derrors.Error {
+	numDeleted := 0
+	for _, ns := range tc.Namespaces {
+		client := tc.Client.RbacV1().Roles(ns)
+		opts := metaV1.ListOptions{}
+		roles, err := client.List(opts)
+		if err != nil {
+			return derrors.AsError(err, "cannot list roles")
+		}
+		dOpts := metaV1.DeleteOptions{}
+		for _, rol := range roles.Items{
+			log.Debug().Str("name", rol.Name).Msg("deleting role")
+			err := client.Delete(rol.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete role")
+			}
+			numDeleted++
+		}
+	}
+
+	// Kube-System
+	client := tc.Client.RbacV1().Roles(KubeSystemNamespace)
+	opts := metaV1.ListOptions{}
+	roleList, err := client.List(opts)
+	if err != nil {
+		return derrors.AsError(err, "cannot list roles")
+	}
+	dOpts := metaV1.DeleteOptions{}
+	for _, r := range roleList.Items {
+		_, exists := r.Labels["cluster"]
+		if exists {
+			log.Debug().Str("name", r.Name).Msg("deleting role")
+			err := client.Delete(r.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete role")
+			}
+			numDeleted++
+		}
+	}
+	log.Debug().Int("deleted", numDeleted).Msg("roles deleted")
+	return nil
+}
+
+func (tc * TestCleaner) DeleteClusterRoleBindings() derrors.Error {
+	numDeleted := 0
+
+	client := tc.Client.RbacV1().ClusterRoleBindings()
+	opts := metaV1.ListOptions{}
+	roles, err := client.List(opts)
+	if err != nil {
+		return derrors.AsError(err, "cannot list cluster role bindings")
+	}
+	dOpts := metaV1.DeleteOptions{}
+
+	for _, cr := range roles.Items{
+		_, exists := cr.Labels["cluster"]
+		if exists {
+			log.Debug().Str("name", cr.Name).Msg("deleting cluster role binding")
+			err := client.Delete(cr.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete cluster role binding")
+			}
+			numDeleted++
+		}
+	}
+
+	log.Debug().Int("deleted", numDeleted).Msg("service cluster role bindings deleted")
+	return nil
+}
+
+func (tc * TestCleaner) DeleteRoleBindings() derrors.Error {
+	numDeleted := 0
+	for _, ns := range tc.Namespaces {
+		client := tc.Client.RbacV1().RoleBindings(ns)
+		opts := metaV1.ListOptions{}
+		roles, err := client.List(opts)
+		if err != nil {
+			return derrors.AsError(err, "cannot list roles")
+		}
+		dOpts := metaV1.DeleteOptions{}
+		for _, rol := range roles.Items{
+			log.Debug().Str("name", rol.Name).Msg("deleting role")
+			err := client.Delete(rol.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete role")
+			}
+			numDeleted++
+		}
+	}
+
+	// Kube-System
+	client := tc.Client.RbacV1().RoleBindings(KubeSystemNamespace)
+	opts := metaV1.ListOptions{}
+	roleList, err := client.List(opts)
+	if err != nil {
+		return derrors.AsError(err, "cannot list roles")
+	}
+	dOpts := metaV1.DeleteOptions{}
+	for _, r := range roleList.Items {
+		_, exists := r.Labels["cluster"]
+		if exists {
+			log.Debug().Str("name", r.Name).Msg("deleting role")
+			err := client.Delete(r.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete role")
+			}
+			numDeleted++
+		}
+	}
+	log.Debug().Int("deleted", numDeleted).Msg("roles deleted")
+	return nil
+}
+
+func (tc * TestCleaner) DeleteConfigMaps() derrors.Error {
+	numDeleted := 0
+	opts := metaV1.ListOptions{}
+	dOpts := metaV1.DeleteOptions{}
+	for _, ns := range tc.Namespaces {
+		client := tc.Client.CoreV1().ConfigMaps(ns)
+		cms, err := client.List(opts)
+		if err != nil {
+			return derrors.AsError(err, "cannot list config maps")
+		}
+		for _, cm := range cms.Items{
+			log.Debug().Str("name", cm.Name).Msg("deleting config map")
+			err := client.Delete(cm.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete config map")
+			}
+			numDeleted++
+		}
+	}
+
+	// Kube-System
+	client := tc.Client.CoreV1().ConfigMaps(KubeSystemNamespace)
+	cms, err := client.List(opts)
+	if err != nil {
+		return derrors.AsError(err, "cannot list config maps")
+	}
+	for _, cm := range cms.Items {
+		_, exists := cm.Labels["cluster"]
+		if exists {
+			log.Debug().Str("name", cm.Name).Msg("deleting config map")
+			err := client.Delete(cm.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete config map")
+			}
+			numDeleted++
+		}
+	}
+	log.Debug().Int("deleted", numDeleted).Msg("config maps deleted")
+	return nil
+}
+
 
 type TestK8sUtils struct {
 	KubeConfigPath string

@@ -19,6 +19,7 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"strings"
 )
@@ -52,11 +53,25 @@ var HttpPort = v1.ServicePort{
 	Port:       80,
 	TargetPort: intstr.IntOrString{StrVal: "http"},
 }
+var MinikubeHttpPort = v1.ServicePort{
+	Name:       "http",
+	Protocol:   v1.ProtocolTCP,
+	Port:       8080,
+	TargetPort: intstr.IntOrString{IntVal: 80},
+	NodePort:   80,
+}
 var HttpsPort = v1.ServicePort{
 	Name:       "https",
 	Protocol:   v1.ProtocolTCP,
 	Port:       443,
 	TargetPort: intstr.IntOrString{StrVal: "https"},
+}
+var MinikubeHttpsPort = v1.ServicePort{
+	Name:       "https",
+	Protocol:   v1.ProtocolTCP,
+	Port:       9443,
+	TargetPort: intstr.IntOrString{IntVal: 443},
+	NodePort: 443,
 }
 
 // CloudGenericService ingress config based on https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml
@@ -66,24 +81,77 @@ var CloudGenericService = v1.Service{
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "ingress-nginx",
-		Namespace: "nalej",
+		Name:      "default-http-backend",
+		Namespace: "kube-system",
 		Labels: map[string]string{
 			"cluster":                   "management",
-			"app.kubernetes.io/name":    "ingress-nginx",
-			"app.kubernetes.io/part-of": "ingress-nginx",
+			"app.kubernetes.io/name":    "default-http-backend",
+			"app.kubernetes.io/part-of": "kube-system",
+			"addonmanager.kubernetes.io/mode":"Reconcile",
 		},
 	},
 	Spec: v1.ServiceSpec{
 		Ports: []v1.ServicePort{HttpPort, HttpsPort},
 		Selector: map[string]string{
-			"app.kubernetes.io/name":    "ingress-nginx",
-			"app.kubernetes.io/part-of": "ingress-nginx",
+			"app.kubernetes.io/name":    "default-http-backend",
 		},
 		Type: v1.ServiceTypeLoadBalancer,
 		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeLocal,
 	},
 }
+
+var MinikubeService = v1.Service{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Service",
+		APIVersion: "v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "nginx-ingress-controller",
+		Namespace: "kube-system",
+		Labels: map[string]string{
+			"cluster":                   "management",
+			"app.kubernetes.io/name":    "nginx-ingress-controller",
+			"app.kubernetes.io/part-of": "kube-system",
+			"addonmanager.kubernetes.io/mode":"Reconcile",
+			"kubernetes.io/minikube-addons":"ingress",
+			"kubernetes.io/minikube-addons-endpoint":"ingress",
+		},
+	},
+	Spec: v1.ServiceSpec{
+		Ports: []v1.ServicePort{MinikubeHttpPort, MinikubeHttpsPort},
+		Selector: map[string]string{
+			"app.kubernetes.io/name":    "nginx-ingress-controller",
+		},
+		Type: v1.ServiceTypeNodePort,
+		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeCluster,
+	},
+}
+
+var MinikubeServiceDefaultBackend = v1.Service{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Service",
+		APIVersion: "v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "default-http-backend",
+		Namespace: "kube-system",
+		Labels: map[string]string{
+			"cluster":                   "management",
+			"app.kubernetes.io/name":    "default-http-backend",
+			"app.kubernetes.io/part-of": "kube-system",
+			"addonmanager.kubernetes.io/mode":"Reconcile",
+			"kubernetes.io/minikube-addons":"ingress",
+			"kubernetes.io/minikube-addons-endpoint":"ingress",
+		},
+	},
+	Spec: v1.ServiceSpec{
+		Ports: []v1.ServicePort{HttpPort, HttpsPort},
+		Selector: map[string]string{
+			"app.kubernetes.io/name":    "default-http-backend",
+		},
+	},
+}
+
 
 // IngressRulesPaths contains the rules for the ingress redirection.
 var IngressRulesPaths = &v1beta1.HTTPIngressRuleValue{
@@ -157,11 +225,11 @@ var IngressDeployment = appsv1.Deployment{
 	},
 	ObjectMeta: metaV1.ObjectMeta{
 		Name:      "nginx-ingress-controller",
-		Namespace: "nalej",
+		Namespace: "kube-system",
 		Labels: map[string]string{
 			"cluster":                         "management",
 			"app.kubernetes.io/name":          "nginx-ingress-controller",
-			"app.kubernetes.io/part-of":       "ingress-nginx",
+			"app.kubernetes.io/part-of":       "kube-system",
 			"addonmanager.kubernetes.io/mode": "Reconcile",
 		},
 	},
@@ -170,7 +238,7 @@ var IngressDeployment = appsv1.Deployment{
 		Selector: &metaV1.LabelSelector{
 			MatchLabels: map[string]string{
 				"app.kubernetes.io/name":          "nginx-ingress-controller",
-				"app.kubernetes.io/part-of":       "ingress-nginx",
+				"app.kubernetes.io/part-of":       "kube-system",
 				"addonmanager.kubernetes.io/mode": "Reconcile",
 			},
 		},
@@ -178,7 +246,7 @@ var IngressDeployment = appsv1.Deployment{
 			ObjectMeta: metaV1.ObjectMeta{
 				Labels: map[string]string{
 					"app.kubernetes.io/name":          "nginx-ingress-controller",
-					"app.kubernetes.io/part-of":       "ingress-nginx",
+					"app.kubernetes.io/part-of":       "kube-system",
 					"addonmanager.kubernetes.io/mode": "Reconcile",
 				},
 				Annotations: map[string]string{
@@ -187,27 +255,29 @@ var IngressDeployment = appsv1.Deployment{
 				},
 			},
 			Spec: v1.PodSpec{
+				ServiceAccountName: "nginx-ingress",
 				Containers: []v1.Container{
 					v1.Container{
 						Name:  "nginx-ingress-controller",
 						Image: "quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0",
 						Args: []string{
 							"/nginx-ingress-controller",
-							"--default-backend-service=nalej/default-http-backend",
-							"--configmap=nalej/nginx-load-balancer-conf",
-							"--tcp-services-configmap=nalej/tcp-services",
-							"--udp-services-configmap=nalej/udp-services",
+							"--default-backend-service=kube-system/default-http-backend",
+							"--configmap=kube-system/nginx-load-balancer-conf",
+							"--tcp-services-configmap=kube-system/tcp-services",
+							"--udp-services-configmap=kube-system/udp-services",
 							"--annotations-prefix=nginx.ingress.kubernetes.io",
+							"--v=5",
 						},
 						Ports: []v1.ContainerPort{
 							v1.ContainerPort{
-								Name:          "Port 80",
-								HostPort:      80,
+								Name:          "port80",
+								HostPort:      8080,
 								ContainerPort: 80,
 							},
 							v1.ContainerPort{
-								Name:          "Port 443",
-								HostPort:      443,
+								Name:          "port443",
+								HostPort:      9443,
 								ContainerPort: 443,
 							},
 						},
@@ -273,11 +343,11 @@ var IngressDefaultBackend = appsv1.Deployment{
 	},
 	ObjectMeta: metaV1.ObjectMeta{
 		Name:      "default-http-backend",
-		Namespace: "nalej",
+		Namespace: "kube-system",
 		Labels: map[string]string{
 			"cluster":                         "management",
 			"app.kubernetes.io/name":          "default-http-backend",
-			"app.kubernetes.io/part-of":       "ingress-nginx",
+			"app.kubernetes.io/part-of":       "kube-system",
 			"addonmanager.kubernetes.io/mode": "Reconcile",
 		},
 	},
@@ -303,7 +373,7 @@ var IngressDefaultBackend = appsv1.Deployment{
 						Image: "gcr.io/google_containers/defaultbackend:1.4",
 						Ports: []v1.ContainerPort{
 							v1.ContainerPort{
-								Name:          "Port 8080",
+								Name:          "port8080",
 								ContainerPort: 8080,
 							},
 						},
@@ -337,6 +407,209 @@ var IngressDefaultBackend = appsv1.Deployment{
 	},
 }
 
+var IngressServiceAccount = v1.ServiceAccount{
+	TypeMeta:                     metaV1.TypeMeta{
+		Kind:       "ServiceAccount",
+		APIVersion: "v1",
+	},
+	ObjectMeta:                   metaV1.ObjectMeta{
+		Name:                       "nginx-ingress",
+		Namespace:                  "kube-system",
+		Labels:          map[string]string{
+			"cluster":                         "management",
+			"addonmanager.kubernetes.io/mode": "Reconcile",
+		},
+	},
+}
+
+var IngressClusterRole = rbacv1.ClusterRole{
+	TypeMeta:        metaV1.TypeMeta{
+		Kind:       "ClusterRole",
+		APIVersion: "v1",
+	},
+	ObjectMeta:      metaV1.ObjectMeta{
+		Name:                       "system:nginx-ingress",
+		Namespace:                  "kube-system",
+		Labels:          map[string]string{
+			"cluster":                         "management",
+			"kubernetes.io/bootstrapping":                         "rbac-defaults",
+			"addonmanager.kubernetes.io/mode": "Reconcile",
+		},
+	},
+	Rules:           []rbacv1.PolicyRule{
+		rbacv1.PolicyRule{
+			Verbs:           []string{"list", "watch"},
+			APIGroups:       []string{""},
+			Resources:       []string{"configmaps", "endpoints", "nodes", "pods", "secrets"},
+		},
+		rbacv1.PolicyRule{
+			Verbs:           []string{"get"},
+			APIGroups:       []string{""},
+			Resources:       []string{"nodes"},
+		},
+		rbacv1.PolicyRule{
+			Verbs:           []string{"get", "list", "watch"},
+			APIGroups:       []string{""},
+			Resources:       []string{"services"},
+		},
+		rbacv1.PolicyRule{
+			Verbs:           []string{"get", "list", "watch"},
+			APIGroups:       []string{"extensions"},
+			Resources:       []string{"ingresses"},
+		},
+		rbacv1.PolicyRule{
+			Verbs:           []string{"create", "patch"},
+			APIGroups:       []string{""},
+			Resources:       []string{"events"},
+		},
+		rbacv1.PolicyRule{
+			Verbs:           []string{"update"},
+			APIGroups:       []string{"extensions"},
+			Resources:       []string{"ingresses/status"},
+		},
+	},
+}
+
+var IngressRole = rbacv1.Role{
+	TypeMeta:   metaV1.TypeMeta{
+		Kind:       "Role",
+		APIVersion: "rbac.authorization.k8s.io/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:                       "system::nginx-ingress-role",
+		Namespace:                  "kube-system",
+		Labels:          map[string]string{
+			"cluster":                         "management",
+			"kubernetes.io/bootstrapping":                         "rbac-defaults",
+			"addonmanager.kubernetes.io/mode": "Reconcile",
+		},
+	},
+	Rules:      []rbacv1.PolicyRule{
+		rbacv1.PolicyRule{
+			Verbs:           []string{"get"},
+			APIGroups:       []string{""},
+			Resources:       []string{"configmaps", "pods", "secrets", "namespaces"},
+		},
+		rbacv1.PolicyRule{
+			Verbs:           []string{"get", "update"},
+			APIGroups:       []string{""},
+			Resources:       []string{"ingress-controller-leader-nginx"},
+		},
+		rbacv1.PolicyRule{
+			Verbs:           []string{"create"},
+			APIGroups:       []string{""},
+			Resources:       []string{"configmaps"},
+		},
+		rbacv1.PolicyRule{
+			Verbs:           []string{"get"},
+			APIGroups:       []string{""},
+			Resources:       []string{"endpoints"},
+		},
+	},
+}
+
+var IngressRoleBinding = rbacv1.RoleBinding{
+	TypeMeta:   metaV1.TypeMeta{
+		Kind:       "RoleBinding",
+		APIVersion: "rbac.authorization.k8s.io/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:                       "system::nginx-ingress-role-binding",
+		Namespace:                  "kube-system",
+		Labels:          map[string]string{
+			"cluster":                         "management",
+			"kubernetes.io/bootstrapping":                         "rbac-defaults",
+			"addonmanager.kubernetes.io/mode": "EnsureExists",
+		},
+	},
+	Subjects:   []rbacv1.Subject{
+		rbacv1.Subject{
+			Kind:      "ServiceAccount",
+			Name:      "nginx-ingress",
+			Namespace: "kube-system",
+		},
+	},
+	RoleRef:    rbacv1.RoleRef{
+		APIGroup: "rbac.authorization.k8s.io",
+		Kind:     "Role",
+		Name:     "system::nginx-ingress-role",
+	},
+}
+
+var IngressClusterRoleBinding = rbacv1.ClusterRoleBinding{
+	TypeMeta:   metaV1.TypeMeta{
+		Kind:       "ClusterRoleBinding",
+		APIVersion: "rbac.authorization.k8s.io/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:                       "system:nginx-ingress",
+		Namespace:                  "kube-system",
+		Labels:         map[string]string{
+			"cluster":                         "management",
+			"kubernetes.io/bootstrapping":                         "rbac-defaults",
+			"addonmanager.kubernetes.io/mode": "EnsureExists",
+		},
+	},
+	Subjects:   []rbacv1.Subject{
+		rbacv1.Subject{
+			Kind:      "ServiceAccount",
+			Name:      "nginx-ingress",
+			Namespace: "kube-system",
+		},
+	},
+	RoleRef:    rbacv1.RoleRef{
+		APIGroup: "rbac.authorization.k8s.io",
+		Kind:     "ClusterRole",
+		Name:     "system:nginx-ingress",
+	},
+}
+
+var IngressLoadBalancerConfigMap = v1.ConfigMap{
+	TypeMeta:   metaV1.TypeMeta{
+		Kind:       "ConfigMap",
+		APIVersion: "v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:                       "nginx-load-balancer-conf",
+		Namespace:                  "kube-system",
+		Labels: map[string]string{
+			"cluster":"management",
+			"addonmanager.kubernetes.io/mode":"EnsureExists",
+		},
+	},
+}
+
+var IngressTCPServiceConfigMap = v1.ConfigMap{
+	TypeMeta:   metaV1.TypeMeta{
+		Kind:       "ConfigMap",
+		APIVersion: "v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:                       "tcp-services",
+		Namespace:                  "kube-system",
+		Labels: map[string]string{
+			"cluster":"management",
+			"addonmanager.kubernetes.io/mode":"EnsureExists",
+		},
+	},
+}
+
+var IngressUDPServiceConfigMap = v1.ConfigMap{
+	TypeMeta:   metaV1.TypeMeta{
+		Kind:       "ConfigMap",
+		APIVersion: "v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:                       "udp-services",
+		Namespace:                  "kube-system",
+		Labels: map[string]string{
+			"cluster":"management",
+			"addonmanager.kubernetes.io/mode":"EnsureExists",
+		},
+	},
+}
+
+
 type InstallTargetType int32
 
 const (
@@ -350,16 +623,17 @@ type InstallIngress struct {
 	ManagementPublicHost string `json:"management_public_host"`
 }
 
-func NewInstallIngress(kubeConfigPath string) *InstallIngress {
+func NewInstallIngress(kubeConfigPath string, managementPublicHost string) *InstallIngress {
 	return &InstallIngress{
 		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallIngress),
 			KubeConfigPath:     kubeConfigPath,
 		},
+		ManagementPublicHost: managementPublicHost,
 	}
 }
 
-func NewInstallIngressJSON(raw []byte) (*entities.Command, derrors.Error) {
+func NewInstallIngressFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	ccc := &InstallIngress{}
 	if err := json.Unmarshal(raw, &ccc); err != nil {
 		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
@@ -374,6 +648,13 @@ func (ii *InstallIngress) getIngressRules() *v1beta1.Ingress {
 	toReturn.Spec.TLS[0].Hosts[0] = ii.ManagementPublicHost
 	toReturn.Spec.Rules[0].Host = ii.ManagementPublicHost
 	return &toReturn
+}
+
+func (ii * InstallIngress) getService(installType InstallTargetType) (*v1.Service, *v1.Service) {
+	if installType == MinikubeCluster {
+		return &MinikubeService, &MinikubeServiceDefaultBackend
+	}
+	return &CloudGenericService, &MinikubeServiceDefaultBackend
 }
 
 // GetExistingIngressOnNamespace checks if an ingress exists on a given namespace.
@@ -410,10 +691,80 @@ func (ii *InstallIngress) GetExistingIngress() (*v1beta1.Ingress, derrors.Error)
 }
 
 func (ii *InstallIngress) triggerInstall(installType InstallTargetType) derrors.Error {
+
+	err := ii.createNamespacesIfNotExist("nalej")
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating nalej namespace")
+		return err
+	}
+
+	log.Debug().Msg("Installing ingress service account")
+	err = ii.createServiceAccount(&IngressServiceAccount)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress service account")
+		return err
+	}
+
+	log.Debug().Msg("Installing ingress cluster role")
+	err = ii.createClusterRole(&IngressClusterRole)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress cluster role")
+		return err
+	}
+
+	log.Debug().Msg("Installing ingress role")
+	err = ii.createRole(&IngressRole)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress role")
+		return err
+	}
+
+	log.Debug().Msg("Installing ingress role binding")
+	err = ii.createRoleBinding(&IngressRoleBinding)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress role binding")
+		return err
+	}
+
+	log.Debug().Msg("Installing ingress cluster role binding")
+	err = ii.createClusterRoleBinding(&IngressClusterRoleBinding)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress cluster role binding")
+		return err
+	}
+
+	log.Debug().Msg("Installing ingress load balancer configmap")
+	err = ii.createConfigMap(&IngressLoadBalancerConfigMap)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress load balancer configmap")
+		return err
+	}
+
+	log.Debug().Msg("Installing ingress TCP configmap")
+	err = ii.createConfigMap(&IngressTCPServiceConfigMap)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress TCP configmap")
+		return err
+	}
+
+	log.Debug().Msg("Installing ingress UDP configmap")
+	err = ii.createConfigMap(&IngressUDPServiceConfigMap)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress UDP configmap")
+		return err
+	}
+
 	log.Debug().Msg("Installing ingress service")
-	err := ii.createService(&CloudGenericService)
+	ingressBackend, defaultBackend := ii.getService(installType)
+
+	err = ii.createService(ingressBackend)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress service")
+		return err
+	}
+	err = ii.createService(defaultBackend)
+	if err != nil {
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress default service")
 		return err
 	}
 	log.Debug().Msg("Installing ingress rules")
@@ -432,7 +783,7 @@ func (ii *InstallIngress) triggerInstall(installType InstallTargetType) derrors.
 		args = append(args, "--report-node-internal-ip-address")
 		ingressDeployment.Spec.Template.Spec.Containers[0].Args = args
 		statusPort := v1.ContainerPort{
-			Name:          "Stats on /nginx-status",
+			Name:          "stats", // on /nginx-status
 			HostPort:      18080,
 			ContainerPort: 18080,
 		}
@@ -489,6 +840,10 @@ func (ii *InstallIngress) InstallIngress() derrors.Error {
 	}
 	if detected == AzureCluster {
 		log.Debug().Msg("Installing ingress in an Azure cluster")
+	}
+	if detected == Unknown {
+		log.Warn().Msg("Cannot determine cluster type, assuming Minikube")
+		detected = MinikubeCluster
 	}
 	if detected != Unknown {
 		return ii.triggerInstall(detected)

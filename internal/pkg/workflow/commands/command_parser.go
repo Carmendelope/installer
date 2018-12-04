@@ -93,6 +93,8 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return k8s.NewCreateCredentialsJSON(raw)
 	case entities.AddClusterUser:
 		return k8s.NewAddClusterUserFromJSON(raw)
+	case entities.InstallIngress:
+		return k8s.NewInstallIngressFromJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}
