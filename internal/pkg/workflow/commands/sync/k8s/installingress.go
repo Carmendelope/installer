@@ -193,7 +193,8 @@ var IngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"nginx.ingress.kubernetes.io/rewrite-target": "/",
+			"kubernetes.io/ingress.class": "nginx",
+			// "nginx.ingress.kubernetes.io/rewrite-target": "/", Not required as we do not need to rewrite the paths.
 		},
 	},
 	Spec: v1beta1.IngressSpec{
@@ -213,6 +214,143 @@ var IngressRules = v1beta1.Ingress{
 		},
 	},
 }
+
+var SignupAPIIngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "extensions/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "signup-api-ingress",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":   "management",
+			"component": "ingress-nginx",
+		},
+		Annotations: map[string]string{
+			"kubernetes.io/ingress.class": "nginx",
+			//"nginx.ingress.kubernetes.io/ssl-passthrough": "true",
+			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+		},
+	},
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			v1beta1.IngressTLS{
+				Hosts:      []string{"signup.MANAGEMENT_HOST"},
+				SecretName: "signup-server-tls",
+			},
+		},
+		Rules: []v1beta1.IngressRule{
+			v1beta1.IngressRule{
+				Host: "signup.MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
+					HTTP: &v1beta1.HTTPIngressRuleValue{
+						Paths: []v1beta1.HTTPIngressPath{
+							v1beta1.HTTPIngressPath{
+								Backend: v1beta1.IngressBackend{
+									ServiceName: "signup",
+									ServicePort: intstr.IntOrString{IntVal: 8180},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var LoginAPIIngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "extensions/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "login-api-ingress",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":   "management",
+			"component": "ingress-nginx",
+		},
+		Annotations: map[string]string{
+			"kubernetes.io/ingress.class": "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+		},
+	},
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			v1beta1.IngressTLS{
+				Hosts:      []string{"login.MANAGEMENT_HOST"},
+				SecretName: "signup-server-tls",
+			},
+		},
+		Rules: []v1beta1.IngressRule{
+			v1beta1.IngressRule{
+				Host: "login.MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
+					HTTP: &v1beta1.HTTPIngressRuleValue{
+						Paths: []v1beta1.HTTPIngressPath{
+							v1beta1.HTTPIngressPath{
+								Backend: v1beta1.IngressBackend{
+									ServiceName: "login-api",
+									ServicePort: intstr.IntOrString{IntVal: 8444},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var PublicAPIIngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "extensions/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "public-api-ingress",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":   "management",
+			"component": "ingress-nginx",
+		},
+		Annotations: map[string]string{
+			"kubernetes.io/ingress.class": "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+		},
+	},
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			v1beta1.IngressTLS{
+				Hosts:      []string{"api.MANAGEMENT_HOST"},
+				SecretName: "signup-server-tls",
+			},
+		},
+		Rules: []v1beta1.IngressRule{
+			v1beta1.IngressRule{
+				Host: "api.MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
+					HTTP: &v1beta1.HTTPIngressRuleValue{
+						Paths: []v1beta1.HTTPIngressPath{
+							v1beta1.HTTPIngressPath{
+								Backend: v1beta1.IngressBackend{
+									ServiceName: "public-api",
+									ServicePort: intstr.IntOrString{IntVal: 8081},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 
 // Adapt num replicas to num nodes.
 var IngressNumReplicas int32 = 1
@@ -267,7 +405,8 @@ var IngressDeployment = appsv1.Deployment{
 							"--tcp-services-configmap=kube-system/tcp-services",
 							"--udp-services-configmap=kube-system/udp-services",
 							"--annotations-prefix=nginx.ingress.kubernetes.io",
-							"--v=5",
+							//" --enable-ssl-passthrough",
+							"--v=4",
 						},
 						Ports: []v1.ContainerPort{
 							v1.ContainerPort{
@@ -496,7 +635,7 @@ var IngressRole = rbacv1.Role{
 			Resources:       []string{"ingress-controller-leader-nginx"},
 		},
 		rbacv1.PolicyRule{
-			Verbs:           []string{"create"},
+			Verbs:           []string{"create", "get", "update"},
 			APIGroups:       []string{""},
 			Resources:       []string{"configmaps"},
 		},
@@ -577,6 +716,9 @@ var IngressLoadBalancerConfigMap = v1.ConfigMap{
 			"addonmanager.kubernetes.io/mode":"EnsureExists",
 		},
 	},
+	Data: map[string]string{
+		"http2":"True",
+	},
 }
 
 var IngressTCPServiceConfigMap = v1.ConfigMap{
@@ -623,6 +765,13 @@ type InstallIngress struct {
 	ManagementPublicHost string `json:"management_public_host"`
 }
 
+type Ingresses struct {
+	HTTPIngress *v1beta1.Ingress
+	LoginGRPC *v1beta1.Ingress
+	SignupGRPC *v1beta1.Ingress
+	PublicAPIGRPC *v1beta1.Ingress
+}
+
 func NewInstallIngress(kubeConfigPath string, managementPublicHost string) *InstallIngress {
 	return &InstallIngress{
 		Kubernetes: Kubernetes{
@@ -643,11 +792,26 @@ func NewInstallIngressFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	return &r, nil
 }
 
-func (ii *InstallIngress) getIngressRules() *v1beta1.Ingress {
-	toReturn := IngressRules
-	toReturn.Spec.TLS[0].Hosts[0] = ii.ManagementPublicHost
-	toReturn.Spec.Rules[0].Host = ii.ManagementPublicHost
-	return &toReturn
+func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
+	ingress := IngressRules
+	ingress.Spec.TLS[0].Hosts[0] = ii.ManagementPublicHost
+	ingress.Spec.Rules[0].Host = ii.ManagementPublicHost
+
+	login := LoginAPIIngressRules
+	login.Spec.Rules[0].Host = fmt.Sprintf("login.%s", ii.ManagementPublicHost)
+
+	signup := SignupAPIIngressRules
+	signup.Spec.TLS[0].Hosts[0] = fmt.Sprintf("signup.%s", ii.ManagementPublicHost)
+	signup.Spec.Rules[0].Host = fmt.Sprintf("signup.%s", ii.ManagementPublicHost)
+
+	api := PublicAPIIngressRules
+	api.Spec.TLS[0].Hosts[0] = fmt.Sprintf("api.%s", ii.ManagementPublicHost)
+	api.Spec.Rules[0].Host = fmt.Sprintf("api.%s", ii.ManagementPublicHost)
+
+	return []*v1beta1.Ingress{
+		&ingress, &login, &signup, &api,
+	}
+
 }
 
 func (ii * InstallIngress) getService(installType InstallTargetType) (*v1.Service, *v1.Service) {
@@ -768,10 +932,12 @@ func (ii *InstallIngress) triggerInstall(installType InstallTargetType) derrors.
 		return err
 	}
 	log.Debug().Msg("Installing ingress rules")
-	err = ii.createIngress(ii.getIngressRules())
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress rules")
-		return err
+	for _, ingressToInstall := range ii.getIngressRules(){
+		err = ii.createIngress(ingressToInstall)
+		if err != nil {
+			log.Error().Str("trace", err.DebugReport()).Str("name", ingressToInstall.Name).Msg("error creating ingress rules")
+			return err
+		}
 	}
 
 	var ingressDeployment = IngressDeployment
