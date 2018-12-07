@@ -35,7 +35,6 @@ const CoreDNSUpdateTemplate = `.:53 {
 
 service.nalej {
     log stdout
-    health
     proxy . MANAGEMENT_PUBLIC_HOST:30600
     cache 30
 }

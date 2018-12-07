@@ -798,6 +798,7 @@ func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
 	ingress.Spec.Rules[0].Host = ii.ManagementPublicHost
 
 	login := LoginAPIIngressRules
+	login.Spec.TLS[0].Hosts[0] = fmt.Sprintf("login.%s", ii.ManagementPublicHost)
 	login.Spec.Rules[0].Host = fmt.Sprintf("login.%s", ii.ManagementPublicHost)
 
 	signup := SignupAPIIngressRules
