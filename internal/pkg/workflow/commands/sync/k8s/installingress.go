@@ -53,6 +53,13 @@ var HttpPort = v1.ServicePort{
 	Port:       80,
 	TargetPort: intstr.IntOrString{StrVal: "http"},
 }
+
+var CloudGenericHttpPort = v1.ServicePort{
+	Name:       "http",
+	Protocol:   v1.ProtocolTCP,
+	Port:       80,
+	TargetPort: intstr.IntOrString{IntVal: 80},
+}
 var MinikubeHttpPort = v1.ServicePort{
 	Name:       "http",
 	Protocol:   v1.ProtocolTCP,
@@ -66,6 +73,14 @@ var HttpsPort = v1.ServicePort{
 	Port:       443,
 	TargetPort: intstr.IntOrString{StrVal: "https"},
 }
+
+var CloudGenericHttpsPort = v1.ServicePort{
+	Name:       "https",
+	Protocol:   v1.ProtocolTCP,
+	Port:       443,
+	TargetPort: intstr.IntOrString{IntVal: 443},
+}
+
 var MinikubeHttpsPort = v1.ServicePort{
 	Name:       "https",
 	Protocol:   v1.ProtocolTCP,
@@ -81,22 +96,22 @@ var CloudGenericService = v1.Service{
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "default-http-backend",
+		Name:      "nginx-ingress-controller",
 		Namespace: "kube-system",
 		Labels: map[string]string{
 			"cluster":                   "management",
-			"app.kubernetes.io/name":    "default-http-backend",
+			"app.kubernetes.io/name":    "nginx-ingress-controller",
 			"app.kubernetes.io/part-of": "kube-system",
 			"addonmanager.kubernetes.io/mode":"Reconcile",
 		},
 	},
 	Spec: v1.ServiceSpec{
-		Ports: []v1.ServicePort{HttpPort, HttpsPort},
+		Ports: []v1.ServicePort{CloudGenericHttpPort, CloudGenericHttpsPort},
 		Selector: map[string]string{
-			"app.kubernetes.io/name":    "default-http-backend",
+			"app.kubernetes.io/name":    "nginx-ingress-controller",
 		},
 		Type: v1.ServiceTypeLoadBalancer,
-		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeLocal,
+		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeCluster,
 	},
 }
 
@@ -124,6 +139,29 @@ var MinikubeService = v1.Service{
 		},
 		Type: v1.ServiceTypeNodePort,
 		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeCluster,
+	},
+}
+
+var CloudGenericServiceDefaultBackend = v1.Service{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Service",
+		APIVersion: "v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "default-http-backend",
+		Namespace: "kube-system",
+		Labels: map[string]string{
+			"cluster":                   "management",
+			"app.kubernetes.io/name":    "default-http-backend",
+			"app.kubernetes.io/part-of": "kube-system",
+			"addonmanager.kubernetes.io/mode":"Reconcile",
+		},
+	},
+	Spec: v1.ServiceSpec{
+		Ports: []v1.ServicePort{HttpPort, HttpsPort},
+		Selector: map[string]string{
+			"app.kubernetes.io/name":    "default-http-backend",
+		},
 	},
 }
 
@@ -818,7 +856,7 @@ func (ii * InstallIngress) getService(installType InstallTargetType) (*v1.Servic
 	if installType == MinikubeCluster {
 		return &MinikubeService, &MinikubeServiceDefaultBackend
 	}
-	return &CloudGenericService, &MinikubeServiceDefaultBackend
+	return &CloudGenericService, &CloudGenericServiceDefaultBackend
 }
 
 // GetExistingIngressOnNamespace checks if an ingress exists on a given namespace.
