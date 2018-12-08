@@ -57,8 +57,8 @@ func NewInstallIngressFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 
 func (ii * InstallIngress) getAppClusterIngressRules() []*v1beta1.Ingress {
 	appClusterAPI := AppClusterAPIIngressRules
-	appClusterAPI.Spec.TLS[0].Hosts[0] = fmt.Sprintf("cluster.%s", ii.ManagementPublicHost)
-	appClusterAPI.Spec.Rules[0].Host = fmt.Sprintf("cluster.%s", ii.ManagementPublicHost)
+	appClusterAPI.Spec.TLS[0].Hosts[0] = fmt.Sprintf("appcluster.%s", ii.ManagementPublicHost)
+	appClusterAPI.Spec.Rules[0].Host = fmt.Sprintf("appcluster.%s", ii.ManagementPublicHost)
 	return []*v1beta1.Ingress{&appClusterAPI}
 }
 

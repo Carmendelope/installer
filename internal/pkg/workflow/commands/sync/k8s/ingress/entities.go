@@ -457,13 +457,13 @@ var AppClusterAPIIngressRules = v1beta1.Ingress{
 	Spec: v1beta1.IngressSpec{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
-				Hosts:      []string{"cluster.MANAGEMENT_HOST"},
+				Hosts:      []string{"appcluster.MANAGEMENT_HOST"},
 				SecretName: "app-cluster-api-tls",
 			},
 		},
 		Rules: []v1beta1.IngressRule{
 			v1beta1.IngressRule{
-				Host: "cluster.MANAGEMENT_HOST",
+				Host: "appcluster.MANAGEMENT_HOST",
 				IngressRuleValue: v1beta1.IngressRuleValue{
 					HTTP: &v1beta1.HTTPIngressRuleValue{
 						Paths: []v1beta1.HTTPIngressPath{
