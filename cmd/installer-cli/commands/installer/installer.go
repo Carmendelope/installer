@@ -52,6 +52,7 @@ func NewInstallerFromCLI(
 		ClusterType:       grpc_infrastructure_go.ClusterType_KUBERNETES,
 		InstallBaseSystem: installK8s,
 		KubeConfigRaw:     kubeConfigContent,
+		Hostname: managementClusterHost,
 		Username:          username,
 		PrivateKey:        privateKeyContent,
 		Nodes:             nodes,

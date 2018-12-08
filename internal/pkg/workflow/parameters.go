@@ -13,7 +13,7 @@ import (
 	"github.com/nalej/grpc-installer-go"
 )
 
-const DefaultManagementPort = "80"
+const DefaultManagementPort = "443"
 
 // Parameters required to transform a template into a workflow.
 type Parameters struct {

@@ -136,7 +136,7 @@ func (cmc *CreateManagementConfig) Run(workflowID string) (*entities.CommandResu
 		return nil, connectErr
 	}
 
-	cErr := cmc.createNamespacesIfNotExist(TargetNamespace)
+	cErr := cmc.CreateNamespacesIfNotExist(TargetNamespace)
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}

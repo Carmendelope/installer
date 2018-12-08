@@ -43,15 +43,16 @@ const InstallManagementCluster = `
 			{"type":"sync", "name":"createManagementConfig",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"public_host":"{{$.ManagementClusterHost}}",
-				"public_port":"{{$.ManagementClusterHost}}",
+				"public_port":"{{$.ManagementClusterPort}}",
 				"docker_username":"{{$.Registry.Username}}",
 				"docker_password":"{{$.Registry.Password}}"
 			},
-			{"type":"sync", "name":"installIngress",
-				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-				"management_public_host":"{{$.ManagementClusterHost}}"
-			},
 		{{end}}
+		{"type":"sync", "name":"installIngress",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"management_public_host":"{{$.ManagementClusterHost}}",
+				"on_management_cluster":{{ not $.AppClusterInstall}}
+		},
 		{"type":"sync", "name":"createCredentials",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"username":"{{$.Registry.Username}}",

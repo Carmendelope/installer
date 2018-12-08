@@ -104,25 +104,25 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 
 	switch o := obj.(type) {
 	case *batchV1.Job:
-		return lc.createJob(obj.(*batchV1.Job))
+		return lc.CreateJob(obj.(*batchV1.Job))
 	case *appsv1.Deployment:
-		return lc.createDeployment(obj.(*appsv1.Deployment))
+		return lc.CreateDeployment(obj.(*appsv1.Deployment))
 	case *appsv1.DaemonSet:
 		return lc.launchDaemonSet(obj.(*appsv1.DaemonSet))
 	case *v1.Service:
-		return lc.createService(obj.(*v1.Service))
+		return lc.CreateService(obj.(*v1.Service))
 	case *v1.Secret:
 		return lc.launchSecret(obj.(*v1.Secret))
 	case *v1.ServiceAccount:
-		return lc.createServiceAccount(obj.(*v1.ServiceAccount))
+		return lc.CreateServiceAccount(obj.(*v1.ServiceAccount))
 	case *v1.ConfigMap:
-		return lc.createConfigMap(obj.(*v1.ConfigMap))
+		return lc.CreateConfigMap(obj.(*v1.ConfigMap))
 	case *rbacv1.RoleBinding:
-		return lc.createRoleBinding(obj.(*rbacv1.RoleBinding))
+		return lc.CreateRoleBinding(obj.(*rbacv1.RoleBinding))
 	case *rbacv1.ClusterRole:
-		return lc.createClusterRole(obj.(*rbacv1.ClusterRole))
+		return lc.CreateClusterRole(obj.(*rbacv1.ClusterRole))
 	case *rbacv1.ClusterRoleBinding:
-		return lc.createClusterRoleBinding(obj.(*rbacv1.ClusterRoleBinding))
+		return lc.CreateClusterRoleBinding(obj.(*rbacv1.ClusterRoleBinding))
 	case *policyv1beta1.PodSecurityPolicy:
 		return lc.launchPodSecurityPolicy(obj.(*policyv1beta1.PodSecurityPolicy))
 	case *v1.PersistentVolume:

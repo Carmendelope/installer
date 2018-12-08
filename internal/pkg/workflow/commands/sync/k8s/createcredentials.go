@@ -63,7 +63,7 @@ func (cc *CreateCredentials) Run(workflowID string) (*entities.CommandResult, de
 	if connectErr != nil {
 		return nil, connectErr
 	}
-	cErr := cc.createNamespacesIfNotExist("nalej")
+	cErr := cc.CreateNamespacesIfNotExist("nalej")
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}

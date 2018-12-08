@@ -31,6 +31,9 @@ func (h * Handler) ValidInstallRequest(installRequest *grpc_installer_go.Install
 	if installRequest.ClusterId == "" {
 		return derrors.NewInvalidArgumentError("expecting ClusterId")
 	}
+	if installRequest.Hostname == "" {
+		return derrors.NewInvalidArgumentError("hostname must be set with the ingress hostname")
+	}
 	authFound := false
 
 	if installRequest.Username != "" {

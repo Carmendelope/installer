@@ -56,7 +56,7 @@ func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult,
 		return nil, connectErr
 	}
 
-	cErr := ccc.createNamespacesIfNotExist("nalej")
+	cErr := ccc.CreateNamespacesIfNotExist("nalej")
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}

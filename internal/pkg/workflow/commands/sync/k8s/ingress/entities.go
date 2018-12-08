@@ -2,26 +2,16 @@
  * Copyright (C) 2018 Nalej - All Rights Reserved
  */
 
-// References
-// https://github.com/kubernetes/minikube/blob/master/deploy/addons/ingress/ingress-dp.yaml
-
-package k8s
+package ingress
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/nalej/derrors"
-	"github.com/nalej/installer/internal/pkg/errors"
-	"github.com/nalej/installer/internal/pkg/workflow/entities"
-	"github.com/rs/zerolog/log"
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"strings"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 /*
@@ -232,19 +222,21 @@ var IngressRules = v1beta1.Ingress{
 		},
 		Annotations: map[string]string{
 			"kubernetes.io/ingress.class": "nginx",
+			"certmanager.k8s.io/acme-challenge-type": "http01",
+			"certmanager.k8s.io/issuer": "letsencrypt-staging",
 			// "nginx.ingress.kubernetes.io/rewrite-target": "/", Not required as we do not need to rewrite the paths.
 		},
 	},
 	Spec: v1beta1.IngressSpec{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
-				Hosts:      []string{"MANAGEMENT_HOST"},
+				Hosts:      []string{"web.MANAGEMENT_HOST"},
 				SecretName: "ingress-tls",
 			},
 		},
 		Rules: []v1beta1.IngressRule{
 			v1beta1.IngressRule{
-				Host: "MANAGEMENT_HOST",
+				Host: "web.MANAGEMENT_HOST",
 				IngressRuleValue: v1beta1.IngressRuleValue{
 					HTTP: IngressRulesPaths,
 				},
@@ -267,6 +259,8 @@ var SignupAPIIngressRules = v1beta1.Ingress{
 		},
 		Annotations: map[string]string{
 			"kubernetes.io/ingress.class": "nginx",
+			"certmanager.k8s.io/acme-challenge-type": "http01",
+			"certmanager.k8s.io/issuer": "letsencrypt-staging",
 			//"nginx.ingress.kubernetes.io/ssl-passthrough": "true",
 			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
@@ -313,6 +307,8 @@ var LoginAPIIngressRules = v1beta1.Ingress{
 		},
 		Annotations: map[string]string{
 			"kubernetes.io/ingress.class": "nginx",
+			"certmanager.k8s.io/acme-challenge-type": "http01",
+			"certmanager.k8s.io/issuer": "letsencrypt-staging",
 			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		},
@@ -358,6 +354,8 @@ var PublicAPIIngressRules = v1beta1.Ingress{
 		},
 		Annotations: map[string]string{
 			"kubernetes.io/ingress.class": "nginx",
+			"certmanager.k8s.io/acme-challenge-type": "http01",
+			"certmanager.k8s.io/issuer": "letsencrypt-staging",
 			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		},
@@ -389,6 +387,99 @@ var PublicAPIIngressRules = v1beta1.Ingress{
 	},
 }
 
+var ClusterAPIIngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "extensions/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "cluster-api-ingress",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":   "management",
+			"component": "ingress-nginx",
+		},
+		Annotations: map[string]string{
+			"kubernetes.io/ingress.class": "nginx",
+			"certmanager.k8s.io/acme-challenge-type": "http01",
+			"certmanager.k8s.io/issuer": "letsencrypt-staging",
+			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+		},
+	},
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			v1beta1.IngressTLS{
+				Hosts:      []string{"cluster.MANAGEMENT_HOST"},
+				SecretName: "signup-server-tls",
+			},
+		},
+		Rules: []v1beta1.IngressRule{
+			v1beta1.IngressRule{
+				Host: "cluster.MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
+					HTTP: &v1beta1.HTTPIngressRuleValue{
+						Paths: []v1beta1.HTTPIngressPath{
+							v1beta1.HTTPIngressPath{
+								Backend: v1beta1.IngressBackend{
+									ServiceName: "cluster-api",
+									ServicePort: intstr.IntOrString{IntVal: 8280},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var AppClusterAPIIngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "extensions/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "app-cluster-api-ingress",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":   "management",
+			"component": "ingress-nginx",
+		},
+		Annotations: map[string]string{
+			"kubernetes.io/ingress.class": "nginx",
+			"certmanager.k8s.io/acme-challenge-type": "http01",
+			"certmanager.k8s.io/issuer": "letsencrypt-staging",
+			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+		},
+	},
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			v1beta1.IngressTLS{
+				Hosts:      []string{"cluster.MANAGEMENT_HOST"},
+				SecretName: "app-cluster-api-tls",
+			},
+		},
+		Rules: []v1beta1.IngressRule{
+			v1beta1.IngressRule{
+				Host: "cluster.MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
+					HTTP: &v1beta1.HTTPIngressRuleValue{
+						Paths: []v1beta1.HTTPIngressPath{
+							v1beta1.HTTPIngressPath{
+								Backend: v1beta1.IngressBackend{
+									ServiceName: "app-cluster-api",
+									ServicePort: intstr.IntOrString{IntVal: 8281},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
 
 // Adapt num replicas to num nodes.
 var IngressNumReplicas int32 = 1
@@ -789,304 +880,16 @@ var IngressUDPServiceConfigMap = v1.ConfigMap{
 	},
 }
 
-
-type InstallTargetType int32
-
-const (
-	MinikubeCluster InstallTargetType = iota + 1
-	AzureCluster
-	Unknown
-)
-
-type InstallIngress struct {
-	Kubernetes
-	ManagementPublicHost string `json:"management_public_host"`
-}
-
-type Ingresses struct {
-	HTTPIngress *v1beta1.Ingress
-	LoginGRPC *v1beta1.Ingress
-	SignupGRPC *v1beta1.Ingress
-	PublicAPIGRPC *v1beta1.Ingress
-}
-
-func NewInstallIngress(kubeConfigPath string, managementPublicHost string) *InstallIngress {
-	return &InstallIngress{
-		Kubernetes: Kubernetes{
-			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallIngress),
-			KubeConfigPath:     kubeConfigPath,
-		},
-		ManagementPublicHost: managementPublicHost,
-	}
-}
-
-func NewInstallIngressFromJSON(raw []byte) (*entities.Command, derrors.Error) {
-	ccc := &InstallIngress{}
-	if err := json.Unmarshal(raw, &ccc); err != nil {
-		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
-	}
-	ccc.CommandID = entities.GenerateCommandID(ccc.Name())
-	var r entities.Command = ccc
-	return &r, nil
-}
-
-func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
-	ingress := IngressRules
-	ingress.Spec.TLS[0].Hosts[0] = ii.ManagementPublicHost
-	ingress.Spec.Rules[0].Host = ii.ManagementPublicHost
-
-	login := LoginAPIIngressRules
-	login.Spec.TLS[0].Hosts[0] = fmt.Sprintf("login.%s", ii.ManagementPublicHost)
-	login.Spec.Rules[0].Host = fmt.Sprintf("login.%s", ii.ManagementPublicHost)
-
-	signup := SignupAPIIngressRules
-	signup.Spec.TLS[0].Hosts[0] = fmt.Sprintf("signup.%s", ii.ManagementPublicHost)
-	signup.Spec.Rules[0].Host = fmt.Sprintf("signup.%s", ii.ManagementPublicHost)
-
-	api := PublicAPIIngressRules
-	api.Spec.TLS[0].Hosts[0] = fmt.Sprintf("api.%s", ii.ManagementPublicHost)
-	api.Spec.Rules[0].Host = fmt.Sprintf("api.%s", ii.ManagementPublicHost)
-
-	return []*v1beta1.Ingress{
-		&ingress, &login, &signup, &api,
-	}
-
-}
-
-func (ii * InstallIngress) getService(installType InstallTargetType) (*v1.Service, *v1.Service) {
-	if installType == MinikubeCluster {
-		return &MinikubeService, &MinikubeServiceDefaultBackend
-	}
-	return &CloudGenericService, &CloudGenericServiceDefaultBackend
-}
-
-// GetExistingIngressOnNamespace checks if an ingress exists on a given namespace.
-func (ii *InstallIngress) GetExistingIngressOnNamespace(namespace string) (*v1beta1.Ingress, derrors.Error) {
-	client := ii.Client.ExtensionsV1beta1().Ingresses(namespace)
-	opts := metaV1.ListOptions{}
-	ingresses, err := client.List(opts)
-	if err != nil {
-		return nil, derrors.NewInternalError("cannot retrieve ingresses", err)
-	}
-	if len(ingresses.Items) > 0 {
-		return &ingresses.Items[0], nil
-	}
-	return nil, nil
-}
-
-// GetExistingIngress retrieves an ingress if it exists on the system.
-func (ii *InstallIngress) GetExistingIngress() (*v1beta1.Ingress, derrors.Error) {
-	opts := metaV1.ListOptions{}
-	namespaces, err := ii.Client.CoreV1().Namespaces().List(opts)
-	if err != nil {
-		return nil, derrors.NewInternalError("cannot retrieve namespaces", err)
-	}
-	for _, ns := range namespaces.Items {
-		found, err := ii.GetExistingIngressOnNamespace(ns.Name)
-		if err != nil {
-			return nil, err
-		}
-		if found != nil {
-			return found, nil
-		}
-	}
-	return nil, nil
-}
-
-func (ii *InstallIngress) triggerInstall(installType InstallTargetType) derrors.Error {
-
-	err := ii.createNamespacesIfNotExist("nalej")
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating nalej namespace")
-		return err
-	}
-
-	log.Debug().Msg("Installing ingress service account")
-	err = ii.createServiceAccount(&IngressServiceAccount)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress service account")
-		return err
-	}
-
-	log.Debug().Msg("Installing ingress cluster role")
-	err = ii.createClusterRole(&IngressClusterRole)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress cluster role")
-		return err
-	}
-
-	log.Debug().Msg("Installing ingress role")
-	err = ii.createRole(&IngressRole)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress role")
-		return err
-	}
-
-	log.Debug().Msg("Installing ingress role binding")
-	err = ii.createRoleBinding(&IngressRoleBinding)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress role binding")
-		return err
-	}
-
-	log.Debug().Msg("Installing ingress cluster role binding")
-	err = ii.createClusterRoleBinding(&IngressClusterRoleBinding)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress cluster role binding")
-		return err
-	}
-
-	log.Debug().Msg("Installing ingress load balancer configmap")
-	err = ii.createConfigMap(&IngressLoadBalancerConfigMap)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress load balancer configmap")
-		return err
-	}
-
-	log.Debug().Msg("Installing ingress TCP configmap")
-	err = ii.createConfigMap(&IngressTCPServiceConfigMap)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress TCP configmap")
-		return err
-	}
-
-	log.Debug().Msg("Installing ingress UDP configmap")
-	err = ii.createConfigMap(&IngressUDPServiceConfigMap)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress UDP configmap")
-		return err
-	}
-
-	log.Debug().Msg("Installing ingress service")
-	ingressBackend, defaultBackend := ii.getService(installType)
-
-	err = ii.createService(ingressBackend)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress service")
-		return err
-	}
-	err = ii.createService(defaultBackend)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress default service")
-		return err
-	}
-	log.Debug().Msg("Installing ingress rules")
-	for _, ingressToInstall := range ii.getIngressRules(){
-		err = ii.createIngress(ingressToInstall)
-		if err != nil {
-			log.Error().Str("trace", err.DebugReport()).Str("name", ingressToInstall.Name).Msg("error creating ingress rules")
-			return err
-		}
-	}
-
-	var ingressDeployment = IngressDeployment
-
-	if installType == MinikubeCluster {
-		log.Debug().Msg("Adding extra arguments and ports for Minikube dev install")
-		// args - --report-node-internal-ip-address
-		args := ingressDeployment.Spec.Template.Spec.Containers[0].Args
-		args = append(args, "--report-node-internal-ip-address")
-		ingressDeployment.Spec.Template.Spec.Containers[0].Args = args
-		statusPort := v1.ContainerPort{
-			Name:          "stats", // on /nginx-status
-			HostPort:      18080,
-			ContainerPort: 18080,
-		}
-		ports := ingressDeployment.Spec.Template.Spec.Containers[0].Ports
-		ports = append(ports, statusPort)
-		ingressDeployment.Spec.Template.Spec.Containers[0].Ports = ports
-	}
-
-	log.Debug().Msg("installing ingress deployment")
-	err = ii.createDeployment(&ingressDeployment)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress deployment")
-		return err
-	}
-	log.Debug().Msg("installing default ingress backend")
-	err = ii.createDeployment(&IngressDefaultBackend)
-	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress backend")
-		return err
-	}
-
-	return nil
-}
-
-func (ii *InstallIngress) DetectInstallType(nodes *v1.NodeList) InstallTargetType {
-	// Check images for minikube
-	for _, n := range nodes.Items {
-		log.Debug().Interface("node", n).Msg("Analyzing node to detect install")
-		for k, _ := range n.Labels {
-			if strings.Contains(k, "kubernetes.azure.com") {
-				return AzureCluster
-			}
-		}
-		for _, img := range n.Status.Images {
-			if strings.Contains(img.Names[0], "k8s-minikube") {
-				return MinikubeCluster
-			}
-		}
-	}
-	return Unknown
-}
-
-func (ii *InstallIngress) InstallIngress() derrors.Error {
-	// Detect the type of target install
-	opts := metaV1.ListOptions{}
-	client := ii.Client.CoreV1().Nodes()
-	nodes, err := client.List(opts)
-	if err != nil {
-		return derrors.AsError(err, "cannot obtain server nodes")
-	}
-	detected := ii.DetectInstallType(nodes)
-	if detected == MinikubeCluster {
-		log.Debug().Msg("Installing ingress in a minikube cluster")
-	}
-	if detected == AzureCluster {
-		log.Debug().Msg("Installing ingress in an Azure cluster")
-	}
-	if detected == Unknown {
-		log.Warn().Msg("Cannot determine cluster type, assuming Minikube")
-		detected = MinikubeCluster
-	}
-	if detected != Unknown {
-		return ii.triggerInstall(detected)
-	}
-	return derrors.NewNotFoundError("cannot determine type of cluster for the ingress service")
-}
-
-func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
-	connectErr := ii.Connect()
-	if connectErr != nil {
-		return nil, connectErr
-	}
-	existingIngress, err := ii.GetExistingIngress()
-	if err != nil {
-		return nil, err
-	}
-	if existingIngress != nil {
-		log.Warn().Interface("ingress", existingIngress).Msg("An ingress has been found")
-		return entities.NewSuccessCommand([]byte("[WARN] Ingress has not been installed as it already exists")), nil
-	}
-
-	err = ii.InstallIngress()
-	if err != nil {
-		return entities.NewCommandResult(
-			false, "cannot install an ingress", err), nil
-	}
-
-	return entities.NewSuccessCommand([]byte("Ingress controller credentials have been created")), nil
-}
-
-func (ii *InstallIngress) String() string {
-	return fmt.Sprintf("SYNC InstallIngress")
-}
-
-func (ii *InstallIngress) PrettyPrint(indentation int) string {
-	return strings.Repeat(" ", indentation) + ii.String()
-}
-
-func (ii *InstallIngress) UserString() string {
-	return fmt.Sprintf("Installing ingress on Kubernetes")
+// The Ingress definition structure contains all the elements required to setup an ingress.
+// TODO Refactor into this
+type IngressDefinition struct {
+	Services []*v1.Service
+	Ingresses []*v1beta1.Ingress
+	Deployments []*appsv1.Deployment
+	ServiceAccounts [] *v1.ServiceAccount
+	ClusterRoles [] *rbacv1.ClusterRole
+	Roles [] *rbacv1.Role
+	RoleBindings []*rbacv1.RoleBinding
+	ClusterRoleBindings []*rbacv1.ClusterRoleBinding
+	ConfigMaps []*v1.ConfigMap
 }
