@@ -76,6 +76,8 @@ func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult,
 			"cluster_id":             ccc.ClusterID,
 			"management_public_host": ccc.ManagementPublicHost,
 			"management_public_port": ccc.ManagementPublicPort,
+			"cluster_api_hostname": fmt.Sprintf("cluster.%s", ccc.ManagementPublicHost),
+			"login_api_hostname": fmt.Sprintf("login.%s", ccc.ManagementPublicHost),
 		},
 	}
 
