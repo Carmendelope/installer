@@ -35,7 +35,6 @@ const CoreDNSUpdateTemplate = `.:53 {
 
 service.nalej {
     log stdout
-    health
     proxy . MANAGEMENT_PUBLIC_HOST:30600
     cache 30
 }
@@ -49,7 +48,7 @@ type UpdateCoreDNS struct {
 func NewUpdateCoreDNS(kubeConfigPath string, managementPublicHost string) * UpdateCoreDNS {
 	return &UpdateCoreDNS{
 		Kubernetes:    Kubernetes{
-			GenericSyncCommand: *entities.NewSyncCommand(entities.UpadateCoreDNS),
+			GenericSyncCommand: *entities.NewSyncCommand(entities.UpdateCoreDNS),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		ManagementPublicHost: managementPublicHost,

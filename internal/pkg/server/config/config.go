@@ -30,6 +30,7 @@ func NewConfiguration(
 	componentsPath string,
 	binaryPath string,
 	tempPath string,
+	clusterPublicHostname string,
 	managementClusterHost string,
 	managementClusterPort string) * Config {
 	return &Config{

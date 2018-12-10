@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s"
+	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s/ingress"
 
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/async"
@@ -87,12 +88,14 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return k8s.NewCreateClusterConfigFromJSON(raw)
 	case entities.CreateManagementConfig:
 		return k8s.NewCreateManagementConfigFromJSON(raw)
-	case entities.UpadateCoreDNS:
+	case entities.UpdateCoreDNS:
 		return k8s.NewUpdateCoreDNSFromJSON(raw)
 	case entities.CreateCredentials:
 		return k8s.NewCreateCredentialsJSON(raw)
 	case entities.AddClusterUser:
 		return k8s.NewAddClusterUserFromJSON(raw)
+	case entities.InstallIngress:
+		return ingress.NewInstallIngressFromJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}

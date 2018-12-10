@@ -59,8 +59,6 @@ func createDeployment(basePath string, namespace string, index int) {
 	log.Debug().Str("file", outputPath).Msg("deployment has been created")
 }
 
-
-
 var _ = ginkgo.Describe("A launch command", func(){
 
 	const numDeployments = 2

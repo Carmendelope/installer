@@ -50,10 +50,12 @@ const CreateClusterConfig = "createClusterConfig"
 
 const CreateManagementConfig = "createManagementConfig"
 
-const UpadateCoreDNS = "updateCoreDNS"
+const UpdateCoreDNS = "updateCoreDNS"
 
 const CreateCredentials = "createCredentials"
 
 const CreateAuthxSecret = "createAuthxSecret"
 
 const AddClusterUser = "addClusterUser"
+
+const InstallIngress = "installIngress"
