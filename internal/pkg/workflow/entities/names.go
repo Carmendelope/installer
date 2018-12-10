@@ -52,6 +52,8 @@ const CreateManagementConfig = "createManagementConfig"
 
 const UpdateCoreDNS = "updateCoreDNS"
 
+const UpdateKubeDNS = "updateKubeDNS"
+
 const CreateCredentials = "createCredentials"
 
 const CreateAuthxSecret = "createAuthxSecret"
@@ -59,3 +61,5 @@ const CreateAuthxSecret = "createAuthxSecret"
 const AddClusterUser = "addClusterUser"
 
 const InstallIngress = "installIngress"
+
+const InstallMngtDNS = "installMngtDNS"

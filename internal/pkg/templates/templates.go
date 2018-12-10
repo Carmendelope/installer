@@ -30,10 +30,19 @@ const InstallManagementCluster = `
 				"management_public_port":"{{$.ManagementClusterPort}}",
 				"cluster_public_hostname":"{{$.InstallRequest.Hostname}}"
 			},
-			{"type":"sync", "name":"updateCoreDNS",
-				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-				"management_public_host":"{{$.ManagementClusterHost}}"
-			},
+			{{if $.InstallRequest.UseCoreDns }}			
+				{"type":"sync", "name":"updateCoreDNS",
+					"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+					"management_public_host":"{{$.ManagementClusterHost}}"
+				},
+			{{end}}
+			{{if $.InstallRequest.UseKubeDns }}			
+				{"type":"sync", "name":"updateKubeDNS",
+					"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+					"management_public_host":"{{$.ManagementClusterHost}}"
+				},
+			{{end}}
+
 			{"type":"sync", "name":"addClusterUser",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"organization_id":"{{$.InstallRequest.OrganizationId}}",
@@ -47,6 +56,10 @@ const InstallManagementCluster = `
 				"public_port":"{{$.ManagementClusterPort}}",
 				"docker_username":"{{$.Registry.Username}}",
 				"docker_password":"{{$.Registry.Password}}"
+			},
+			{"type":"sync", "name":"installMngtDNS",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
 			},
 		{{end}}
 		{"type":"sync", "name":"installIngress",

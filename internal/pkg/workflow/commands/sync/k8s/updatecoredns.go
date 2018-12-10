@@ -19,6 +19,7 @@ import (
 const CoreDNSNamespace = "kube-system"
 const CoreDNSConfigName = "coredns"
 const CoreDNSSection = "Corefile"
+const DefaultDNSPort = 30600
 const CoreDNSUpdateTemplate = `.:53 {
     errors
     health
@@ -35,7 +36,7 @@ const CoreDNSUpdateTemplate = `.:53 {
 
 service.nalej {
     log stdout
-    proxy . MANAGEMENT_PUBLIC_HOST:30600
+    proxy . MANAGEMENT_PUBLIC_IPS
     cache 30
 }
 `
@@ -70,7 +71,6 @@ func (uc * UpdateCoreDNS) Run(workflowID string) (*entities.CommandResult, derro
 	if connectErr != nil {
 		return nil, connectErr
 	}
-
 	existing, err := uc.getExistingConfig()
 	if err != nil{
 		return entities.NewCommandResult(false, "cannot update core dns", err), nil
@@ -94,7 +94,15 @@ func (uc * UpdateCoreDNS) getExistingConfig() (*v1.ConfigMap, derrors.Error){
 
 func (uc * UpdateCoreDNS) updateConfig(cfg *v1.ConfigMap) derrors.Error {
 	log.Debug().Interface("data", cfg.Data[CoreDNSSection]).Msg("current data")
-	toUpdate := strings.Replace(CoreDNSUpdateTemplate, "MANAGEMENT_PUBLIC_HOST", uc.ManagementPublicHost, 1)
+	mgntIPs, rErr := uc.ResolveIP(uc.ManagementPublicHost)
+	if rErr != nil{
+		return rErr
+	}
+	for _, ip := range mgntIPs{
+		ip = fmt.Sprintf("%s:%d", ip, DefaultDNSPort)
+	}
+
+	toUpdate := strings.Replace(CoreDNSUpdateTemplate, "MANAGEMENT_PUBLIC_IPS", strings.Join(mgntIPs, " "), 1)
 	cfg.Data[CoreDNSSection] = toUpdate
 	client := uc.Client.CoreV1().ConfigMaps(CoreDNSNamespace)
 	updated, err := client.Update(cfg)
