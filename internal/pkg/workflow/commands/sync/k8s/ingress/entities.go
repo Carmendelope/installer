@@ -443,7 +443,7 @@ var AppClusterAPIIngressRules = v1beta1.Ingress{
 		Name:      "app-cluster-api-ingress",
 		Namespace: "nalej",
 		Labels: map[string]string{
-			"cluster":   "management",
+			"cluster":   "application",
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{

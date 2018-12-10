@@ -27,7 +27,8 @@ const InstallManagementCluster = `
 				"organization_id":"{{$.InstallRequest.OrganizationId}}",
 				"cluster_id":"{{$.InstallRequest.ClusterId}}",
 				"management_public_host":"{{$.ManagementClusterHost}}",
-				"management_public_port":"{{$.ManagementClusterPort}}"
+				"management_public_port":"{{$.ManagementClusterPort}}",
+				"cluster_public_hostname":"{{$.InstallRequest.Hostname}}"
 			},
 			{"type":"sync", "name":"updateCoreDNS",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
@@ -50,7 +51,7 @@ const InstallManagementCluster = `
 		{{end}}
 		{"type":"sync", "name":"installIngress",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-				"management_public_host":"{{$.ManagementClusterHost}}",
+				"management_public_host":"{{$.InstallRequest.Hostname}}",
 				"on_management_cluster":{{ not $.AppClusterInstall}}
 		},
 		{"type":"sync", "name":"createCredentials",

@@ -22,6 +22,7 @@ type CreateClusterConfig struct {
 	ClusterID            string `json:"cluster_id"`
 	ManagementPublicHost string `json:"management_public_host"`
 	ManagementPublicPort string `json:"management_public_port"`
+	ClusterPublicHostname string `json:"cluster_public_hostname"`
 }
 
 func NewCreateClusterConfig(
@@ -76,6 +77,7 @@ func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult,
 			"cluster_id":             ccc.ClusterID,
 			"management_public_host": ccc.ManagementPublicHost,
 			"management_public_port": ccc.ManagementPublicPort,
+			"cluster_public_hostname": ccc.ClusterPublicHostname,
 			"cluster_api_hostname": fmt.Sprintf("cluster.%s", ccc.ManagementPublicHost),
 			"login_api_hostname": fmt.Sprintf("login.%s", ccc.ManagementPublicHost),
 		},
