@@ -28,21 +28,23 @@ const InstallManagementCluster = `
 				"cluster_id":"{{$.InstallRequest.ClusterId}}",
 				"management_public_host":"{{$.ManagementClusterHost}}",
 				"management_public_port":"{{$.ManagementClusterPort}}",
-				"cluster_public_hostname":"{{$.InstallRequest.Hostname}}"
+				"cluster_public_hostname":"{{$.InstallRequest.Hostname}}",
+				"dns_public_host":"{{$.DNSClusterHost}}",
+				"dns_public_port":"{{$.DNSClusterPort}}"
 			},
-			{{if $.InstallRequest.UseCoreDns }}			
-				{"type":"sync", "name":"updateCoreDNS",
-					"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-					"dns_public_host":"{{$.DNSClusterHost}}",
-					"dns_public_port":"{{$.DNSClusterPort}}"
-				},
-			{{end}}
-			{{if $.InstallRequest.UseKubeDns }}			
-				{"type":"sync", "name":"updateKubeDNS",
-					"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-					"dns_public_host":"{{$.DNSClusterHost}}"
-				},
-			{{end}}
+			// {{if $.InstallRequest.UseCoreDns }}			
+			//	{"type":"sync", "name":"updateCoreDNS",
+			//		"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			//		"dns_public_host":"{{$.DNSClusterHost}}",
+			//		"dns_public_port":"{{$.DNSClusterPort}}"
+			//	},
+			// {{end}}
+			// {{if $.InstallRequest.UseKubeDns }}			
+			//	{"type":"sync", "name":"updateKubeDNS",
+			//		"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			//		"dns_public_host":"{{$.DNSClusterHost}}"
+			//	},
+			// {{end}}
 
 			{"type":"sync", "name":"addClusterUser",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
