@@ -44,6 +44,16 @@ spec:
             configMapKeyRef:
               name: management-config
               key: public_port
+        - name: DNS_PUBLIC_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: management-config
+              key: dns_host
+        - name: DNS_PUBLIC_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: management-config
+              key: dns_port
         - name: DOCKER_USERNAME
           valueFrom:
             secretKeyRef:
@@ -59,6 +69,8 @@ spec:
           - "--debug"
           - "--managementClusterPublicHost=$(MNGT_PUBLIC_HOST)"
           - "--managementClusterPublicPort=$(MNGT_PUBLIC_PORT)"
+          - "--dnsClusterPublicHost=$(DNS_PUBLIC_HOST)"
+          - "--dnsClusterPublicPort=$(DNS_PUBLIC_PORT)"
           - "--componentsPath=/nalej/assets/"
           - "--binaryPath=/nalej/bin/"
           - "--tempPath=/tmp/nalej/"

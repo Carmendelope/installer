@@ -28,8 +28,11 @@ func NewInstallerFromCLI(
 	username string,
 	privateKeyPath string,
 	nodes []string,
+	targetPlatform string,
 	paths workflow.Paths,
 	managementClusterHost string,
+	dnsClusterHost string,
+	dnsClusterPort string,
 	appClusterInstall bool,
 	dockerUsername string,
 	dockerPassword string,
@@ -56,12 +59,15 @@ func NewInstallerFromCLI(
 		Username:          username,
 		PrivateKey:        privateKeyContent,
 		Nodes:             nodes,
+		TargetPlatform: grpc_installer_go.Platform(grpc_installer_go.Platform_value[targetPlatform]),
 	}
 
 	registryCredentials := workflow.NewRegistryCredentials(dockerUsername, dockerPassword)
 
 	params := workflow.NewParameters(request, workflow.Assets{},
-		paths, managementClusterHost, workflow.DefaultManagementPort, appClusterInstall, *registryCredentials)
+		paths, managementClusterHost, workflow.DefaultManagementPort,
+		dnsClusterHost, dnsClusterPort,
+		appClusterInstall, *registryCredentials)
 	return NewInstaller(*params), nil
 }
 

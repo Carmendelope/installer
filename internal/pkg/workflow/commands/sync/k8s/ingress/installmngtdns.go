@@ -47,8 +47,6 @@ func (imd *InstallMngtDNS) Run(workflowID string) (*entities.CommandResult, derr
 		return nil, connectErr
 	}
 
-
-
 	switch imd.PlatformType {
 	case grpc_installer_go.Platform_AZURE.String():
 		return imd.InstallAzure(workflowID)

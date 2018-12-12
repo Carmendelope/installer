@@ -11,18 +11,36 @@ import (
 )
 
 var AzureDNSPort = v1.ServicePort{
-	Name:       "dns",
+	Name:       "dns-udp",
 	Protocol:   v1.ProtocolUDP,
 	Port:       53,
-	TargetPort: intstr.IntOrString{IntVal: 53},
+	TargetPort: intstr.IntOrString{StrVal: "dns-udp"},
 }
 
-var MinikubeDNSPort = v1.ServicePort{
-	Name:       "dns",
+var MinikubeDNSUDPPort = v1.ServicePort{
+	Name:       "dns-udp",
 	Protocol:   v1.ProtocolUDP,
 	Port:       53,
-	TargetPort: intstr.IntOrString{IntVal: 53},
+	TargetPort: intstr.IntOrString{StrVal: "dns-udp"},
+	NodePort: 53,
 }
+
+var MinikubeDNSTCPPort = v1.ServicePort{
+	Name:       "dns-tcp",
+	Protocol:   v1.ProtocolTCP,
+	Port:       53,
+	TargetPort: intstr.IntOrString{StrVal: "dns-tcp"},
+	NodePort: 53,
+}
+
+var MinikubeDNSUIPort = v1.ServicePort{
+	Name:       "consul-gui",
+	Protocol:   v1.ProtocolTCP,
+	Port:       8500,
+	TargetPort: intstr.IntOrString{StrVal: "consul-gui"},
+	NodePort: 30500,
+}
+
 
 var AzureConsulService = v1.Service{
 	TypeMeta: metaV1.TypeMeta{
@@ -30,24 +48,23 @@ var AzureConsulService = v1.Service{
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "dns-consul-server",
-		Namespace: "kube-system",
+		Name:      "dns-server-consul-dns",
+		Namespace: "nalej",
 		Labels: map[string]string{
 			"cluster":                   "management",
-			"app.kubernetes.io/name":    "dns-consul-server",
-			"app.kubernetes.io/part-of": "kube-system",
-			"addonmanager.kubernetes.io/mode":"Reconcile",
+			"component": "dns-server",
+			"release" : "dns-server",
+			"app": "consul",
 		},
 	},
 	Spec: v1.ServiceSpec{
 		Ports: []v1.ServicePort{AzureDNSPort},
 		Selector: map[string]string{
 			"app":    "consul",
-			"component":"dns-server",
+			"hasDNS":"true",
 			"release": "dns-server",
 		},
 		Type: v1.ServiceTypeLoadBalancer,
-		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeCluster,
 	},
 }
 
@@ -57,23 +74,22 @@ var MinikubeConsulService = v1.Service{
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "nginx-ingress-controller",
-		Namespace: "kube-system",
+		Name:      "dns-server-consul-dns",
+		Namespace: "nalej",
 		Labels: map[string]string{
 			"cluster":                   "management",
-			"app.kubernetes.io/name":    "dns-consul-server",
-			"app.kubernetes.io/part-of": "kube-system",
-			"addonmanager.kubernetes.io/mode":"Reconcile",
-			"kubernetes.io/minikube-addons":"ingress",
-			"kubernetes.io/minikube-addons-endpoint":"ingress",
+			"component": "dns-server",
+			"release" : "dns-server",
+			"app": "consul",
 		},
 	},
 	Spec: v1.ServiceSpec{
-		Ports: []v1.ServicePort{MinikubeHttpPort, MinikubeHttpsPort},
+		Ports: []v1.ServicePort{MinikubeDNSUDPPort, MinikubeDNSTCPPort, MinikubeDNSUIPort},
 		Selector: map[string]string{
-			"app.kubernetes.io/name":    "dns-consul-server",
+			"app":    "consul",
+			"hasDNS":"true",
+			"release": "dns-server",
 		},
 		Type: v1.ServiceTypeNodePort,
-		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeCluster,
 	},
 }

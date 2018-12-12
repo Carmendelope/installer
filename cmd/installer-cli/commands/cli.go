@@ -20,8 +20,11 @@ var kubeConfigPath string
 var username string
 var privateKeyPath string
 var nodes string
+var targetPlatform string
 
 var managementPublicHost string
+var dnsClusterHost string
+var dnsClusterPort int
 
 var componentsPath string
 var binaryPath string
@@ -54,10 +57,16 @@ func init() {
 		"Specify the private key path to connect to the remote machine (Only if installK8s is selected)")
 	cliCmd.PersistentFlags().StringVar(&nodes, "nodes", "",
 		"List of IPs of the nodes to be installed separated by comma (Only if installK8s is selected)")
+	cliCmd.PersistentFlags().StringVar(&targetPlatform, "targetPlatform", "MINIKUBE", "Target platform: MINIKUBE or AZURE")
 	cliCmd.PersistentFlags().StringVar(&managementPublicHost, "managementClusterPublicHost", "",
 		"Public FQDN where the management cluster is reachable by the application clusters")
 	cliCmd.MarkPersistentFlagRequired("managementClusterPublicHost")
 
+	cliCmd.PersistentFlags().StringVar(&dnsClusterHost, "dnsClusterPublicHost", "",
+		"Public FQDN where the management cluster is reachable for DNS requests by the application clusters")
+	cliCmd.MarkPersistentFlagRequired("dnsClusterPublicHost")
+	cliCmd.PersistentFlags().IntVar(&dnsClusterPort, "dnsClusterPublicPort", 53,
+		"Public port where the management cluster is reachable for DNS request by the application clusters")
 
 	cliCmd.PersistentFlags().StringVar(&componentsPath, "componentsPath", "./assets/",
 		"Directory with the components to be installed")

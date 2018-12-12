@@ -21,6 +21,8 @@ type Config struct {
 	TempPath string
 	ManagementClusterHost string
 	ManagementClusterPort string
+	DNSClusterHost string
+	DNSClusterPort string
 	DockerRegistryUsername string
 	DockerRegistryPassword string
 }
@@ -32,7 +34,10 @@ func NewConfiguration(
 	tempPath string,
 	clusterPublicHostname string,
 	managementClusterHost string,
-	managementClusterPort string) * Config {
+	managementClusterPort string,
+	dnsClusterHost string,
+	dnsClusterPort string,
+	) * Config {
 	return &Config{
 		Port: port,
 		ComponentsPath: componentsPath,
@@ -40,6 +45,8 @@ func NewConfiguration(
 		TempPath:       tempPath,
 		ManagementClusterHost: managementClusterHost,
 		ManagementClusterPort: managementClusterPort,
+		DNSClusterHost: dnsClusterHost,
+		DNSClusterPort: dnsClusterPort,
 	}
 }
 
@@ -72,10 +79,16 @@ func (conf * Config) Validate() derrors.Error {
 		return derrors.NewInvalidArgumentError("port must be set")
 	}
 	if conf.ManagementClusterHost == "" {
-		return derrors.NewInvalidArgumentError("managementClusterHost")
+		return derrors.NewInvalidArgumentError("managementClusterHost must be set")
 	}
 	if conf.ManagementClusterPort == "" {
-		return derrors.NewInvalidArgumentError("managementClusterPort")
+		return derrors.NewInvalidArgumentError("managementClusterPort must be set")
+	}
+	if conf.DNSClusterHost == "" {
+		return derrors.NewInvalidArgumentError("dnsClusterHost must be set")
+	}
+	if conf.DNSClusterPort == "" {
+		return derrors.NewInvalidArgumentError("dnsClusterPort must be set")
 	}
 	if conf.DockerRegistryUsername == "" || conf.DockerRegistryPassword == "" {
 		return derrors.NewInvalidArgumentError("docker credentials must be set")
@@ -92,6 +105,8 @@ func (conf *Config) Print() {
 	log.Info().Str("path", conf.TempPath).Msg("Temporal files")
 	log.Info().Str("host", conf.ManagementClusterHost).
 		Str("port", conf.ManagementClusterPort).Msg("Management cluster")
+	log.Info().Str("host", conf.DNSClusterHost).
+		Str("port", conf.DNSClusterPort).Msg("DNS")
 	log.Info().Str("username", conf.DockerRegistryUsername).
 		Str("password", strings.Repeat("*", len(conf.DockerRegistryPassword))).Msg("Docker registry")
 }

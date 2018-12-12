@@ -107,7 +107,14 @@ func (ccc *CreateClusterConfig) String() string {
 }
 
 func (ccc *CreateClusterConfig) PrettyPrint(indentation int) string {
-	return strings.Repeat(" ", indentation) + ccc.String()
+	simpleIden := strings.Repeat(" ", indentation)
+	entrySep := simpleIden +  "  "
+	msg := fmt.Sprintf("\n%sConfig:\n%sManagementPublicHost: %s\n%sClusterPubliHostname: %s",
+		entrySep,
+		entrySep, ccc.ManagementPublicHost,
+		entrySep, ccc.ClusterPublicHostname,
+		)
+	return strings.Repeat(" ", indentation) + ccc.String() + msg
 }
 
 func (ccc *CreateClusterConfig) UserString() string {

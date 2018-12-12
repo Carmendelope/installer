@@ -20,20 +20,20 @@ const KubeDNSNamespace = "kube-system"
 var KubeDNSConfigNames = []string{"kube-dns", "kubedns-kubecfg"}
 const KubeDNSSection = "stubDomains"
 
-const KubeDNSUpdateTemplate= `{"service.nalej": [MANAGEMENT_PUBLIC_IPS]}`
+const KubeDNSUpdateTemplate= `{"service.nalej": [DNS_PUBLIC_IPS]}`
 
 type UpdateKubeDNS struct {
 	Kubernetes
-	ManagementPublicHost string `json:"management_public_host"`
+	DNSPublicHost string `json:"dns_public_host"`
 }
 
-func NewUpdateKubeDNS(kubeConfigPath string, managementPublicHost string) * UpdateKubeDNS{
+func NewUpdateKubeDNS(kubeConfigPath string, dnsPublicHost string) * UpdateKubeDNS{
 	return &UpdateKubeDNS{
 		Kubernetes:    Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.UpdateKubeDNS),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		ManagementPublicHost: managementPublicHost,
+		DNSPublicHost: dnsPublicHost,
 	}
 }
 
@@ -78,7 +78,7 @@ func (uk * UpdateKubeDNS) getExistingConfig() (*v1.ConfigMap, derrors.Error){
 }
 
 func (uk * UpdateKubeDNS) updateConfig(cfg *v1.ConfigMap) derrors.Error {
-	mgntIPs, rErr := uk.ResolveIP(uk.ManagementPublicHost)
+	mgntIPs, rErr := uk.ResolveIP(uk.DNSPublicHost)
 	if rErr != nil{
 		return rErr
 	}
@@ -86,7 +86,7 @@ func (uk * UpdateKubeDNS) updateConfig(cfg *v1.ConfigMap) derrors.Error {
 		ip = fmt.Sprintf("\"%s\"", ip)
 	}
 
-	toUpdate := strings.Replace(KubeDNSUpdateTemplate, "MANAGEMENT_PUBLIC_IPS", strings.Join(mgntIPs, ", "), 1)
+	toUpdate := strings.Replace(KubeDNSUpdateTemplate, "DNS_PUBLIC_IPS", strings.Join(mgntIPs, ", "), 1)
 	cfg.Data[KubeDNSSection] = toUpdate
 	client := uk.Client.CoreV1().ConfigMaps(KubeDNSNamespace)
 	updated, err := client.Update(cfg)
@@ -98,7 +98,7 @@ func (uk * UpdateKubeDNS) updateConfig(cfg *v1.ConfigMap) derrors.Error {
 }
 
 func (uk * UpdateKubeDNS) String() string {
-	return fmt.Sprintf("SYNC UpdateKubeDNS to %s", uk.ManagementPublicHost)
+	return fmt.Sprintf("SYNC UpdateKubeDNS to %s", uk.DNSPublicHost)
 }
 
 func (uk * UpdateKubeDNS) PrettyPrint(indentation int) string {
@@ -106,5 +106,5 @@ func (uk * UpdateKubeDNS) PrettyPrint(indentation int) string {
 }
 
 func (uk * UpdateKubeDNS) UserString() string {
-	return fmt.Sprintf("Update cluster KubeDNS config to %s", uk.ManagementPublicHost)
+	return fmt.Sprintf("Update cluster KubeDNS config to %s", uk.DNSPublicHost)
 }

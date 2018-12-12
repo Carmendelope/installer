@@ -56,6 +56,7 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		*assets,
 		*paths,
 		"mngtcluster_host", "80",
+		"dns_host", "53",
 		appClusterInstall,
 		*registryCredentials)
 }

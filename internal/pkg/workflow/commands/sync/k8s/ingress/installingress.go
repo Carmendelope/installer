@@ -29,6 +29,7 @@ const (
 	Unknown
 )
 
+// TODO Refactor using the new parameter to define the target platform instead of detecting it.
 type InstallIngress struct {
 	k8s.Kubernetes
 	ManagementPublicHost string `json:"management_public_host"`
@@ -445,11 +446,21 @@ func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derro
 }
 
 func (ii *InstallIngress) String() string {
-	return fmt.Sprintf("SYNC InstallIngress")
+	return fmt.Sprintf("SYNC InstallIngress on Management: %t", ii.OnManagementCluster)
 }
 
 func (ii *InstallIngress) PrettyPrint(indentation int) string {
-	return strings.Repeat(" ", indentation) + ii.String()
+	msg := strings.Repeat(" ", indentation) + "  Ingresses:"
+	var ingresses []*v1beta1.Ingress
+	if ii.OnManagementCluster{
+		ingresses = ii.getIngressRules()
+	}else{
+		ingresses = ii.getAppClusterIngressRules()
+	}
+	for _, ing := range ingresses{
+		msg = msg + fmt.Sprintf("\n%s    %s: %s", strings.Repeat(" ", indentation), ing.Name, ing.Spec.Rules[0].Host)
+	}
+	return strings.Repeat(" ", indentation) + ii.String() + "\n" + msg
 }
 
 func (ii *InstallIngress) UserString() string {

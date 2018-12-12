@@ -23,6 +23,8 @@ type CreateManagementConfig struct {
 	Kubernetes
 	PublicHost     string `json:"public_host"`
 	PublicPort     string `json:"public_port"`
+	DNSHost     string `json:"dns_host"`
+	DNSPort     string `json:"dns_port"`
 	DockerUsername string `json:"docker_username"`
 	DockerPassword string `json:"docker_password"`
 }
@@ -66,7 +68,10 @@ func (cmc *CreateManagementConfig) createConfigMap() derrors.Error {
 		},
 		Data: map[string]string{
 			"public_host": cmc.PublicHost,
-			"public_port": cmc.PublicPort},
+			"public_port": cmc.PublicPort,
+			"dns_host": cmc.DNSHost,
+			"dns_port": cmc.DNSPort,
+		},
 	}
 
 	client := cmc.Client.CoreV1().ConfigMaps(config.Namespace)
@@ -162,11 +167,19 @@ func (cmc *CreateManagementConfig) Run(workflowID string) (*entities.CommandResu
 }
 
 func (cmc *CreateManagementConfig) String() string {
-	return fmt.Sprintf("SYNC CreateManagementConfig publicHost: %s, publicPort: %s", cmc.PublicHost, cmc.PublicPort)
+	return fmt.Sprintf("SYNC CreateManagementConfig")
 }
 
 func (cmc *CreateManagementConfig) PrettyPrint(indentation int) string {
-	return strings.Repeat(" ", indentation) + cmc.String()
+	simpleIden := strings.Repeat(" ", indentation) +  "  "
+	entrySep := simpleIden +  "  "
+	msg := fmt.Sprintf("\n%sConfig:\n%sPublicHost: %s:%s\n%sDNSHost: %s:%s\n%sDocker credentials: %s:%s",
+		simpleIden,
+		entrySep, cmc.PublicHost, cmc.PublicPort,
+		entrySep, cmc.DNSHost, cmc.DNSPort,
+		entrySep, cmc.DockerUsername, strings.Repeat("*", len(cmc.DockerPassword)),
+	)
+	return strings.Repeat(" ", indentation) + cmc.String() + msg
 }
 
 func (cmc *CreateManagementConfig) UserString() string {

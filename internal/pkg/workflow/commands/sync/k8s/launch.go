@@ -74,7 +74,7 @@ func (lc * LaunchComponents) Run(workflowID string) (*entities.CommandResult, de
 		numLaunched := 0
 		for _, file := range fileInfo {
 			if strings.HasSuffix(file.Name(), ".yaml"){
-				log.Debug().Str("file", file.Name()).Msg("processing component")
+				log.Info().Str("file", file.Name()).Msg("processing component")
 				err := lc.launchComponent(path.Join(lc.ComponentsDir, file.Name()))
 				if err != nil {
 					return entities.NewCommandResult(false, "cannot launch component", err), nil

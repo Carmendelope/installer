@@ -33,13 +33,14 @@ const InstallManagementCluster = `
 			{{if $.InstallRequest.UseCoreDns }}			
 				{"type":"sync", "name":"updateCoreDNS",
 					"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-					"management_public_host":"{{$.ManagementClusterHost}}"
+					"dns_public_host":"{{$.DNSClusterHost}}",
+					"dns_public_port":"{{$.DNSClusterPort}}"
 				},
 			{{end}}
 			{{if $.InstallRequest.UseKubeDns }}			
 				{"type":"sync", "name":"updateKubeDNS",
 					"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-					"management_public_host":"{{$.ManagementClusterHost}}"
+					"dns_public_host":"{{$.DNSClusterHost}}"
 				},
 			{{end}}
 
@@ -54,6 +55,8 @@ const InstallManagementCluster = `
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"public_host":"{{$.ManagementClusterHost}}",
 				"public_port":"{{$.ManagementClusterPort}}",
+				"dns_host":"{{$.DNSClusterHost}}",
+				"dns_port":"{{$.DNSClusterPort}}",
 				"docker_username":"{{$.Registry.Username}}",
 				"docker_password":"{{$.Registry.Password}}"
 			},

@@ -89,7 +89,7 @@ func (cr *CheckRequirements) Run(workflowID string) (*entities.CommandResult, de
 }
 
 func (cr *CheckRequirements) String() string {
-	return "SYNC CheckRequirements"
+	return "SYNC CheckRequirements minVersion: " + cr.MinVersion
 }
 
 func (cr *CheckRequirements) PrettyPrint(indentation int) string {
