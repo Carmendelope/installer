@@ -51,10 +51,17 @@ func NewCreateClusterConfigFromJSON(raw []byte) (*entities.Command, derrors.Erro
 	return &r, nil
 }
 
+
+
 func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 	connectErr := ccc.Connect()
 	if connectErr != nil {
 		return nil, connectErr
+	}
+
+	mgntIPs, rErr := ccc.ResolveIP(ccc.ManagementPublicHost)
+	if rErr != nil{
+		return nil, rErr
 	}
 
 	cErr := ccc.CreateNamespacesIfNotExist("nalej")
@@ -76,6 +83,7 @@ func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult,
 			"organization_id":        ccc.OrganizationID,
 			"cluster_id":             ccc.ClusterID,
 			"management_public_host": ccc.ManagementPublicHost,
+			"management_public_ip": strings.Join(mgntIPs, ","),
 			"management_public_port": ccc.ManagementPublicPort,
 			"cluster_public_hostname": ccc.ClusterPublicHostname,
 			"cluster_api_hostname": fmt.Sprintf("cluster.%s", ccc.ManagementPublicHost),
@@ -99,7 +107,14 @@ func (ccc *CreateClusterConfig) String() string {
 }
 
 func (ccc *CreateClusterConfig) PrettyPrint(indentation int) string {
-	return strings.Repeat(" ", indentation) + ccc.String()
+	simpleIden := strings.Repeat(" ", indentation)
+	entrySep := simpleIden +  "  "
+	msg := fmt.Sprintf("\n%sConfig:\n%sManagementPublicHost: %s\n%sClusterPubliHostname: %s",
+		entrySep,
+		entrySep, ccc.ManagementPublicHost,
+		entrySep, ccc.ClusterPublicHostname,
+		)
+	return strings.Repeat(" ", indentation) + ccc.String() + msg
 }
 
 func (ccc *CreateClusterConfig) UserString() string {

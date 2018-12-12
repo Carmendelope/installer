@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -68,8 +69,11 @@ func LaunchManagementInstall() {
 		username,
 		privateKeyPath,
 		strings.Split(nodes, ","),
+		strings.ToUpper(targetPlatform),
 		*paths,
 		managementPublicHost,
+		dnsClusterHost,
+		strconv.Itoa(dnsClusterPort),
 		false,
 		getDockerUsername(), getDockerPassword())
 

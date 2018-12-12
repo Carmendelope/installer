@@ -60,6 +60,11 @@ func (h * Handler) ValidInstallRequest(installRequest *grpc_installer_go.Install
 	if ! authFound {
 		return derrors.NewInvalidArgumentError("expecting KubeConfigRaw or Username, PrivateKey and Nodes")
 	}
+
+	if !installRequest.UseCoreDns && !installRequest.UseKubeDns {
+		return derrors.NewInvalidArgumentError("expecting useCoreDNS or useKubeDNS")
+	}
+
 	return nil
 }
 

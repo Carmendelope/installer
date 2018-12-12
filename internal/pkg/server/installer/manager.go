@@ -84,7 +84,9 @@ func (m *Manager) launchInstall(installID string) {
 	// Create Parameters
 	params := workflow.NewParameters(
 		request, workflow.Assets{}, m.Paths,
-		m.Config.ManagementClusterHost, m.Config.ManagementClusterPort, true, *registryCredentials)
+		m.Config.ManagementClusterHost, m.Config.ManagementClusterPort,
+		m.Config.DNSClusterHost, m.Config.DNSClusterPort,
+		true, *registryCredentials)
 	status.Params = params
 	err := status.Params.LoadCredentials()
 	if err != nil {

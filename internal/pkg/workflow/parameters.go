@@ -29,6 +29,10 @@ type Parameters struct {
 	ManagementClusterHost string `json:"management_cluster_host"`
 	//InframgrPort is the port where the management cluster is accepting requests.
 	ManagementClusterPort string `json:"management_cluster_port"`
+	// DNSClusterHost is the host where the dns service of the management cluster is accepting DNS requests.
+	DNSClusterHost string `json:"dns_cluster_host"`
+	// DNSClusterPort is the port where the dns service of the management cluster is accepting DNS requests.
+	DNSClusterPort string `json:"dns_cluster_port"`
 	//AppClusterInstall indicates if an application cluster is being installed.
 	AppClusterInstall bool `json:"app_cluster_install"`
 	//Registry contains the credentials to access the docker registry to download internal images.
@@ -95,6 +99,8 @@ func NewParameters(
 	paths Paths,
 	managementClusterHost string,
 	managementClusterPort string,
+	dnsClusterHost string,
+	dnsClusterPort string,
 	appClusterInstall bool,
 	registryCredentials RegistryCredentials) *Parameters {
 	return &Parameters{
@@ -103,6 +109,7 @@ func NewParameters(
 		assets,
 		paths,
 		managementClusterHost, managementClusterPort,
+		dnsClusterHost, dnsClusterPort,
 		appClusterInstall,
 		registryCredentials,
 	}

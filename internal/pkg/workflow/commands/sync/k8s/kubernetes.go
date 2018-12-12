@@ -16,6 +16,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"net"
 )
 
 type Kubernetes struct {
@@ -41,6 +42,21 @@ func (k *Kubernetes) Connect() derrors.Error {
 
 	k.Client = clientset
 	return nil
+}
+
+func (k *Kubernetes) ResolveIP(address string) ([]string, derrors.Error){
+	result := make([]string, 0)
+	ips, err := net.LookupIP(address)
+	if err != nil {
+		log.Error().Err(err).Str("address", address).Msg("cannot resolve IP address")
+		return nil, derrors.AsError(err, "cannot resolve IP address")
+	}
+	for _, ip := range ips {
+		if len(ip) == net.IPv4len {
+			result = append(result, ip.String())
+		}
+	}
+	return result, nil
 }
 
 func (k *Kubernetes) ExistNamespace(name string) (bool, derrors.Error) {
@@ -95,6 +111,17 @@ func (k *Kubernetes) CreateNamespacesIfNotExist(name string) derrors.Error {
 	return nil
 }
 
+func (k *Kubernetes) ExitsService(deploymentName string, namespace string) (bool, derrors.Error){
+	serviceClient := k.Client.CoreV1().Services(namespace)
+	opts := metaV1.GetOptions{}
+	service, err := serviceClient.Get(deploymentName, opts)
+	if err != nil{
+		return false, derrors.AsError(err, "cannot list service")
+	}
+	log.Debug().Str("service", service.Name).Msg("Service exists")
+	return true, nil
+}
+
 func (k *Kubernetes) CreateService(service *v1.Service) derrors.Error {
 	serviceClient := k.Client.CoreV1().Services(service.Namespace)
 	log.Debug().Interface("service", service).Msg("unmarshalled")
@@ -115,6 +142,17 @@ func (k *Kubernetes) CreateConfigMap(configMap *v1.ConfigMap) derrors.Error {
 	}
 	log.Debug().Interface("created", created).Msg("new config map has been created")
 	return nil
+}
+
+func (k *Kubernetes) ExitsConfigMap(name string, namespace string) (bool, derrors.Error){
+	serviceClient := k.Client.CoreV1().ConfigMaps(namespace)
+	opts := metaV1.GetOptions{}
+	service, err := serviceClient.Get(name, opts)
+	if err != nil{
+		return false, derrors.AsError(err, "cannot list config maps")
+	}
+	log.Debug().Str("service", service.Name).Msg("Config map exists")
+	return true, nil
 }
 
 func (k *Kubernetes) CreateIngress(ingress *v1beta1.Ingress) derrors.Error {

@@ -48,6 +48,12 @@ func init() {
 	runCmd.PersistentFlags().StringVar(&config.ManagementClusterPort, "managementClusterPublicPort", "",
 		"Public port where the management cluster is reachable by the application clusters")
 	runCmd.MarkPersistentFlagRequired("managementClusterPublicPort")
+	runCmd.PersistentFlags().StringVar(&config.DNSClusterHost, "dnsClusterPublicHost", "",
+		"Public FQDN where the management cluster is reachable for DNS requests by the application clusters")
+	runCmd.MarkPersistentFlagRequired("dnsClusterPublicHost")
+	runCmd.PersistentFlags().StringVar(&config.DNSClusterPort, "dnsClusterPublicPort", "",
+		"Public port where the management cluster is reachable for DNS request by the application clusters")
+	runCmd.MarkPersistentFlagRequired("dnsClusterPublicPort")
 
 	runCmd.PersistentFlags().StringVar(&config.ComponentsPath, "componentsPath", "./assets/",
 		"Directory with the components to be installed")

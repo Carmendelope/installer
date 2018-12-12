@@ -35,23 +35,24 @@ const CoreDNSUpdateTemplate = `.:53 {
 
 service.nalej {
     log stdout
-    proxy . MANAGEMENT_PUBLIC_HOST:30600
+    proxy . DNS_PUBLIC_IPS
     cache 30
 }
 `
 
 type UpdateCoreDNS struct {
 	Kubernetes
-	ManagementPublicHost string `json:"management_public_host"`
+	DNSPublicHost string `json:"dns_public_host"`
+	DNSPublicPort string `json:"dns_public_port"`
 }
 
-func NewUpdateCoreDNS(kubeConfigPath string, managementPublicHost string) * UpdateCoreDNS {
+func NewUpdateCoreDNS(kubeConfigPath string, dnsPublicHost string) * UpdateCoreDNS {
 	return &UpdateCoreDNS{
 		Kubernetes:    Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.UpdateCoreDNS),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		ManagementPublicHost: managementPublicHost,
+		DNSPublicHost: dnsPublicHost,
 	}
 }
 
@@ -70,7 +71,6 @@ func (uc * UpdateCoreDNS) Run(workflowID string) (*entities.CommandResult, derro
 	if connectErr != nil {
 		return nil, connectErr
 	}
-
 	existing, err := uc.getExistingConfig()
 	if err != nil{
 		return entities.NewCommandResult(false, "cannot update core dns", err), nil
@@ -94,7 +94,15 @@ func (uc * UpdateCoreDNS) getExistingConfig() (*v1.ConfigMap, derrors.Error){
 
 func (uc * UpdateCoreDNS) updateConfig(cfg *v1.ConfigMap) derrors.Error {
 	log.Debug().Interface("data", cfg.Data[CoreDNSSection]).Msg("current data")
-	toUpdate := strings.Replace(CoreDNSUpdateTemplate, "MANAGEMENT_PUBLIC_HOST", uc.ManagementPublicHost, 1)
+	mgntIPs, rErr := uc.ResolveIP(uc.DNSPublicHost)
+	if rErr != nil{
+		return rErr
+	}
+	for _, ip := range mgntIPs{
+		ip = fmt.Sprintf("%s:%s", ip, uc.DNSPublicPort)
+	}
+
+	toUpdate := strings.Replace(CoreDNSUpdateTemplate, "DNS_PUBLIC_IPS", strings.Join(mgntIPs, " "), 1)
 	cfg.Data[CoreDNSSection] = toUpdate
 	client := uc.Client.CoreV1().ConfigMaps(CoreDNSNamespace)
 	updated, err := client.Update(cfg)
@@ -106,7 +114,7 @@ func (uc * UpdateCoreDNS) updateConfig(cfg *v1.ConfigMap) derrors.Error {
 }
 
 func (uc * UpdateCoreDNS) String() string {
-	return fmt.Sprintf("SYNC UpdateCoreDNS to %s", uc.ManagementPublicHost)
+	return fmt.Sprintf("SYNC UpdateCoreDNS to %s", uc.DNSPublicHost)
 }
 
 func (uc * UpdateCoreDNS) PrettyPrint(indentation int) string {
@@ -114,5 +122,5 @@ func (uc * UpdateCoreDNS) PrettyPrint(indentation int) string {
 }
 
 func (uc * UpdateCoreDNS) UserString() string {
-	return fmt.Sprintf("Update cluster CoreDNS config to %s", uc.ManagementPublicHost)
+	return fmt.Sprintf("Update cluster CoreDNS config to %s", uc.DNSPublicHost)
 }
