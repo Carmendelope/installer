@@ -63,7 +63,7 @@ pipeline {
                 container("golang") {
                     dir("${packagePath}") {
                         script {
-                            testStatus = sh(returnStdout: true, script: "make test &> testOutput")
+                            testStatus = sh(returnStatus: true, script: "make test &> testOutput")
                             testOutput = readFile("testOutput")
                             echo testOutput
                             if (env.CHANGE_ID) {
