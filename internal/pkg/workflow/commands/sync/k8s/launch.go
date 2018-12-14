@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nalej/derrors"
+	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 	"github.com/rs/zerolog/log"
@@ -26,13 +27,16 @@ import (
 	"strings"
 )
 
+const AzureStorageClass = "managed-premium"
+
 type LaunchComponents struct {
 	Kubernetes
 	Namespaces []string `json:"namespaces"`
 	ComponentsDir string `json:"componentsDir"`
+	PlatformType string `json:"platform_type"`
 }
 
-func NewLaunchComponents(kubeConfigPath string, namespaces []string, componentsDir string) * LaunchComponents {
+func NewLaunchComponents(kubeConfigPath string, namespaces []string, componentsDir string, targetPlatform string) * LaunchComponents {
 	return &LaunchComponents{
 		Kubernetes:    Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.LaunchComponents),
@@ -40,6 +44,7 @@ func NewLaunchComponents(kubeConfigPath string, namespaces []string, componentsD
 		},
 		Namespaces: namespaces,
 		ComponentsDir: componentsDir,
+		PlatformType: targetPlatform,
 	}
 }
 
@@ -224,6 +229,13 @@ func (lc * LaunchComponents) launchPersistentVolume(pv *v1.PersistentVolume) der
 
 func (lc * LaunchComponents) launchPersistentVolumeClaim(pvc *v1.PersistentVolumeClaim) derrors.Error {
 	client := lc.Client.CoreV1().PersistentVolumeClaims(pvc.Namespace)
+
+	if lc.PlatformType == grpc_installer_go.Platform_AZURE.String() {
+		log.Debug().Msg("Modifying storageClass")
+		sc := AzureStorageClass
+		pvc.Spec.StorageClassName = &sc
+	}
+
 	log.Debug().Interface("pvc", pvc).Msg("unmarshalled")
 	created, err := client.Create(pvc)
 	if err != nil {

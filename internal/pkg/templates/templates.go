@@ -80,7 +80,8 @@ const InstallManagementCluster = `
 		{"type":"sync", "name": "launchComponents",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespaces":["nalej", "ingress-nginx"],
-			"componentsDir":"{{$.Paths.ComponentsPath}}"
+			"componentsDir":"{{$.Paths.ComponentsPath}}",
+			"platform_type":"{{$.InstallRequest.TargetPlatform}}"
 		}
 	]
 }
