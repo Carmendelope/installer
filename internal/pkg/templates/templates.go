@@ -30,7 +30,8 @@ const InstallManagementCluster = `
 				"management_public_port":"{{$.ManagementClusterPort}}",
 				"cluster_public_hostname":"{{$.InstallRequest.Hostname}}",
 				"dns_public_host":"{{$.DNSClusterHost}}",
-				"dns_public_port":"{{$.DNSClusterPort}}"
+				"dns_public_port":"{{$.DNSClusterPort}}",
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
 			},
 			// {{if $.InstallRequest.UseCoreDns }}			
 			//	{"type":"sync", "name":"updateCoreDNS",
@@ -60,7 +61,8 @@ const InstallManagementCluster = `
 				"dns_host":"{{$.DNSClusterHost}}",
 				"dns_port":"{{$.DNSClusterPort}}",
 				"docker_username":"{{$.Registry.Username}}",
-				"docker_password":"{{$.Registry.Password}}"
+				"docker_password":"{{$.Registry.Password}}",
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
 			},
 			{"type":"sync", "name":"installMngtDNS",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",

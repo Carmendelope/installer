@@ -25,6 +25,7 @@ type CreateClusterConfig struct {
 	ClusterPublicHostname string `json:"cluster_public_hostname"`
 	DNSPublicHost         string `json:"dns_public_host"`
 	DNSPublicPort         string `json:"dns_public_port"`
+	PlatformType string `json:"platform_type"`
 }
 
 func NewCreateClusterConfig(
@@ -33,6 +34,7 @@ func NewCreateClusterConfig(
 	managementPublicHost string, managementPublicPort string,
 	clusterPublicHostname string,
 	dnsPublicHost string, dnsPublicPort string,
+	platformType string,
 ) *CreateClusterConfig {
 	return &CreateClusterConfig{
 		Kubernetes: Kubernetes{
@@ -46,6 +48,7 @@ func NewCreateClusterConfig(
 		ClusterPublicHostname: clusterPublicHostname,
 		DNSPublicHost:         dnsPublicHost,
 		DNSPublicPort:         dnsPublicPort,
+		PlatformType: platformType,
 	}
 }
 
@@ -101,6 +104,7 @@ func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult,
 			"login_api_hostname":      fmt.Sprintf("login.%s", ccc.ManagementPublicHost),
 			"dns_public_ips":          strings.Join(dnsIPs, ","),
 			"dns_public_port":         ccc.DNSPublicPort,
+			"platform_type": ccc.PlatformType,
 		},
 	}
 

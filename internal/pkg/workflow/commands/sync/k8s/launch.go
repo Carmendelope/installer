@@ -91,6 +91,20 @@ func (lc * LaunchComponents) Run(workflowID string) (*entities.CommandResult, de
 		return entities.NewCommandResult(true, msg, nil), nil
 }
 
+func (lc * LaunchComponents) ListComponents() []string {
+	fileInfo, err := ioutil.ReadDir(lc.ComponentsDir)
+	if err != nil {
+		log.Fatal().Err(err).Str("componentsDir", lc.ComponentsDir).Msg("cannot read components dir")
+	}
+	result := make([]string, 0)
+	for _, file := range fileInfo {
+		if strings.HasSuffix(file.Name(), ".yaml") {
+			result = append(result, file.Name())
+		}
+	}
+	return result
+}
+
 func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error {
 	log.Debug().Str("path", componentPath).Msg("launch component")
 
@@ -218,6 +232,13 @@ func (lc * LaunchComponents) createNamespace(name string) derrors.Error {
 
 func (lc * LaunchComponents) launchPersistentVolume(pv *v1.PersistentVolume) derrors.Error {
 	client := lc.Client.CoreV1().PersistentVolumes()
+
+	if lc.PlatformType == grpc_installer_go.Platform_AZURE.String() {
+		log.Debug().Msg("Modifying storageClass")
+		sc := AzureStorageClass
+		pv.Spec.StorageClassName = sc
+	}
+
 	log.Debug().Interface("pv", pv).Msg("unmarshalled")
 	created, err := client.Create(pv)
 	if err != nil {
@@ -257,8 +278,20 @@ func (lc * LaunchComponents) launchPodDisruptionBudget(pdb *policyv1beta1.PodDis
 }
 
 func (lc * LaunchComponents) launchStatefulSet(ss *appsv1.StatefulSet) derrors.Error {
+
+	/*
+	if lc.PlatformType == grpc_installer_go.Platform_AZURE.String() {
+		log.Debug().Msg("Modifying storageClass")
+		log.Debug().Int("num claims", len(ss.Spec.VolumeClaimTemplates)).Msg("stateful set contains claims")
+		for _, vct := range ss.Spec.VolumeClaimTemplates {
+			sc := AzureStorageClass
+			vct.Spec.StorageClassName = &sc
+		}
+	}
+	*/
+
 	client := lc.Client.AppsV1().StatefulSets(ss.Namespace)
-	log.Debug().Interface("pdb", ss).Msg("unmarshalled")
+	log.Debug().Interface("ss", ss).Msg("unmarshalled")
 	created, err := client.Create(ss)
 	if err != nil {
 		return derrors.AsError(err, "cannot create stateful set")
@@ -283,7 +316,13 @@ func (lc * LaunchComponents) String() string {
 }
 
 func (lc * LaunchComponents) PrettyPrint(indentation int) string {
-	return strings.Repeat(" ", indentation) + lc.String()
+	simpleIden := strings.Repeat(" ", indentation) +  "  "
+	entrySep := simpleIden +  "  "
+	cStr := ""
+	for _, c := range lc.ListComponents() {
+		cStr = cStr + "\n" + entrySep + c
+	}
+	return strings.Repeat(" ", indentation) + lc.String() + cStr
 }
 
 func (lc * LaunchComponents) UserString() string {

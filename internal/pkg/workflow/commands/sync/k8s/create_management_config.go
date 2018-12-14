@@ -27,12 +27,14 @@ type CreateManagementConfig struct {
 	DNSPort     string `json:"dns_port"`
 	DockerUsername string `json:"docker_username"`
 	DockerPassword string `json:"docker_password"`
+	PlatformType string `json:"platform_type"`
 }
 
 func NewCreateManagementConfig(
 	kubeConfigPath string,
 	publicHost string, publicPort string,
-	dockerUsername string, dockerPassword string) *CreateManagementConfig {
+	dockerUsername string, dockerPassword string,
+	platformType string) *CreateManagementConfig {
 	return &CreateManagementConfig{
 		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateManagementConfig),
@@ -42,6 +44,7 @@ func NewCreateManagementConfig(
 		PublicPort:     publicPort,
 		DockerUsername: dockerUsername,
 		DockerPassword: dockerPassword,
+		PlatformType: platformType,
 	}
 }
 
@@ -71,6 +74,7 @@ func (cmc *CreateManagementConfig) createConfigMap() derrors.Error {
 			"public_port": cmc.PublicPort,
 			"dns_host": cmc.DNSHost,
 			"dns_port": cmc.DNSPort,
+			"platform_type": cmc.PlatformType,
 		},
 	}
 
@@ -173,11 +177,12 @@ func (cmc *CreateManagementConfig) String() string {
 func (cmc *CreateManagementConfig) PrettyPrint(indentation int) string {
 	simpleIden := strings.Repeat(" ", indentation) +  "  "
 	entrySep := simpleIden +  "  "
-	msg := fmt.Sprintf("\n%sConfig:\n%sPublicHost: %s:%s\n%sDNSHost: %s:%s\n%sDocker credentials: %s:%s",
+	msg := fmt.Sprintf("\n%sConfig:\n%sPublicHost: %s:%s\n%sDNSHost: %s:%s\n%sDocker credentials: %s:%s\n%sPlatform Type:%s",
 		simpleIden,
 		entrySep, cmc.PublicHost, cmc.PublicPort,
 		entrySep, cmc.DNSHost, cmc.DNSPort,
 		entrySep, cmc.DockerUsername, strings.Repeat("*", len(cmc.DockerPassword)),
+		entrySep, cmc.PlatformType,
 	)
 	return strings.Repeat(" ", indentation) + cmc.String() + msg
 }
