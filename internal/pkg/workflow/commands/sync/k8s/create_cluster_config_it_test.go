@@ -28,7 +28,12 @@ var _ = ginkgo.Describe("A create cluster config command", func(){
 	}
 
 	ginkgo.It("should be able to create the config map", func(){
-	    ccc := NewCreateClusterConfig(itKubeConfigFile, "testOrg", "testCluster", "managementPublicHost", "managementPublicPort")
+	    ccc := NewCreateClusterConfig(
+	    	itKubeConfigFile, "testOrg", "testCluster",
+	    	"managementPublicHost", "managementPublicPort",
+	    	"clusterPublicHostname",
+	    	"dnsPublicHost", "53",
+	    	"MINIKUBE")
 	    result, err := ccc.Run("createClusterConfig")
 	    gomega.Expect(err).To(gomega.Succeed())
 	    gomega.Expect(result.Success).Should(gomega.BeTrue())

@@ -28,7 +28,10 @@ var _ = ginkgo.Describe("A create management config command", func(){
 	}
 
 	ginkgo.It("should be able to create the config maps", func(){
-		cmc := NewCreateManagementConfig(itKubeConfigFile, "publicHost", "publicPort", "dockerUsername", "dockerPassword")
+		cmc := NewCreateManagementConfig(
+			itKubeConfigFile, "publicHost", "publicPort",
+			"dockerUsername", "dockerPassword",
+			"MINIKUBE")
 		result, err := cmc.Run("createManagementConfig")
 		gomega.Expect(err).To(gomega.Succeed())
 		gomega.Expect(result.Success).Should(gomega.BeTrue())
