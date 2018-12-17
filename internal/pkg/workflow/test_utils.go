@@ -7,6 +7,7 @@ package workflow
 import (
 	"fmt"
 	"github.com/nalej/derrors"
+	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-installer-go"
 )
 
@@ -42,10 +43,13 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		nodes = append(nodes, toAdd)
 	}
 	request := grpc_installer_go.InstallRequest{
-		InstallId:     "TestInstall",
-		ClusterId:     "TestCluster",
-		KubeConfigRaw: "KubeConfigContent",
-		Nodes:         nodes,
+		InstallId:            "TestInstall",
+		OrganizationId:       "orgID",
+		ClusterId:            "TestCluster",
+		ClusterType:          grpc_infrastructure_go.ClusterType_KUBERNETES,
+		InstallBaseSystem:    false,
+		KubeConfigRaw:        "KubeConfigContent",
+		Nodes:                nodes,
 	}
 
 	assets := NewAssets(make([]string, 0), make([]string, 0))
