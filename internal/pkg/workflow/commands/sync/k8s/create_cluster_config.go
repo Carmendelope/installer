@@ -7,13 +7,14 @@ package k8s
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 type CreateClusterConfig struct {
@@ -25,7 +26,7 @@ type CreateClusterConfig struct {
 	ClusterPublicHostname string `json:"cluster_public_hostname"`
 	DNSPublicHost         string `json:"dns_public_host"`
 	DNSPublicPort         string `json:"dns_public_port"`
-	PlatformType string `json:"platform_type"`
+	PlatformType          string `json:"platform_type"`
 }
 
 func NewCreateClusterConfig(
@@ -48,7 +49,7 @@ func NewCreateClusterConfig(
 		ClusterPublicHostname: clusterPublicHostname,
 		DNSPublicHost:         dnsPublicHost,
 		DNSPublicPort:         dnsPublicPort,
-		PlatformType: platformType,
+		PlatformType:          platformType,
 	}
 }
 
