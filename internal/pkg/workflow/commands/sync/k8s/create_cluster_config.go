@@ -105,7 +105,7 @@ func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult,
 			"login_api_hostname":      fmt.Sprintf("login.%s", ccc.ManagementPublicHost),
 			"dns_public_ips":          strings.Join(dnsIPs, ","),
 			"dns_public_port":         ccc.DNSPublicPort,
-			"platform_type":           ccc.PlatformType,
+			"platform_type": ccc.PlatformType,
 		},
 	}
 

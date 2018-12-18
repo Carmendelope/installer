@@ -85,7 +85,7 @@ var _ = ginkgo.Describe("A launch command", func(){
 	})
 
 	ginkgo.It("should create the deployments on kubernetes", func(){
-	    lc := NewLaunchComponents(itKubeConfigFile, []string{itAuxNamespace}, componentsDir)
+	    lc := NewLaunchComponents(itKubeConfigFile, []string{itAuxNamespace}, componentsDir, "MINIKUBE")
 	    result, err := lc.Run("testLaunchComponents")
 	    gomega.Expect(err).To(gomega.Succeed())
 	    gomega.Expect(result).ShouldNot(gomega.BeNil())

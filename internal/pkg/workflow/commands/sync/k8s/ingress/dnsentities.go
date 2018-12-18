@@ -14,14 +14,20 @@ var AzureDNSPort = v1.ServicePort{
 	Name:       "dns-udp",
 	Protocol:   v1.ProtocolUDP,
 	Port:       53,
-	TargetPort: intstr.IntOrString{StrVal: "dns-udp"},
+	TargetPort: intstr.IntOrString{
+		Type:   intstr.String,
+		StrVal: "dns-udp",
+	},
 }
 
 var MinikubeDNSUDPPort = v1.ServicePort{
 	Name:       "dns-udp",
 	Protocol:   v1.ProtocolUDP,
 	Port:       53,
-	TargetPort: intstr.IntOrString{StrVal: "dns-udp"},
+	TargetPort: intstr.IntOrString{
+		Type:   intstr.String,
+		StrVal: "dns-udp",
+	},
 	NodePort: 53,
 }
 
@@ -29,7 +35,10 @@ var MinikubeDNSTCPPort = v1.ServicePort{
 	Name:       "dns-tcp",
 	Protocol:   v1.ProtocolTCP,
 	Port:       53,
-	TargetPort: intstr.IntOrString{StrVal: "dns-tcp"},
+	TargetPort: intstr.IntOrString{
+		StrVal: "dns-tcp",
+		Type:   intstr.String,
+	},
 	NodePort: 53,
 }
 
@@ -37,7 +46,10 @@ var MinikubeDNSUIPort = v1.ServicePort{
 	Name:       "consul-gui",
 	Protocol:   v1.ProtocolTCP,
 	Port:       8500,
-	TargetPort: intstr.IntOrString{StrVal: "consul-gui"},
+	TargetPort: intstr.IntOrString{
+		Type:   intstr.String,
+		StrVal: "consul-gui",
+	},
 	NodePort: 30500,
 }
 
