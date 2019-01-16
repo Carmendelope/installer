@@ -6,8 +6,9 @@ package workflow
 
 import (
 	"encoding/json"
-	"github.com/nalej/installer/internal/pkg/errors"
 	"io/ioutil"
+
+	"github.com/nalej/installer/internal/pkg/errors"
 
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-installer-go"
@@ -37,6 +38,8 @@ type Parameters struct {
 	AppClusterInstall bool `json:"app_cluster_install"`
 	//Registry contains the credentials to access the docker registry to download internal images.
 	Registry RegistryCredentials `json:"registry"`
+	//StaticIPAddresses contains the available static IP addresses and a flag to use it
+	StaticIP StaticIPAddresses `json:static_ip`
 }
 
 // TODO Remove assets if not used anymore
@@ -78,6 +81,23 @@ func NewRegistryCredentials(username string, password string) *RegistryCredentia
 	}
 }
 
+type StaticIPAddresses struct {
+	//We use static IP addresses
+	Enabled bool `json:"enabled"`
+	//IP Address for the public ingress service
+	Ingress string `json:"ingress"`
+	//IP Address for the public DNS service
+	DNS string `json:"dns"`
+}
+
+func NewStaticIPAddresses(enabled bool, ingress string, dns string) *StaticIPAddresses {
+	return &StaticIPAddresses{
+		Enabled: enabled,
+		Ingress: ingress,
+		DNS:     dns,
+	}
+}
+
 type InstallCredentials struct {
 	// Username for the SSH credentials.
 	Username string `json:"username"`
@@ -102,7 +122,8 @@ func NewParameters(
 	dnsClusterHost string,
 	dnsClusterPort string,
 	appClusterInstall bool,
-	registryCredentials RegistryCredentials) *Parameters {
+	registryCredentials RegistryCredentials,
+	staticIPAddresses StaticIPAddresses) *Parameters {
 	return &Parameters{
 		request,
 		InstallCredentials{},
@@ -112,6 +133,7 @@ func NewParameters(
 		dnsClusterHost, dnsClusterPort,
 		appClusterInstall,
 		registryCredentials,
+		staticIPAddresses,
 	}
 }
 

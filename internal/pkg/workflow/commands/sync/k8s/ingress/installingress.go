@@ -10,6 +10,8 @@ package ingress
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s"
@@ -18,7 +20,6 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 type InstallTargetType int32
@@ -33,16 +34,20 @@ const (
 type InstallIngress struct {
 	k8s.Kubernetes
 	ManagementPublicHost string `json:"management_public_host"`
-	OnManagementCluster bool `json:"on_management_cluster"`
+	OnManagementCluster  bool   `json:"on_management_cluster"`
+	UseStaticIp          bool   `json:"use_static_ip"`
+	StaticIpAddress      string `json:"static_ip_address"`
 }
 
-func NewInstallIngress(kubeConfigPath string, managementPublicHost string) *InstallIngress {
+func NewInstallIngress(kubeConfigPath string, managementPublicHost string, useStaticIp bool, staticIpAddress string) *InstallIngress {
 	return &InstallIngress{
 		Kubernetes: k8s.Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallIngress),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		ManagementPublicHost: managementPublicHost,
+		UseStaticIp:          useStaticIp,
+		StaticIpAddress:      staticIpAddress,
 	}
 }
 
@@ -56,7 +61,7 @@ func NewInstallIngressFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	return &r, nil
 }
 
-func (ii * InstallIngress) getAppClusterIngressRules() []*v1beta1.Ingress {
+func (ii *InstallIngress) getAppClusterIngressRules() []*v1beta1.Ingress {
 	appClusterAPI := AppClusterAPIIngressRules
 	appClusterAPI.Spec.TLS[0].Hosts[0] = fmt.Sprintf("appcluster.%s", ii.ManagementPublicHost)
 	appClusterAPI.Spec.Rules[0].Host = fmt.Sprintf("appcluster.%s", ii.ManagementPublicHost)
@@ -90,11 +95,17 @@ func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
 
 }
 
-func (ii * InstallIngress) getService(installType InstallTargetType) (*v1.Service, *v1.Service) {
+func (ii *InstallIngress) getService(installType InstallTargetType) (*v1.Service, *v1.Service) {
 	if installType == MinikubeCluster {
 		return &MinikubeService, &MinikubeServiceDefaultBackend
 	}
-	return &CloudGenericService, &CloudGenericServiceDefaultBackend
+
+	genericService := CloudGenericService
+	if ii.UseStaticIp {
+		genericService.Spec.LoadBalancerIP = ii.StaticIpAddress
+	}
+
+	return &genericService, &CloudGenericServiceDefaultBackend
 }
 
 // GetExistingIngressOnNamespace checks if an ingress exists on a given namespace.
@@ -216,7 +227,7 @@ func (ii *InstallIngress) triggerAppClusterInstall(installType InstallTargetType
 	}
 
 	log.Debug().Msg("Installing app cluster ingress rules")
-	for _, ingressToInstall := range ii.getAppClusterIngressRules(){
+	for _, ingressToInstall := range ii.getAppClusterIngressRules() {
 		err = ii.CreateIngress(ingressToInstall)
 		if err != nil {
 			log.Error().Str("trace", err.DebugReport()).Str("name", ingressToInstall.Name).Msg("error creating ingress rules")
@@ -337,7 +348,7 @@ func (ii *InstallIngress) triggerManagementInstall(installType InstallTargetType
 		return err
 	}
 	log.Debug().Msg("Installing ingress rules")
-	for _, ingressToInstall := range ii.getIngressRules(){
+	for _, ingressToInstall := range ii.getIngressRules() {
 		err = ii.CreateIngress(ingressToInstall)
 		if err != nil {
 			log.Error().Str("trace", err.DebugReport()).Str("name", ingressToInstall.Name).Msg("error creating ingress rules")
@@ -452,12 +463,12 @@ func (ii *InstallIngress) String() string {
 func (ii *InstallIngress) PrettyPrint(indentation int) string {
 	msg := strings.Repeat(" ", indentation) + "  Ingresses:"
 	var ingresses []*v1beta1.Ingress
-	if ii.OnManagementCluster{
+	if ii.OnManagementCluster {
 		ingresses = ii.getIngressRules()
-	}else{
+	} else {
 		ingresses = ii.getAppClusterIngressRules()
 	}
-	for _, ing := range ingresses{
+	for _, ing := range ingresses {
 		msg = msg + fmt.Sprintf("\n%s    %s: %s", strings.Repeat(" ", indentation), ing.Name, ing.Spec.Rules[0].Host)
 	}
 	return strings.Repeat(" ", indentation) + ii.String() + "\n" + msg

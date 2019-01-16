@@ -6,6 +6,7 @@ package workflow
 
 import (
 	"fmt"
+
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-installer-go"
@@ -43,18 +44,19 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		nodes = append(nodes, toAdd)
 	}
 	request := grpc_installer_go.InstallRequest{
-		InstallId:            "TestInstall",
-		OrganizationId:       "orgID",
-		ClusterId:            "TestCluster",
-		ClusterType:          grpc_infrastructure_go.ClusterType_KUBERNETES,
-		InstallBaseSystem:    false,
-		KubeConfigRaw:        "KubeConfigContent",
-		Nodes:                nodes,
+		InstallId:         "TestInstall",
+		OrganizationId:    "orgID",
+		ClusterId:         "TestCluster",
+		ClusterType:       grpc_infrastructure_go.ClusterType_KUBERNETES,
+		InstallBaseSystem: false,
+		KubeConfigRaw:     "KubeConfigContent",
+		Nodes:             nodes,
 	}
 
 	assets := NewAssets(make([]string, 0), make([]string, 0))
 	paths := NewPaths("assestPath", "binPath", "confPath")
 	registryCredentials := NewRegistryCredentials("dockerUsername", "dockerPassword")
+	staticIPAddresses := NewStaticIPAddresses(false, "", "")
 	return NewParameters(
 		request,
 		*assets,
@@ -62,5 +64,6 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		"mngtcluster_host", "80",
 		"dns_host", "53",
 		appClusterInstall,
-		*registryCredentials)
+		*registryCredentials,
+		*staticIPAddresses)
 }
