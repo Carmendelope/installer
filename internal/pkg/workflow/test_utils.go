@@ -56,7 +56,6 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 	assets := NewAssets(make([]string, 0), make([]string, 0))
 	paths := NewPaths("assestPath", "binPath", "confPath")
 	registryCredentials := NewRegistryCredentials("dockerUsername", "dockerPassword")
-	staticIPAddresses := NewStaticIPAddresses(false, "", "")
 	return NewParameters(
 		request,
 		*assets,
@@ -64,6 +63,5 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		"mngtcluster_host", "80",
 		"dns_host", "53",
 		appClusterInstall,
-		*registryCredentials,
-		*staticIPAddresses)
+		*registryCredentials)
 }

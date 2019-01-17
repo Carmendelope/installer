@@ -52,6 +52,12 @@ func NewInstallerFromCLI(
 		return nil, err
 	}
 
+	staticIPAddresses := grpc_installer_go.StaticIPAddresses{
+		UseStaticIp: useStaticIPAddresses,
+		Ingress:     ipAddressIngress,
+		Dns:         ipAddressDNS,
+	}
+
 	request := grpc_installer_go.InstallRequest{
 		InstallId:         installId,
 		OrganizationId:    "nalej",
@@ -64,15 +70,15 @@ func NewInstallerFromCLI(
 		PrivateKey:        privateKeyContent,
 		Nodes:             nodes,
 		TargetPlatform:    grpc_installer_go.Platform(grpc_installer_go.Platform_value[targetPlatform]),
+		StaticIpAddresses: &staticIPAddresses,
 	}
 
 	registryCredentials := workflow.NewRegistryCredentials(dockerUsername, dockerPassword)
-	staticIPAddresses := workflow.NewStaticIPAddresses(useStaticIPAddresses, ipAddressIngress, ipAddressDNS)
 
 	params := workflow.NewParameters(request, workflow.Assets{},
 		paths, managementClusterHost, workflow.DefaultManagementPort,
 		dnsClusterHost, dnsClusterPort,
-		appClusterInstall, *registryCredentials, *staticIPAddresses)
+		appClusterInstall, *registryCredentials)
 	return NewInstaller(*params), nil
 }
 

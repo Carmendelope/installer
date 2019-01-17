@@ -26,9 +26,6 @@ type Config struct {
 	DNSClusterPort         string
 	DockerRegistryUsername string
 	DockerRegistryPassword string
-	UseStaticIP            bool
-	IPAddressIngress       string
-	IPAddressDNS           string
 }
 
 func NewConfiguration(
@@ -41,9 +38,6 @@ func NewConfiguration(
 	managementClusterPort string,
 	dnsClusterHost string,
 	dnsClusterPort string,
-	useStaticIP bool,
-	ipAddressIngress string,
-	ipAddressDNS string,
 ) *Config {
 	return &Config{
 		Port:                  port,
@@ -54,9 +48,6 @@ func NewConfiguration(
 		ManagementClusterPort: managementClusterPort,
 		DNSClusterHost:        dnsClusterHost,
 		DNSClusterPort:        dnsClusterPort,
-		UseStaticIP:           useStaticIP,
-		IPAddressIngress:      ipAddressIngress,
-		IPAddressDNS:          ipAddressDNS,
 	}
 }
 
@@ -103,9 +94,6 @@ func (conf *Config) Validate() derrors.Error {
 	if conf.DockerRegistryUsername == "" || conf.DockerRegistryPassword == "" {
 		return derrors.NewInvalidArgumentError("docker credentials must be set")
 	}
-	if conf.UseStaticIP && (conf.IPAddressIngress == "" && conf.IPAddressDNS == "") {
-		return derrors.NewInvalidArgumentError("if useStaticIp is enabled, ip addresses must be set")
-	}
 
 	return nil
 }
@@ -122,7 +110,4 @@ func (conf *Config) Print() {
 		Str("port", conf.DNSClusterPort).Msg("DNS")
 	log.Info().Str("username", conf.DockerRegistryUsername).
 		Str("password", strings.Repeat("*", len(conf.DockerRegistryPassword))).Msg("Docker registry")
-	log.Info().Bool("ip", conf.UseStaticIP).Msg("Use Static IP addresses")
-	log.Info().Str("ip", conf.IPAddressIngress).Msg("Public ingress static IP address")
-	log.Info().Str("ip", conf.IPAddressDNS).Msg("Public DNS static IP address")
 }

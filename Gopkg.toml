@@ -4,7 +4,7 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-installer-go"
-    version="v0.0.23"
+    version="v0.0.29"
 
 [[constraint]]
     name="github.com/nalej/grpc-user-manager-go"

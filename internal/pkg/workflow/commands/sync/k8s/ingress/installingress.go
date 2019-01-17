@@ -35,19 +35,19 @@ type InstallIngress struct {
 	k8s.Kubernetes
 	ManagementPublicHost string `json:"management_public_host"`
 	OnManagementCluster  bool   `json:"on_management_cluster"`
-	UseStaticIp          bool   `json:"use_static_ip"`
-	StaticIpAddress      string `json:"static_ip_address"`
+	UseStaticIP          bool   `json:"use_static_ip"`
+	StaticIPAddress      string `json:"static_ip_address"`
 }
 
-func NewInstallIngress(kubeConfigPath string, managementPublicHost string, useStaticIp bool, staticIpAddress string) *InstallIngress {
+func NewInstallIngress(kubeConfigPath string, managementPublicHost string, useStaticIP bool, staticIPAddress string) *InstallIngress {
 	return &InstallIngress{
 		Kubernetes: k8s.Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallIngress),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		ManagementPublicHost: managementPublicHost,
-		UseStaticIp:          useStaticIp,
-		StaticIpAddress:      staticIpAddress,
+		UseStaticIP:          useStaticIP,
+		StaticIPAddress:      staticIPAddress,
 	}
 }
 
@@ -101,8 +101,8 @@ func (ii *InstallIngress) getService(installType InstallTargetType) (*v1.Service
 	}
 
 	genericService := CloudGenericService
-	if ii.UseStaticIp {
-		genericService.Spec.LoadBalancerIP = ii.StaticIpAddress
+	if ii.UseStaticIP {
+		genericService.Spec.LoadBalancerIP = ii.StaticIPAddress
 	}
 
 	return &genericService, &CloudGenericServiceDefaultBackend

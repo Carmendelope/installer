@@ -83,13 +83,12 @@ func (m *Manager) launchInstall(installID string) {
 	registryCredentials := workflow.NewRegistryCredentials(
 		m.Config.DockerRegistryUsername, m.Config.DockerRegistryPassword)
 
-	staticIpAddress := workflow.NewStaticIPAddresses(m.Config.UseStaticIP, m.Config.IPAddressIngress, m.Config.IPAddressDNS)
 	// Create Parameters
 	params := workflow.NewParameters(
 		request, workflow.Assets{}, m.Paths,
 		m.Config.ManagementClusterHost, m.Config.ManagementClusterPort,
 		m.Config.DNSClusterHost, m.Config.DNSClusterPort,
-		true, *registryCredentials, *staticIpAddress)
+		true, *registryCredentials)
 	status.Params = params
 	err := status.Params.LoadCredentials()
 	if err != nil {
