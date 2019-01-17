@@ -5,13 +5,13 @@
 package ingress
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 /*
@@ -76,7 +76,7 @@ var MinikubeHttpsPort = v1.ServicePort{
 	Protocol:   v1.ProtocolTCP,
 	Port:       9443,
 	TargetPort: intstr.IntOrString{IntVal: 443},
-	NodePort: 443,
+	NodePort:   443,
 }
 
 // CloudGenericService ingress config based on https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/cloud-generic.yaml
@@ -89,18 +89,18 @@ var CloudGenericService = v1.Service{
 		Name:      "nginx-ingress-controller",
 		Namespace: "kube-system",
 		Labels: map[string]string{
-			"cluster":                   "management",
-			"app.kubernetes.io/name":    "nginx-ingress-controller",
-			"app.kubernetes.io/part-of": "kube-system",
-			"addonmanager.kubernetes.io/mode":"Reconcile",
+			"cluster":                         "management",
+			"app.kubernetes.io/name":          "nginx-ingress-controller",
+			"app.kubernetes.io/part-of":       "kube-system",
+			"addonmanager.kubernetes.io/mode": "Reconcile",
 		},
 	},
 	Spec: v1.ServiceSpec{
 		Ports: []v1.ServicePort{CloudGenericHttpPort, CloudGenericHttpsPort},
 		Selector: map[string]string{
-			"app.kubernetes.io/name":    "nginx-ingress-controller",
+			"app.kubernetes.io/name": "nginx-ingress-controller",
 		},
-		Type: v1.ServiceTypeLoadBalancer,
+		Type:                  v1.ServiceTypeLoadBalancer,
 		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeCluster,
 	},
 }
@@ -114,20 +114,20 @@ var MinikubeService = v1.Service{
 		Name:      "nginx-ingress-controller",
 		Namespace: "kube-system",
 		Labels: map[string]string{
-			"cluster":                   "management",
-			"app.kubernetes.io/name":    "nginx-ingress-controller",
-			"app.kubernetes.io/part-of": "kube-system",
-			"addonmanager.kubernetes.io/mode":"Reconcile",
-			"kubernetes.io/minikube-addons":"ingress",
-			"kubernetes.io/minikube-addons-endpoint":"ingress",
+			"cluster":                                "management",
+			"app.kubernetes.io/name":                 "nginx-ingress-controller",
+			"app.kubernetes.io/part-of":              "kube-system",
+			"addonmanager.kubernetes.io/mode":        "Reconcile",
+			"kubernetes.io/minikube-addons":          "ingress",
+			"kubernetes.io/minikube-addons-endpoint": "ingress",
 		},
 	},
 	Spec: v1.ServiceSpec{
 		Ports: []v1.ServicePort{MinikubeHttpPort, MinikubeHttpsPort},
 		Selector: map[string]string{
-			"app.kubernetes.io/name":    "nginx-ingress-controller",
+			"app.kubernetes.io/name": "nginx-ingress-controller",
 		},
-		Type: v1.ServiceTypeNodePort,
+		Type:                  v1.ServiceTypeNodePort,
 		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeCluster,
 	},
 }
@@ -141,16 +141,16 @@ var CloudGenericServiceDefaultBackend = v1.Service{
 		Name:      "default-http-backend",
 		Namespace: "kube-system",
 		Labels: map[string]string{
-			"cluster":                   "management",
-			"app.kubernetes.io/name":    "default-http-backend",
-			"app.kubernetes.io/part-of": "kube-system",
-			"addonmanager.kubernetes.io/mode":"Reconcile",
+			"cluster":                         "management",
+			"app.kubernetes.io/name":          "default-http-backend",
+			"app.kubernetes.io/part-of":       "kube-system",
+			"addonmanager.kubernetes.io/mode": "Reconcile",
 		},
 	},
 	Spec: v1.ServiceSpec{
 		Ports: []v1.ServicePort{HttpPort, HttpsPort},
 		Selector: map[string]string{
-			"app.kubernetes.io/name":    "default-http-backend",
+			"app.kubernetes.io/name": "default-http-backend",
 		},
 	},
 }
@@ -164,22 +164,21 @@ var MinikubeServiceDefaultBackend = v1.Service{
 		Name:      "default-http-backend",
 		Namespace: "kube-system",
 		Labels: map[string]string{
-			"cluster":                   "management",
-			"app.kubernetes.io/name":    "default-http-backend",
-			"app.kubernetes.io/part-of": "kube-system",
-			"addonmanager.kubernetes.io/mode":"Reconcile",
-			"kubernetes.io/minikube-addons":"ingress",
-			"kubernetes.io/minikube-addons-endpoint":"ingress",
+			"cluster":                                "management",
+			"app.kubernetes.io/name":                 "default-http-backend",
+			"app.kubernetes.io/part-of":              "kube-system",
+			"addonmanager.kubernetes.io/mode":        "Reconcile",
+			"kubernetes.io/minikube-addons":          "ingress",
+			"kubernetes.io/minikube-addons-endpoint": "ingress",
 		},
 	},
 	Spec: v1.ServiceSpec{
 		Ports: []v1.ServicePort{HttpPort, HttpsPort},
 		Selector: map[string]string{
-			"app.kubernetes.io/name":    "default-http-backend",
+			"app.kubernetes.io/name": "default-http-backend",
 		},
 	},
 }
-
 
 // IngressRulesPaths contains the rules for the ingress redirection.
 var IngressRulesPaths = &v1beta1.HTTPIngressRuleValue{
@@ -222,9 +221,6 @@ var IngressRules = v1beta1.Ingress{
 		},
 		Annotations: map[string]string{
 			"kubernetes.io/ingress.class": "nginx",
-			"certmanager.k8s.io/acme-challenge-type": "http01",
-			"certmanager.k8s.io/issuer": "letsencrypt-staging",
-			// "nginx.ingress.kubernetes.io/rewrite-target": "/", Not required as we do not need to rewrite the paths.
 		},
 	},
 	Spec: v1beta1.IngressSpec{
@@ -258,11 +254,8 @@ var SignupAPIIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class": "nginx",
-			"certmanager.k8s.io/acme-challenge-type": "http01",
-			"certmanager.k8s.io/issuer": "letsencrypt-staging",
-			//"nginx.ingress.kubernetes.io/ssl-passthrough": "true",
-			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"kubernetes.io/ingress.class":                  "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		},
 	},
@@ -270,7 +263,7 @@ var SignupAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"signup.MANAGEMENT_HOST"},
-				SecretName: "signup-server-tls",
+				SecretName: "ingress-tls",
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -306,10 +299,8 @@ var LoginAPIIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class": "nginx",
-			"certmanager.k8s.io/acme-challenge-type": "http01",
-			"certmanager.k8s.io/issuer": "letsencrypt-staging",
-			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"kubernetes.io/ingress.class":                  "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		},
 	},
@@ -317,7 +308,7 @@ var LoginAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"login.MANAGEMENT_HOST"},
-				SecretName: "signup-server-tls",
+				SecretName: "ingress-tls",
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -353,10 +344,8 @@ var PublicAPIIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class": "nginx",
-			"certmanager.k8s.io/acme-challenge-type": "http01",
-			"certmanager.k8s.io/issuer": "letsencrypt-staging",
-			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"kubernetes.io/ingress.class":                  "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		},
 	},
@@ -364,7 +353,7 @@ var PublicAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"api.MANAGEMENT_HOST"},
-				SecretName: "signup-server-tls",
+				SecretName: "ingress-tls",
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -400,10 +389,8 @@ var ClusterAPIIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class": "nginx",
-			"certmanager.k8s.io/acme-challenge-type": "http01",
-			"certmanager.k8s.io/issuer": "letsencrypt-staging",
-			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"kubernetes.io/ingress.class":                  "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		},
 	},
@@ -411,7 +398,7 @@ var ClusterAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"cluster.MANAGEMENT_HOST"},
-				SecretName: "signup-server-tls",
+				SecretName: "ingress-tls",
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -447,10 +434,8 @@ var AppClusterAPIIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class": "nginx",
-			"certmanager.k8s.io/acme-challenge-type": "http01",
-			"certmanager.k8s.io/issuer": "letsencrypt-staging",
-			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+			"kubernetes.io/ingress.class":                  "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		},
 	},
@@ -458,7 +443,7 @@ var AppClusterAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"appcluster.MANAGEMENT_HOST"},
-				SecretName: "app-cluster-api-tls",
+				SecretName: "ingress-tls",
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -676,14 +661,14 @@ var IngressDefaultBackend = appsv1.Deployment{
 }
 
 var IngressServiceAccount = v1.ServiceAccount{
-	TypeMeta:                     metaV1.TypeMeta{
+	TypeMeta: metaV1.TypeMeta{
 		Kind:       "ServiceAccount",
 		APIVersion: "v1",
 	},
-	ObjectMeta:                   metaV1.ObjectMeta{
-		Name:                       "nginx-ingress",
-		Namespace:                  "kube-system",
-		Labels:          map[string]string{
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "nginx-ingress",
+		Namespace: "kube-system",
+		Labels: map[string]string{
 			"cluster":                         "management",
 			"addonmanager.kubernetes.io/mode": "Reconcile",
 		},
@@ -691,113 +676,113 @@ var IngressServiceAccount = v1.ServiceAccount{
 }
 
 var IngressClusterRole = rbacv1.ClusterRole{
-	TypeMeta:        metaV1.TypeMeta{
+	TypeMeta: metaV1.TypeMeta{
 		Kind:       "ClusterRole",
 		APIVersion: "v1",
 	},
-	ObjectMeta:      metaV1.ObjectMeta{
-		Name:                       "system:nginx-ingress",
-		Namespace:                  "kube-system",
-		Labels:          map[string]string{
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "system:nginx-ingress",
+		Namespace: "kube-system",
+		Labels: map[string]string{
 			"cluster":                         "management",
-			"kubernetes.io/bootstrapping":                         "rbac-defaults",
+			"kubernetes.io/bootstrapping":     "rbac-defaults",
 			"addonmanager.kubernetes.io/mode": "Reconcile",
 		},
 	},
-	Rules:           []rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{
 		rbacv1.PolicyRule{
-			Verbs:           []string{"list", "watch"},
-			APIGroups:       []string{""},
-			Resources:       []string{"configmaps", "endpoints", "nodes", "pods", "secrets"},
+			Verbs:     []string{"list", "watch"},
+			APIGroups: []string{""},
+			Resources: []string{"configmaps", "endpoints", "nodes", "pods", "secrets"},
 		},
 		rbacv1.PolicyRule{
-			Verbs:           []string{"get"},
-			APIGroups:       []string{""},
-			Resources:       []string{"nodes"},
+			Verbs:     []string{"get"},
+			APIGroups: []string{""},
+			Resources: []string{"nodes"},
 		},
 		rbacv1.PolicyRule{
-			Verbs:           []string{"get", "list", "watch"},
-			APIGroups:       []string{""},
-			Resources:       []string{"services"},
+			Verbs:     []string{"get", "list", "watch"},
+			APIGroups: []string{""},
+			Resources: []string{"services"},
 		},
 		rbacv1.PolicyRule{
-			Verbs:           []string{"get", "list", "watch"},
-			APIGroups:       []string{"extensions"},
-			Resources:       []string{"ingresses"},
+			Verbs:     []string{"get", "list", "watch"},
+			APIGroups: []string{"extensions"},
+			Resources: []string{"ingresses"},
 		},
 		rbacv1.PolicyRule{
-			Verbs:           []string{"create", "patch"},
-			APIGroups:       []string{""},
-			Resources:       []string{"events"},
+			Verbs:     []string{"create", "patch"},
+			APIGroups: []string{""},
+			Resources: []string{"events"},
 		},
 		rbacv1.PolicyRule{
-			Verbs:           []string{"update"},
-			APIGroups:       []string{"extensions"},
-			Resources:       []string{"ingresses/status"},
+			Verbs:     []string{"update"},
+			APIGroups: []string{"extensions"},
+			Resources: []string{"ingresses/status"},
 		},
 	},
 }
 
 var IngressRole = rbacv1.Role{
-	TypeMeta:   metaV1.TypeMeta{
+	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Role",
 		APIVersion: "rbac.authorization.k8s.io/v1beta1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:                       "system::nginx-ingress-role",
-		Namespace:                  "kube-system",
-		Labels:          map[string]string{
+		Name:      "system::nginx-ingress-role",
+		Namespace: "kube-system",
+		Labels: map[string]string{
 			"cluster":                         "management",
-			"kubernetes.io/bootstrapping":                         "rbac-defaults",
+			"kubernetes.io/bootstrapping":     "rbac-defaults",
 			"addonmanager.kubernetes.io/mode": "Reconcile",
 		},
 	},
-	Rules:      []rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{
 		rbacv1.PolicyRule{
-			Verbs:           []string{"get"},
-			APIGroups:       []string{""},
-			Resources:       []string{"configmaps", "pods", "secrets", "namespaces"},
+			Verbs:     []string{"get"},
+			APIGroups: []string{""},
+			Resources: []string{"configmaps", "pods", "secrets", "namespaces"},
 		},
 		rbacv1.PolicyRule{
-			Verbs:           []string{"get", "update"},
-			APIGroups:       []string{""},
-			Resources:       []string{"ingress-controller-leader-nginx"},
+			Verbs:     []string{"get", "update"},
+			APIGroups: []string{""},
+			Resources: []string{"ingress-controller-leader-nginx"},
 		},
 		rbacv1.PolicyRule{
-			Verbs:           []string{"create", "get", "update"},
-			APIGroups:       []string{""},
-			Resources:       []string{"configmaps"},
+			Verbs:     []string{"create", "get", "update"},
+			APIGroups: []string{""},
+			Resources: []string{"configmaps"},
 		},
 		rbacv1.PolicyRule{
-			Verbs:           []string{"get"},
-			APIGroups:       []string{""},
-			Resources:       []string{"endpoints"},
+			Verbs:     []string{"get"},
+			APIGroups: []string{""},
+			Resources: []string{"endpoints"},
 		},
 	},
 }
 
 var IngressRoleBinding = rbacv1.RoleBinding{
-	TypeMeta:   metaV1.TypeMeta{
+	TypeMeta: metaV1.TypeMeta{
 		Kind:       "RoleBinding",
 		APIVersion: "rbac.authorization.k8s.io/v1beta1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:                       "system::nginx-ingress-role-binding",
-		Namespace:                  "kube-system",
-		Labels:          map[string]string{
+		Name:      "system::nginx-ingress-role-binding",
+		Namespace: "kube-system",
+		Labels: map[string]string{
 			"cluster":                         "management",
-			"kubernetes.io/bootstrapping":                         "rbac-defaults",
+			"kubernetes.io/bootstrapping":     "rbac-defaults",
 			"addonmanager.kubernetes.io/mode": "EnsureExists",
 		},
 	},
-	Subjects:   []rbacv1.Subject{
+	Subjects: []rbacv1.Subject{
 		rbacv1.Subject{
 			Kind:      "ServiceAccount",
 			Name:      "nginx-ingress",
 			Namespace: "kube-system",
 		},
 	},
-	RoleRef:    rbacv1.RoleRef{
+	RoleRef: rbacv1.RoleRef{
 		APIGroup: "rbac.authorization.k8s.io",
 		Kind:     "Role",
 		Name:     "system::nginx-ingress-role",
@@ -805,27 +790,27 @@ var IngressRoleBinding = rbacv1.RoleBinding{
 }
 
 var IngressClusterRoleBinding = rbacv1.ClusterRoleBinding{
-	TypeMeta:   metaV1.TypeMeta{
+	TypeMeta: metaV1.TypeMeta{
 		Kind:       "ClusterRoleBinding",
 		APIVersion: "rbac.authorization.k8s.io/v1beta1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:                       "system:nginx-ingress",
-		Namespace:                  "kube-system",
-		Labels:         map[string]string{
+		Name:      "system:nginx-ingress",
+		Namespace: "kube-system",
+		Labels: map[string]string{
 			"cluster":                         "management",
-			"kubernetes.io/bootstrapping":                         "rbac-defaults",
+			"kubernetes.io/bootstrapping":     "rbac-defaults",
 			"addonmanager.kubernetes.io/mode": "EnsureExists",
 		},
 	},
-	Subjects:   []rbacv1.Subject{
+	Subjects: []rbacv1.Subject{
 		rbacv1.Subject{
 			Kind:      "ServiceAccount",
 			Name:      "nginx-ingress",
 			Namespace: "kube-system",
 		},
 	},
-	RoleRef:    rbacv1.RoleRef{
+	RoleRef: rbacv1.RoleRef{
 		APIGroup: "rbac.authorization.k8s.io",
 		Kind:     "ClusterRole",
 		Name:     "system:nginx-ingress",
@@ -833,49 +818,49 @@ var IngressClusterRoleBinding = rbacv1.ClusterRoleBinding{
 }
 
 var IngressLoadBalancerConfigMap = v1.ConfigMap{
-	TypeMeta:   metaV1.TypeMeta{
+	TypeMeta: metaV1.TypeMeta{
 		Kind:       "ConfigMap",
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:                       "nginx-load-balancer-conf",
-		Namespace:                  "kube-system",
+		Name:      "nginx-load-balancer-conf",
+		Namespace: "kube-system",
 		Labels: map[string]string{
-			"cluster":"management",
-			"addonmanager.kubernetes.io/mode":"EnsureExists",
+			"cluster":                         "management",
+			"addonmanager.kubernetes.io/mode": "EnsureExists",
 		},
 	},
 	Data: map[string]string{
-		"http2":"True",
+		"http2": "True",
 	},
 }
 
 var IngressTCPServiceConfigMap = v1.ConfigMap{
-	TypeMeta:   metaV1.TypeMeta{
+	TypeMeta: metaV1.TypeMeta{
 		Kind:       "ConfigMap",
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:                       "tcp-services",
-		Namespace:                  "kube-system",
+		Name:      "tcp-services",
+		Namespace: "kube-system",
 		Labels: map[string]string{
-			"cluster":"management",
-			"addonmanager.kubernetes.io/mode":"EnsureExists",
+			"cluster":                         "management",
+			"addonmanager.kubernetes.io/mode": "EnsureExists",
 		},
 	},
 }
 
 var IngressUDPServiceConfigMap = v1.ConfigMap{
-	TypeMeta:   metaV1.TypeMeta{
+	TypeMeta: metaV1.TypeMeta{
 		Kind:       "ConfigMap",
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:                       "udp-services",
-		Namespace:                  "kube-system",
+		Name:      "udp-services",
+		Namespace: "kube-system",
 		Labels: map[string]string{
-			"cluster":"management",
-			"addonmanager.kubernetes.io/mode":"EnsureExists",
+			"cluster":                         "management",
+			"addonmanager.kubernetes.io/mode": "EnsureExists",
 		},
 	},
 }
@@ -883,13 +868,13 @@ var IngressUDPServiceConfigMap = v1.ConfigMap{
 // The Ingress definition structure contains all the elements required to setup an ingress.
 // TODO Refactor into this
 type IngressDefinition struct {
-	Services []*v1.Service
-	Ingresses []*v1beta1.Ingress
-	Deployments []*appsv1.Deployment
-	ServiceAccounts [] *v1.ServiceAccount
-	ClusterRoles [] *rbacv1.ClusterRole
-	Roles [] *rbacv1.Role
-	RoleBindings []*rbacv1.RoleBinding
+	Services            []*v1.Service
+	Ingresses           []*v1beta1.Ingress
+	Deployments         []*appsv1.Deployment
+	ServiceAccounts     []*v1.ServiceAccount
+	ClusterRoles        []*rbacv1.ClusterRole
+	Roles               []*rbacv1.Role
+	RoleBindings        []*rbacv1.RoleBinding
 	ClusterRoleBindings []*rbacv1.ClusterRoleBinding
-	ConfigMaps []*v1.ConfigMap
+	ConfigMaps          []*v1.ConfigMap
 }
