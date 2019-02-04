@@ -5,13 +5,14 @@
 package installer
 
 import (
+	"sync"
+
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/installer/internal/pkg/server/config"
 	"github.com/nalej/installer/internal/pkg/templates"
 	"github.com/nalej/installer/internal/pkg/workflow"
 	"github.com/rs/zerolog/log"
-	"sync"
 )
 
 type Manager struct {
@@ -81,6 +82,7 @@ func (m *Manager) launchInstall(installID string) {
 
 	registryCredentials := workflow.NewRegistryCredentials(
 		m.Config.DockerRegistryUsername, m.Config.DockerRegistryPassword)
+
 	// Create Parameters
 	params := workflow.NewParameters(
 		request, workflow.Assets{}, m.Paths,

@@ -66,13 +66,17 @@ const InstallManagementCluster = `
 			},
 			{"type":"sync", "name":"installMngtDNS",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}",
+				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
+				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Dns}}"
 			},
 		{{end}}
 		{"type":"sync", "name":"installIngress",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"management_public_host":"{{$.InstallRequest.Hostname}}",
-				"on_management_cluster":{{ not $.AppClusterInstall}}
+				"on_management_cluster":{{ not $.AppClusterInstall}},
+				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
+				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}"
 		},
 		{"type":"sync", "name":"createCredentials",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
@@ -88,4 +92,3 @@ const InstallManagementCluster = `
 	]
 }
 `
-

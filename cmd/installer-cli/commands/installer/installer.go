@@ -6,6 +6,8 @@ package installer
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-installer-go"
@@ -13,7 +15,6 @@ import (
 	"github.com/nalej/installer/internal/pkg/utils"
 	"github.com/nalej/installer/internal/pkg/workflow"
 	"github.com/rs/zerolog/log"
-	"time"
 )
 
 type Installer struct {
@@ -33,6 +34,9 @@ func NewInstallerFromCLI(
 	managementClusterHost string,
 	dnsClusterHost string,
 	dnsClusterPort string,
+	useStaticIPAddresses bool,
+	ipAddressIngress string,
+	ipAddressDNS string,
 	appClusterInstall bool,
 	dockerUsername string,
 	dockerPassword string,
@@ -48,6 +52,12 @@ func NewInstallerFromCLI(
 		return nil, err
 	}
 
+	staticIPAddresses := grpc_installer_go.StaticIPAddresses{
+		UseStaticIp: useStaticIPAddresses,
+		Ingress:     ipAddressIngress,
+		Dns:         ipAddressDNS,
+	}
+
 	request := grpc_installer_go.InstallRequest{
 		InstallId:         installId,
 		OrganizationId:    "nalej",
@@ -55,11 +65,12 @@ func NewInstallerFromCLI(
 		ClusterType:       grpc_infrastructure_go.ClusterType_KUBERNETES,
 		InstallBaseSystem: installK8s,
 		KubeConfigRaw:     kubeConfigContent,
-		Hostname: managementClusterHost,
+		Hostname:          managementClusterHost,
 		Username:          username,
 		PrivateKey:        privateKeyContent,
 		Nodes:             nodes,
-		TargetPlatform: grpc_installer_go.Platform(grpc_installer_go.Platform_value[targetPlatform]),
+		TargetPlatform:    grpc_installer_go.Platform(grpc_installer_go.Platform_value[targetPlatform]),
+		StaticIpAddresses: &staticIPAddresses,
 	}
 
 	registryCredentials := workflow.NewRegistryCredentials(dockerUsername, dockerPassword)

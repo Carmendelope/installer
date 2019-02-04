@@ -6,12 +6,13 @@ package commands
 
 import (
 	"fmt"
-	"github.com/nalej/installer/cmd/installer-cli/commands/installer"
-	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/nalej/installer/cmd/installer-cli/commands/installer"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 )
 
 var managementClusterCmd = &cobra.Command{
@@ -74,6 +75,9 @@ func LaunchManagementInstall() {
 		managementPublicHost,
 		dnsClusterHost,
 		strconv.Itoa(dnsClusterPort),
+		useStaticIPAddresses,
+		ipAddressIngress,
+		ipAddressDNS,
 		false,
 		getDockerUsername(), getDockerPassword())
 

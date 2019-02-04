@@ -5,12 +5,13 @@
 package commands
 
 import (
+	"os"
+
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/utils"
 	"github.com/nalej/installer/internal/pkg/workflow"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var explainPlan bool
@@ -23,6 +24,11 @@ var nodes string
 var targetPlatform string
 
 var managementPublicHost string
+
+var useStaticIPAddresses bool
+var ipAddressIngress string
+var ipAddressDNS string
+
 var dnsClusterHost string
 var dnsClusterPort int
 
@@ -62,6 +68,13 @@ func init() {
 		"Public FQDN where the management cluster is reachable by the application clusters")
 	cliCmd.MarkPersistentFlagRequired("managementClusterPublicHost")
 
+	cliCmd.PersistentFlags().BoolVar(&useStaticIPAddresses, "useStaticIPAddresses", false,
+		"Use statically assigned IP Addresses for the public facing services")
+	cliCmd.PersistentFlags().StringVar(&ipAddressIngress, "ipAddressIngress", "",
+		"Public IP Address assigned to the public ingress service")
+	cliCmd.PersistentFlags().StringVar(&ipAddressDNS, "ipAddressDNS", "",
+		"Public IP Address assigned to the DNS server service")
+
 	cliCmd.PersistentFlags().StringVar(&dnsClusterHost, "dnsClusterPublicHost", "",
 		"Public FQDN where the management cluster is reachable for DNS requests by the application clusters")
 	cliCmd.MarkPersistentFlagRequired("dnsClusterPublicHost")
@@ -86,11 +99,11 @@ func init() {
 }
 
 func CheckExists(path string) bool {
-	_, err := os.Stat(path);
+	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
 }
 
-func GetPaths() (* workflow.Paths, derrors.Error) {
+func GetPaths() (*workflow.Paths, derrors.Error) {
 
 	components := utils.ExtendComponentsPath(utils.GetPath(componentsPath), false)
 	binary := utils.GetPath(binaryPath)
@@ -104,9 +117,9 @@ func GetPaths() (* workflow.Paths, derrors.Error) {
 		return nil, derrors.NewNotFoundError("binary directory does not exists").WithParams(binary)
 	}
 
-	if ! CheckExists(temp) {
+	if !CheckExists(temp) {
 		err := os.MkdirAll(temp, os.ModePerm)
-		if err != nil{
+		if err != nil {
 			return nil, derrors.AsError(err, "cannot create temp directory")
 		}
 	}
@@ -130,7 +143,7 @@ func ValidateInstallParameters() derrors.Error {
 		if nodes == "" {
 			return derrors.NewInvalidArgumentError("nodes expected on kubernetes install mode")
 		}
-	}else {
+	} else {
 		if kubeConfigPath == "" {
 			return derrors.NewInvalidArgumentError("kubeConfig path expected")
 		}
@@ -143,4 +156,3 @@ func ValidateInstallParameters() derrors.Error {
 	log.Info().Str("path", kubeConfigPath).Msg("KubeConfig")
 	return nil
 }
-

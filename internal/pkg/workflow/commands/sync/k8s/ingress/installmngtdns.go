@@ -7,27 +7,32 @@ package ingress
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 	"github.com/rs/zerolog/log"
-	"strings"
 )
 
 type InstallMngtDNS struct {
 	k8s.Kubernetes
-	PlatformType string `json:"platform_type"`
+	PlatformType    string `json:"platform_type"`
+	UseStaticIp     bool   `json:"use_static_ip"`
+	StaticIpAddress string `json:"static_ip_address"`
 }
 
-func NewInstallMngtDNS(kubeConfigPath string, platformType string) *InstallMngtDNS {
+func NewInstallMngtDNS(kubeConfigPath string, platformType string, useStaticIp bool, staticIpAddress string) *InstallMngtDNS {
 	return &InstallMngtDNS{
 		Kubernetes: k8s.Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallMngtDNS),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		PlatformType: platformType,
+		PlatformType:    platformType,
+		UseStaticIp:     useStaticIp,
+		StaticIpAddress: staticIpAddress,
 	}
 }
 
@@ -58,8 +63,12 @@ func (imd *InstallMngtDNS) Run(workflowID string) (*entities.CommandResult, derr
 		false, "unsupported platform type", nil), nil
 }
 
-func (imd * InstallMngtDNS) InstallAzure(workflowID string) (*entities.CommandResult, derrors.Error) {
-	err := imd.CreateService(&AzureConsulService)
+func (imd *InstallMngtDNS) InstallAzure(workflowID string) (*entities.CommandResult, derrors.Error) {
+	azureService := AzureConsulService
+	if imd.UseStaticIp {
+		azureService.Spec.LoadBalancerIP = imd.StaticIpAddress
+	}
+	err := imd.CreateService(&azureService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating DNS service")
 		return entities.NewCommandResult(
@@ -68,7 +77,7 @@ func (imd * InstallMngtDNS) InstallAzure(workflowID string) (*entities.CommandRe
 	return entities.NewSuccessCommand([]byte("DNS loadbalancer installed on Azure")), nil
 }
 
-func (imd * InstallMngtDNS) InstallMinikube(workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallMngtDNS) InstallMinikube(workflowID string) (*entities.CommandResult, derrors.Error) {
 	err := imd.CreateService(&MinikubeConsulService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating DNS service")
@@ -78,14 +87,14 @@ func (imd * InstallMngtDNS) InstallMinikube(workflowID string) (*entities.Comman
 	return entities.NewSuccessCommand([]byte("DNS loadbalancer installed on Minikube")), nil
 }
 
-func (imd * InstallMngtDNS) String() string {
+func (imd *InstallMngtDNS) String() string {
 	return fmt.Sprintf("SYNC InstallMngtDNS on %s", imd.PlatformType)
 }
 
-func (imd * InstallMngtDNS) PrettyPrint(indentation int) string {
+func (imd *InstallMngtDNS) PrettyPrint(indentation int) string {
 	return strings.Repeat(" ", indentation) + imd.String()
 }
 
-func (imd * InstallMngtDNS) UserString() string {
+func (imd *InstallMngtDNS) UserString() string {
 	return fmt.Sprintf("Installing DNS loadbalancer")
 }

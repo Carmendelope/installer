@@ -6,8 +6,9 @@ package workflow
 
 import (
 	"encoding/json"
-	"github.com/nalej/installer/internal/pkg/errors"
 	"io/ioutil"
+
+	"github.com/nalej/installer/internal/pkg/errors"
 
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-installer-go"
