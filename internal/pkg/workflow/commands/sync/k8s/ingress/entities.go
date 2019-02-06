@@ -421,6 +421,94 @@ var ClusterAPIIngressRules = v1beta1.Ingress{
 	},
 }
 
+var DeviceLoginAPIIngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "extensions/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "device-login-api-ingress",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":   "management",
+			"component": "ingress-nginx",
+		},
+		Annotations: map[string]string{
+			"kubernetes.io/ingress.class": "nginx",
+		},
+	},
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			v1beta1.IngressTLS{
+				Hosts:      []string{"device-login.MANAGEMENT_HOST"},
+				SecretName: "ingress-tls",
+			},
+		},
+		Rules: []v1beta1.IngressRule{
+			v1beta1.IngressRule{
+				Host: "device-login.MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
+					HTTP: &v1beta1.HTTPIngressRuleValue{
+						Paths: []v1beta1.HTTPIngressPath{
+							v1beta1.HTTPIngressPath{
+								Path: "/",
+								Backend: v1beta1.IngressBackend{
+									ServiceName: "device-login-api",
+									ServicePort: intstr.IntOrString{IntVal: 6031},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var DeviceAPIIngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "extensions/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "device-api-ingress",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":   "management",
+			"component": "ingress-nginx",
+		},
+		Annotations: map[string]string{
+			"kubernetes.io/ingress.class": "nginx",
+		},
+	},
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			v1beta1.IngressTLS{
+				Hosts:      []string{"device.MANAGEMENT_HOST"},
+				SecretName: "ingress-tls",
+			},
+		},
+		Rules: []v1beta1.IngressRule{
+			v1beta1.IngressRule{
+				Host: "device.MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
+					HTTP: &v1beta1.HTTPIngressRuleValue{
+						Paths: []v1beta1.HTTPIngressPath{
+							v1beta1.HTTPIngressPath{
+								Path: "/",
+								Backend: v1beta1.IngressBackend{
+									ServiceName: "device-api",
+									ServicePort: intstr.IntOrString{IntVal: 6001},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 var AppClusterAPIIngressRules = v1beta1.Ingress{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Ingress",
