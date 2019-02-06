@@ -74,7 +74,7 @@ var AzureZTPlanetService = v1.Service{
 	},
 }
 
-var MinikubeConsulService = v1.Service{
+var MinikubeZTPlanetService = v1.Service{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Service",
 		APIVersion: "v1",
