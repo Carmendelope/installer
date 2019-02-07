@@ -9,7 +9,7 @@ metadata:
     cluster: management
     component: installer
   name: installer
-  namespace: nalej
+  namespace: __NPH_NAMESPACE
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: installer
-        image: nalejregistry.azurecr.io/nalej/installer:VERSION
+        image: __NPH_REGISTRY.azurecr.io/__NPH_REGISTRY_NAMESPACE/installer:__NPH_VERSION
         imagePullPolicy: Always
         volumeMounts:
         - name: installer-config
