@@ -2,7 +2,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: installer
-  namespace: nalej
+  namespace: __NPH_NAMESPACE
   labels:
     cluster: management
     component: installer
