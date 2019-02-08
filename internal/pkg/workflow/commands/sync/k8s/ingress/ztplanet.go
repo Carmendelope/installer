@@ -10,26 +10,6 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//apiVersion: v1
-//kind: Service
-//metadata:
-//  labels:
-//    cluster: management
-//    component: network-manager
-//  name: zerotier-planet
-//  namespace: nalej
-//spec:
-//  externalTrafficPolicy: Cluster
-//  ports:
-//  - name: zt-udp
-//    port: 9993
-//    protocol: UDP
-//    targetPort: 9993
-//  selector:
-//    cluster: management
-//    component: network-manager
-//  type: LoadBalancer
-
 var AzureZTPort = v1.ServicePort{
 	Name:       "zt-udp",
 	Protocol:   v1.ProtocolUDP,
