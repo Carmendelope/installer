@@ -40,6 +40,7 @@ const CheckAsset = "checkAsset"
 
 // RKEInstall command to launch the installation of a new cluster with RKE.
 const RKEInstall = "rkeInstall"
+
 const RKERemove = "rkeRemove"
 
 const LaunchComponents = "launchComponents"
@@ -63,3 +64,5 @@ const AddClusterUser = "addClusterUser"
 const InstallIngress = "installIngress"
 
 const InstallMngtDNS = "installMngtDNS"
+
+const InstallZtPlanetLB = "installZtPlanetLB"
