@@ -33,20 +33,6 @@ const InstallManagementCluster = `
 				"dns_public_port":"{{$.DNSClusterPort}}",
 				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
 			},
-			// {{if $.InstallRequest.UseCoreDns }}			
-			//	{"type":"sync", "name":"updateCoreDNS",
-			//		"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-			//		"dns_public_host":"{{$.DNSClusterHost}}",
-			//		"dns_public_port":"{{$.DNSClusterPort}}"
-			//	},
-			// {{end}}
-			// {{if $.InstallRequest.UseKubeDns }}			
-			//	{"type":"sync", "name":"updateKubeDNS",
-			//		"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-			//		"dns_public_host":"{{$.DNSClusterHost}}"
-			//	},
-			// {{end}}
-
 			{"type":"sync", "name":"addClusterUser",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"organization_id":"{{$.InstallRequest.OrganizationId}}",
@@ -78,6 +64,12 @@ const InstallManagementCluster = `
 				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
 				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}"
 		},
+		{{if not $.AppClusterInstall }}
+			{"type":"sync", "name":"installZtPlanetLB",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
+			},
+		{{end}}
 		{"type":"sync", "name":"createCredentials",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"username":"{{$.Registry.Username}}",

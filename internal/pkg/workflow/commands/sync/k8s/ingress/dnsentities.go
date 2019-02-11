@@ -53,7 +53,6 @@ var MinikubeDNSUIPort = v1.ServicePort{
 	NodePort: 30500,
 }
 
-
 var AzureConsulService = v1.Service{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Service",

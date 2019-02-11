@@ -100,6 +100,8 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return ingress.NewInstallIngressFromJSON(raw)
 	case entities.InstallMngtDNS:
 		return ingress.NewInstallMngtDNSFromJSON(raw)
+	case entities.InstallZtPlanetLB:
+		return ingress.NewInstallZtPlanetLBFromJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}
