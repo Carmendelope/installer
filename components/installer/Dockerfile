@@ -11,6 +11,7 @@ RUN mkdir -p /nalej/bin
 COPY dockerenv/rke /nalej/bin/
 COPY installer /nalej/
 
+
 RUN chmod +x /nalej/bin/rke
 
 ENTRYPOINT ["./nalej/installer"]
