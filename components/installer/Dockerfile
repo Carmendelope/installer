@@ -1,9 +1,8 @@
 #
-# Copyright (C) 2018 Nalej Group - All Rights Reserved
+# Copyright (C) 2019 Nalej Group - All Rights Reserved
 #
 
-# iron/go is the alpine image with only ca-certificates added
-FROM iron/go
+FROM debian:stretch
 
 # Now just add the binary\
 RUN mkdir -p /nalej/bin

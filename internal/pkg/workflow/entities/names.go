@@ -43,6 +43,8 @@ const RKEInstall = "rkeInstall"
 
 const RKERemove = "rkeRemove"
 
+const CreateZTPlanetFiles = "CreateZtPlanetFiles"
+
 const LaunchComponents = "launchComponents"
 
 const CheckRequirements = "checkRequirements"
