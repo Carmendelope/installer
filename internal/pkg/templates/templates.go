@@ -11,7 +11,6 @@ const InstallManagementCluster = `
 		// Prerequirements
 		{"type":"sync", "name":"checkAsset", "path":"{{$.Paths.BinaryPath}}/rke"},
 		{"type":"sync", "name":"checkAsset", "path":"{{$.Paths.BinaryPath}}/zerotier-idtool"},
-		{"type":"sync", "name":"checkAsset", "path":"{{$.Paths.BinaryPath}}/zerotier-cli"},
 		// Install K8s
 		{{if $.InstallRequest.InstallBaseSystem }}
 			{"type":"sync", "name": "logger", "msg": "Installing base system"},
@@ -78,6 +77,7 @@ const InstallManagementCluster = `
 				"identitySecretPath":"{{$.Paths.TempPath}}/identity.secret",
 				"identityPublicPath":"{{$.Paths.TempPath}}/identity.public",
 				"planetJsonPath":"{{$.Paths.TempPath}}/planet.json",
+				"binaryPath":{{$.Paths.BinaryPath}}
 			},
 		{{end}}
 		{"type":"sync", "name":"createCredentials",

@@ -13,6 +13,9 @@ import (
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
+	"k8s.io/api/core/v1"
+	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -24,19 +27,6 @@ type CreateZTPlanetFiles struct {
 	IdentitySecretPath string `json:"identitySecretPath"`
 	IdentityPublicPath string `json:"identityPublicPath"`
 	PlanetJsonPath string `json:"planetJsonPath"`
-}
-
-type ZTPlanetJson struct {
-	Id string `json:"id"`
-	ObjType string `json:"objtype"`
-	Roots [] struct{
-		Identity string `json:"identity"`
-		StableEndpoints []string `json:"stableEndpoints"`
-	} `json:"roots"`
-	SigningKey string `json:"signinKey"`
-	SigningKeySecret string `json:"signingKey_SECRET"`
-	UpdatesMustBeSignedBy string `json:"updatesMustBeSignedBy"`
-	WorldType string `json:"worldType"`
 }
 
 func NewCreateZTPlanetFiles (
@@ -57,6 +47,19 @@ func NewCreateZTPlanetFiles (
 		IdentityPublicPath: identityPublicPath,
 		PlanetJsonPath: planetJsonPath,
 	}
+}
+
+type ZTPlanetJson struct {
+	Id string `json:"id"`
+	ObjType string `json:"objtype"`
+	Roots [] struct{
+		Identity string `json:"identity"`
+		StableEndpoints []string `json:"stableEndpoints"`
+	} `json:"roots"`
+	SigningKey string `json:"signinKey"`
+	SigningKeySecret string `json:"signingKey_SECRET"`
+	UpdatesMustBeSignedBy string `json:"updatesMustBeSignedBy"`
+	WorldType string `json:"worldType"`
 }
 
 func NewCreateZTPlanetFilesFromJSON (raw []byte) (*entities.Command, derrors.Error) {
@@ -145,17 +148,109 @@ func (cmd *CreateZTPlanetFiles) Run (workflowID string) (*entities.CommandResult
 		log.Error().Msg("Error while executing genmoon command")
 		return nil, derrors.AsError(pipeErr, errors.IOError)
 	}
-	generateMoonOut, err := generateMoon.StdoutPipe()
+
+	generateMoonOut, err := generateMoon.Output()
 	if err != nil {
-		log.Error().Msg("Error generating ZT Planet file")
-		return nil, derrors.NewGenericError("Error generating ZT Planet file")
+		log.Error().Msg("Error while executing genmoon command")
+		return nil, derrors.NewGenericError("Error while executing genmoon command")
 	}
-	if err := generateMoon.Start(); err != nil {
-		log.Error().Msg("Error starting ZT Planet file creation command")
-		return nil, derrors.NewGenericError("Error starting ZT Planet file creation command")
+	generateMoonOutStr := strings.Fields(string (generateMoonOut))
+	moonName := generateMoonOutStr [1]
+	fmt.Print(moonName)
+
+	// Move moon file to planet file
+	err = os.Rename("/bin/"+moonName,cmd.PlanetJsonPath)
+	if err != nil {
+		log.Error().Msg("Error while renaming moon file")
+		return nil, derrors.NewGenericError("Error while renaming moon file")
 	}
 
-	var planetFile string
+	// Planet Secret
+	planetData, err := ioutil.ReadFile(cmd.PlanetJsonPath)
+	if err != nil {
+		log.Error().Msg("cannot read planet file")
+		return nil, derrors.NewGenericError("cannot read planet file")
+	}
+	ztPlanetSecret := &v1.Secret{
+		TypeMeta: v12.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: v12.ObjectMeta{
+			Name:         "zt-planet",
+			GenerateName: "",
+			Namespace:    "nalej",
+		},
+		Data: map[string][]byte{
+		 	"planet": planetData,
+		 },
+		Type: v1.SecretTypeDockerConfigJson,
+	}
+	client := cmd.Client.CoreV1().Secrets(ztPlanetSecret.Namespace)
+	created, err := client.Create(ztPlanetSecret)
+	if err != nil {
+		log.Error().Msg("Error creating zt-planet secret")
+		return nil, derrors.NewGenericError("Error creating zt-planet secret")
+	}
+	log.Debug().Interface("created", created).Msg("zt-planet secret has been created")
+
+	// Identity Secret Secret
+	identitySecretData, err := ioutil.ReadFile(cmd.IdentitySecretPath)
+	if err != nil {
+		log.Error().Msg("cannot read identity.secret file")
+		return nil, derrors.NewGenericError("cannot read identity.secret file")
+	}
+	ztIdentitySecretSecret := &v1.Secret{
+		TypeMeta: v12.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: v12.ObjectMeta{
+			Name:         "zt-identity-secret",
+			GenerateName: "",
+			Namespace:    "nalej",
+		},
+		Data: map[string][]byte{
+			"identity.secret": identitySecretData,
+		},
+		Type: v1.SecretTypeDockerConfigJson,
+	}
+	client = cmd.Client.CoreV1().Secrets(ztIdentitySecretSecret.Namespace)
+	created, err = client.Create(ztIdentitySecretSecret)
+	if err != nil {
+		log.Error().Msg("Error creating zt-identity-secret secret")
+		return nil, derrors.NewGenericError("Error creating zt-identity-secret secret")
+	}
+	log.Debug().Interface("created", created).Msg("zt-identity-secret secret has been created")
+
+	// Identity Public Secret
+	identityPublicData, err := ioutil.ReadFile(cmd.IdentityPublicPath)
+	if err != nil {
+		log.Error().Msg("cannot read identity.public file")
+		return nil, derrors.NewGenericError("cannot read identity.public file")
+	}
+	ztIdentityPublicSecret := &v1.Secret{
+		TypeMeta: v12.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: v12.ObjectMeta{
+			Name:         "zt-identity-public",
+			GenerateName: "",
+			Namespace:    "nalej",
+		},
+		Data: map[string][]byte{
+			"planet": identityPublicData,
+		},
+		Type: v1.SecretTypeDockerConfigJson,
+	}
+	client = cmd.Client.CoreV1().Secrets(ztIdentityPublicSecret.Namespace)
+	created, err = client.Create(ztIdentityPublicSecret)
+	if err != nil {
+		log.Error().Msg("Error creating zt-planet secret")
+		return nil, derrors.NewGenericError("Error creating zt-planet secret")
+	}
+	log.Debug().Interface("created", created).Msg("zt-planet secret has been created")
 
 	return entities.NewSuccessCommand([]byte("ZT Planet files and secrets successfully created.")), nil
 }
