@@ -76,7 +76,7 @@ func NewCreateZTPlanetFilesFromJSON (raw []byte) (*entities.Command, derrors.Err
 	return &r, nil
 }
 
-func (cmd * CreateZTPlanetFiles) generateZTidentifiers() derrors.Error{
+func (cmd * CreateZTPlanetFiles) generateZTIdentityFiles() derrors.Error{
 	// Generate ZT Planet IDs
 	generateIds := exec.Command(cmd.ZtIdToolBinaryPath, "generate", cmd.IdentitySecretPath, cmd.IdentityPublicPath)
 	_, pipeErr := generateIds.StderrPipe()
@@ -277,7 +277,7 @@ func (cmd * CreateZTPlanetFiles) createKubernetesSecrets() derrors.Error{
 func (cmd *CreateZTPlanetFiles) Run (workflowID string) (*entities.CommandResult, derrors.Error) {
 	log.Debug().Str("path", cmd.ZtIdToolBinaryPath).Msg("ZT ID Tool binary")
 
-	dErr := cmd.generateZTidentifiers()
+	dErr := cmd.generateZTIdentityFiles()
 	if dErr != nil{
 		return nil, dErr
 	}
