@@ -68,3 +68,5 @@ const InstallMngtDNS = "installMngtDNS"
 const InstallZtPlanetLB = "installZtPlanetLB"
 
 const CreateZTPlanetFiles = "createZtPlanetFiles"
+
+const CreateOpaqueSecret = "createOpaqueSecret"

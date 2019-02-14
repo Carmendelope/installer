@@ -88,7 +88,8 @@ func (m *Manager) launchInstall(installID string) {
 		request, workflow.Assets{}, m.Paths,
 		m.Config.ManagementClusterHost, m.Config.ManagementClusterPort,
 		m.Config.DNSClusterHost, m.Config.DNSClusterPort,
-		true, *registryCredentials)
+		true, *registryCredentials,
+		*workflow.NewNetworkConfig(m.Config.ZTPlanetSecretValue))
 	status.Params = params
 	err := status.Params.LoadCredentials()
 	if err != nil {

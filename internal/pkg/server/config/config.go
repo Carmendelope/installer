@@ -26,6 +26,7 @@ type Config struct {
 	DNSClusterPort         string
 	DockerRegistryUsername string
 	DockerRegistryPassword string
+	ZTPlanetSecretValue    string
 }
 
 func NewConfiguration(
@@ -38,6 +39,7 @@ func NewConfiguration(
 	managementClusterPort string,
 	dnsClusterHost string,
 	dnsClusterPort string,
+	ztPlanetSecretValue string,
 ) *Config {
 	return &Config{
 		Port:                  port,
@@ -48,6 +50,7 @@ func NewConfiguration(
 		ManagementClusterPort: managementClusterPort,
 		DNSClusterHost:        dnsClusterHost,
 		DNSClusterPort:        dnsClusterPort,
+		ZTPlanetSecretValue:   ztPlanetSecretValue,
 	}
 }
 

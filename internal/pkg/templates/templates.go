@@ -40,6 +40,12 @@ const InstallManagementCluster = `
 				"cluster_id":"{{$.InstallRequest.ClusterId}}",
 				"user_manager_address":"user-manager.nalej:8920"
 			},
+			{"type":"sync", "name":"createOpaqueSecret",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"secret_name":"zt-planet",
+				"secret_key":"planet",
+				"secret_value":"{{$.NetworkConfig.ZTPlanetSecret}}"
+			},
 		{{else}}
 			{"type":"sync", "name":"createManagementConfig",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",

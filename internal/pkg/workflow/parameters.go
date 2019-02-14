@@ -38,6 +38,19 @@ type Parameters struct {
 	AppClusterInstall bool `json:"app_cluster_install"`
 	//Registry contains the credentials to access the docker registry to download internal images.
 	Registry RegistryCredentials `json:"registry"`
+	// NetworkConfig contains the configuration of the networking of the cluster.
+	NetworkConfig NetworkConfig `json:"network_config"`
+}
+
+type NetworkConfig struct {
+	// ZT Planet Secret
+	ZTPlanetSecret string `json:"zt_planet_secret"`
+}
+
+func NewNetworkConfig (ztPlanetSecret string) *NetworkConfig {
+	return &NetworkConfig{
+		ZTPlanetSecret: ztPlanetSecret,
+	}
 }
 
 // TODO Remove assets if not used anymore
@@ -103,7 +116,8 @@ func NewParameters(
 	dnsClusterHost string,
 	dnsClusterPort string,
 	appClusterInstall bool,
-	registryCredentials RegistryCredentials) *Parameters {
+	registryCredentials RegistryCredentials,
+	networkConfig NetworkConfig) *Parameters {
 	return &Parameters{
 		request,
 		InstallCredentials{},
@@ -113,6 +127,8 @@ func NewParameters(
 		dnsClusterHost, dnsClusterPort,
 		appClusterInstall,
 		registryCredentials,
+		networkConfig,
+
 	}
 }
 
