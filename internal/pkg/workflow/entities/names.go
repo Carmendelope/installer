@@ -66,3 +66,5 @@ const InstallIngress = "installIngress"
 const InstallMngtDNS = "installMngtDNS"
 
 const InstallZtPlanetLB = "installZtPlanetLB"
+
+const CreateZTPlanetFiles = "createZtPlanetFiles"

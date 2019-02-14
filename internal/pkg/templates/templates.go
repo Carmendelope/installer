@@ -10,6 +10,7 @@ const InstallManagementCluster = `
 	"commands": [
 		// Prerequirements
 		{"type":"sync", "name":"checkAsset", "path":"{{$.Paths.BinaryPath}}/rke"},
+		{"type":"sync", "name":"checkAsset", "path":"{{$.Paths.BinaryPath}}/zerotier-idtool"},
 		// Install K8s
 		{{if $.InstallRequest.InstallBaseSystem }}
 			{"type":"sync", "name": "logger", "msg": "Installing base system"},
@@ -68,6 +69,15 @@ const InstallManagementCluster = `
 			{"type":"sync", "name":"installZtPlanetLB",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
+			},
+			{"type":"sync", "name":"createZtPlanetFiles",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"ztIdToolBinaryPath":"{{$.Paths.BinaryPath}}/zerotier-idtool",
+				"management_public_host":"{{$.InstallRequest.Hostname}}",
+				"identitySecretPath":"{{$.Paths.TempPath}}/identity.secret",
+				"identityPublicPath":"{{$.Paths.TempPath}}/identity.public",
+				"planetJsonPath":"{{$.Paths.TempPath}}/planet.json",
+				"planetPath":"{{$.Paths.TempPath}}/planet"
 			},
 		{{end}}
 		{"type":"sync", "name":"createCredentials",
