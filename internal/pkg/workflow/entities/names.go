@@ -43,8 +43,6 @@ const RKEInstall = "rkeInstall"
 
 const RKERemove = "rkeRemove"
 
-const CreateZTPlanetFiles = "CreateZtPlanetFiles"
-
 const LaunchComponents = "launchComponents"
 
 const CheckRequirements = "checkRequirements"
@@ -68,3 +66,5 @@ const InstallIngress = "installIngress"
 const InstallMngtDNS = "installMngtDNS"
 
 const InstallZtPlanetLB = "installZtPlanetLB"
+
+const CreateZTPlanetFiles = "createZtPlanetFiles"

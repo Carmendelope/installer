@@ -93,7 +93,7 @@ func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
 	device.Spec.TLS[0].Hosts[0] = fmt.Sprintf("device.%s", ii.ManagementPublicHost)
 	device.Spec.Rules[0].Host = fmt.Sprintf("device.%s", ii.ManagementPublicHost)
 
-	deviceLogin := DeviceAPIIngressRules
+	deviceLogin := DeviceLoginAPIIngressRules
 	deviceLogin.Spec.TLS[0].Hosts[0] = fmt.Sprintf("device-login.%s", ii.ManagementPublicHost)
 	deviceLogin.Spec.Rules[0].Host = fmt.Sprintf("device-login.%s", ii.ManagementPublicHost)
 

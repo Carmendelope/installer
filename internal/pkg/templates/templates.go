@@ -70,14 +70,14 @@ const InstallManagementCluster = `
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
 			},
-			{"type":"sync", "name":"createZtPlanetConfig",
+			{"type":"sync", "name":"createZtPlanetFiles",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"ztIdToolBinaryPath":"{{$.Paths.BinaryPath}}/zerotier-idtool",
 				"management_public_host":"{{$.InstallRequest.Hostname}}",
 				"identitySecretPath":"{{$.Paths.TempPath}}/identity.secret",
 				"identityPublicPath":"{{$.Paths.TempPath}}/identity.public",
 				"planetJsonPath":"{{$.Paths.TempPath}}/planet.json",
-				"binaryPath":{{$.Paths.BinaryPath}}
+				"planetPath":"{{$.Paths.TempPath}}/planet"
 			},
 		{{end}}
 		{"type":"sync", "name":"createCredentials",
