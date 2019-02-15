@@ -54,16 +54,83 @@ spec:
             configMapKeyRef:
               name: management-config
               key: dns_port
-        - name: DOCKER_USERNAME
+        - name: TARGET_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: management-config
+              key: environment
+        - name: PROD_REGISTRY_USERNAME
           valueFrom:
             secretKeyRef:
-              name: docker-credentials
+              name: credentials-nalej-registry
+              optional: true
               key: username
-        - name: DOCKER_PASSWORD
+        - name: PROD_REGISTRY_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: docker-credentials
+              name: credentials-nalej-registry
+              optional: true
               key: password
+        - name: PROD_REGISTRY_URL
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-registry
+              optional: true
+              key: url
+        - name: STAGING_REGISTRY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-staging-registry
+              optional: true
+              key: username
+        - name: STAGING_REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-staging-registry
+              optional: true
+              key: password
+        - name: STAGING_REGISTRY_URL
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-staging-registry
+              optional: true
+              key: url
+        - name: DEV_REGISTRY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-dev-registry
+              optional: true
+              key: username
+        - name: DEV_REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-dev-registry
+              optional: true
+              key: password
+        - name: DEV_REGISTRY_URL
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-dev-registry
+              optional: true
+              key: url
+        - name: PUBLIC_REGISTRY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-public-registry
+              optional: true
+              key: username
+        - name: PUBLIC_REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-public-registry
+              optional: true
+              key: password
+        - name: PUBLIC_REGISTRY_URL
+          valueFrom:
+            secretKeyRef:
+              name: credentials-nalej-public-registry
+              optional: true
+              key: url
         args:
           - "run"
           - "--debug"
@@ -74,8 +141,7 @@ spec:
           - "--componentsPath=/nalej/assets/"
           - "--binaryPath=/nalej/bin/"
           - "--tempPath=/tmp/nalej/"
-          - "--dockerUsername=$(DOCKER_USERNAME)"
-          - "--dockerPassword=$(DOCKER_PASSWORD)"
+          - "--targetEnvironment=$(TARGET_ENVIRONMENT)"
         securityContext:
           runAsUser: 2000
       volumes:

@@ -46,7 +46,8 @@ const InstallManagementCluster = `
 				"public_port":"{{$.ManagementClusterPort}}",
 				"dns_host":"{{$.DNSClusterHost}}",
 				"dns_port":"{{$.DNSClusterPort}}",
-				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}",
+				"environment":"{{$.TargetEnvironment}}"
 			},
 			{"type":"sync", "name":"installMngtDNS",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",

@@ -26,12 +26,13 @@ type CreateManagementConfig struct {
 	DNSHost     string `json:"dns_host"`
 	DNSPort     string `json:"dns_port"`
 	PlatformType string `json:"platform_type"`
+	Environment string `json:"environment"`
 }
 
 func NewCreateManagementConfig(
 	kubeConfigPath string,
 	publicHost string, publicPort string,
-	platformType string) *CreateManagementConfig {
+	platformType string, environment string) *CreateManagementConfig {
 	return &CreateManagementConfig{
 		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateManagementConfig),
@@ -40,6 +41,7 @@ func NewCreateManagementConfig(
 		PublicHost:     publicHost,
 		PublicPort:     publicPort,
 		PlatformType: platformType,
+		Environment: environment,
 	}
 }
 
@@ -70,6 +72,7 @@ func (cmc *CreateManagementConfig) createConfigMap() derrors.Error {
 			"dns_host": cmc.DNSHost,
 			"dns_port": cmc.DNSPort,
 			"platform_type": cmc.PlatformType,
+			"environment": cmc.Environment,
 		},
 	}
 

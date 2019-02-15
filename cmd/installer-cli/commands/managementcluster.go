@@ -44,6 +44,7 @@ func LaunchManagementInstall() {
 	if vErr != nil{
 		log.Fatal().Str("trace", vErr.DebugReport()).Msg("Invalid environment")
 	}
+	environment.Print()
 
 	inst, err := installer.NewInstallerFromCLI("cli-install",
 		installKubernetes,
