@@ -6,6 +6,7 @@ package workflow
 
 import (
 	"fmt"
+	"github.com/nalej/installer/internal/pkg/entities"
 
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-infrastructure-go"
@@ -55,13 +56,14 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 
 	assets := NewAssets(make([]string, 0), make([]string, 0))
 	paths := NewPaths("assestPath", "binPath", "confPath")
-	registryCredentials := NewRegistryCredentials("dockerUsername", "dockerPassword")
+	registryCredentials := NewRegistryCredentials("Production", "dockerUsername", "dockerPassword", "registryURL")
 	return NewParameters(
 		request,
 		*assets,
 		*paths,
 		"mngtcluster_host", "80",
 		"dns_host", "53",
+		entities.Production,
 		appClusterInstall,
-		*registryCredentials)
+		[]RegistryCredentials{*registryCredentials})
 }

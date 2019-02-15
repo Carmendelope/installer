@@ -51,6 +51,10 @@ const CreateClusterConfig = "createClusterConfig"
 
 const CreateManagementConfig = "createManagementConfig"
 
+const CreateRegistrySecrets = "createRegistrySecrets"
+
+const CreateDockerSecret = "createDockerSecret"
+
 const UpdateCoreDNS = "updateCoreDNS"
 
 const UpdateKubeDNS = "updateKubeDNS"

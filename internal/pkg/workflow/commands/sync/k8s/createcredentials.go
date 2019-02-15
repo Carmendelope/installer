@@ -19,12 +19,14 @@ import (
 
 const DockerRegistryServer = "https://nalejregistry.azurecr.io"
 
+// Deprecated: Use CreateDockerSecret
 type CreateCredentials struct {
 	Kubernetes
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
+// Deprecated: Use CreateDockerSecret
 func NewCreateCredentials(kubeConfigPath string, username string, password string) *CreateCredentials {
 	return &CreateCredentials{
 		Kubernetes: Kubernetes{
@@ -36,6 +38,7 @@ func NewCreateCredentials(kubeConfigPath string, username string, password strin
 	}
 }
 
+// Deprecated: Use CreateDockerSecret
 func NewCreateCredentialsJSON(raw []byte) (*entities.Command, derrors.Error) {
 	ccc := &CreateCredentials{}
 	if err := json.Unmarshal(raw, &ccc); err != nil {

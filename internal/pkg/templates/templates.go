@@ -46,8 +46,6 @@ const InstallManagementCluster = `
 				"public_port":"{{$.ManagementClusterPort}}",
 				"dns_host":"{{$.DNSClusterHost}}",
 				"dns_port":"{{$.DNSClusterPort}}",
-				"docker_username":"{{$.Registry.Username}}",
-				"docker_password":"{{$.Registry.Password}}",
 				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
 			},
 			{"type":"sync", "name":"installMngtDNS",
@@ -70,11 +68,18 @@ const InstallManagementCluster = `
 				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
 			},
 		{{end}}
-		{"type":"sync", "name":"createCredentials",
+
+		{{ range $index, $registry := $.Registries }}
+			{"type":"sync", "name":"createRegistrySecrets",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-				"username":"{{$.Registry.Username}}",
-				"password":"{{$.Registry.Password}}"
-		},
+				"on_management_cluster":{{ not $.AppClusterInstall}},
+				"credentials_name":"{{$registry.Name}}",
+				"username":"{{$registry.Username}}",
+				"password":"{{$registry.Password}}",
+				"url":"{{$registry.URL}}"
+			},
+		{{end}}
+
 		{"type":"sync", "name": "launchComponents",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespaces":["nalej", "ingress-nginx"],

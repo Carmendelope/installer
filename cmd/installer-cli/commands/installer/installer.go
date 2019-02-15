@@ -6,6 +6,7 @@ package installer
 
 import (
 	"fmt"
+	"github.com/nalej/installer/internal/pkg/entities"
 	"time"
 
 	"github.com/nalej/derrors"
@@ -38,8 +39,7 @@ func NewInstallerFromCLI(
 	ipAddressIngress string,
 	ipAddressDNS string,
 	appClusterInstall bool,
-	dockerUsername string,
-	dockerPassword string,
+	environment entities.Environment,
 ) (*Installer, derrors.Error) {
 
 	kubeConfigContent, err := utils.GetKubeConfigContent(kubeConfigPath)
@@ -73,12 +73,14 @@ func NewInstallerFromCLI(
 		StaticIpAddresses: &staticIPAddresses,
 	}
 
-	registryCredentials := workflow.NewRegistryCredentials(dockerUsername, dockerPassword)
+	registryCredentials := workflow.NewRegistryCredentialsFromEnvironment(environment)
 
 	params := workflow.NewParameters(request, workflow.Assets{},
 		paths, managementClusterHost, workflow.DefaultManagementPort,
 		dnsClusterHost, dnsClusterPort,
-		appClusterInstall, *registryCredentials)
+		environment.Target,
+		appClusterInstall,
+		registryCredentials)
 	return NewInstaller(*params), nil
 }
 
