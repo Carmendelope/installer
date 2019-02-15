@@ -2,7 +2,7 @@
  * Copyright (C) 2019 Nalej - All Rights Reserved
  */
 
- package zerotier
+package zerotier
 
 import (
 	"github.com/nalej/installer/internal/pkg/utils"
