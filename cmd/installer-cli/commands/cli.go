@@ -97,7 +97,7 @@ func init() {
 
 // Add parameters related to the usage of registries.
 func addRegistryOptions(cliCmd *cobra.Command){
-	cliCmd.Flags().StringVar(&environment.TargetEnvironment, "targetEnvironment", "PRODUCTION", "Target environment to be installed: PRODUCTION, STAGING, or DEVELOPMENT")
+	cliCmd.PersistentFlags().StringVar(&environment.TargetEnvironment, "targetEnvironment", "PRODUCTION", "Target environment to be installed: PRODUCTION, STAGING, or DEVELOPMENT")
 	// Production
 	cliCmd.PersistentFlags().StringVar(&environment.ProdRegistryUsername, "prodRegistryUsername", "",
 		"Username to download internal images from the production docker registry. Alternatively you may use PROD_REGISTRY_USERNAME")

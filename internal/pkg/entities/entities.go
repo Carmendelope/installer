@@ -48,6 +48,12 @@ var TargetEnvironmentFromString = map[string]TargetEnvironment {
 	"development":Development,
 }
 
+var TargetEnvironmentToString = map[TargetEnvironment]string{
+	Production:"PRODUCTION",
+	Staging:"STAGING",
+	Development:"DEVELOPMENT",
+}
+
 type Environment struct{
 	Target TargetEnvironment
 	TargetEnvironment string `json:"target_environment"`

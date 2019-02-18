@@ -144,11 +144,12 @@ func (cmc *CreateManagementConfig) String() string {
 func (cmc *CreateManagementConfig) PrettyPrint(indentation int) string {
 	simpleIden := strings.Repeat(" ", indentation) +  "  "
 	entrySep := simpleIden +  "  "
-	msg := fmt.Sprintf("\n%sConfig:\n%sPublicHost: %s:%s\n%sDNSHost: %s:%s\n%sPlatform Type:%s",
+	msg := fmt.Sprintf("\n%sConfig:\n%sPublicHost: %s:%s\n%sDNSHost: %s:%s\n%sPlatform Type:%s\n%sEnvironment:%s",
 		simpleIden,
 		entrySep, cmc.PublicHost, cmc.PublicPort,
 		entrySep, cmc.DNSHost, cmc.DNSPort,
 		entrySep, cmc.PlatformType,
+		entrySep, cmc.Environment,
 	)
 	return strings.Repeat(" ", indentation) + cmc.String() + msg
 }

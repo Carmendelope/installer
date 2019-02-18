@@ -36,7 +36,7 @@ type Parameters struct {
 	// DNSClusterPort is the port where the dns service of the management cluster is accepting DNS requests.
 	DNSClusterPort string `json:"dns_cluster_port"`
 	// TargetEnvironment defines the type of environment being installed: PRODUCTION, STAGING, DEVELOPMENT
-	TargetEnvironment entities.TargetEnvironment
+	TargetEnvironment string `json:"target_environment"`
 	//AppClusterInstall indicates if an application cluster is being installed.
 	AppClusterInstall bool `json:"app_cluster_install"`
 	//Registries contains the credentials to access the available docker registries to deploy internal images.
@@ -143,7 +143,7 @@ func NewParameters(
 		paths,
 		managementClusterHost, managementClusterPort,
 		dnsClusterHost, dnsClusterPort,
-		targetEnvironment,
+		entities.TargetEnvironmentToString[targetEnvironment],
 		appClusterInstall,
 		registryCredentials,
 	}
