@@ -25,16 +25,14 @@ type CreateManagementConfig struct {
 	PublicPort     string `json:"public_port"`
 	DNSHost     string `json:"dns_host"`
 	DNSPort     string `json:"dns_port"`
-	DockerUsername string `json:"docker_username"`
-	DockerPassword string `json:"docker_password"`
 	PlatformType string `json:"platform_type"`
+	Environment string `json:"environment"`
 }
 
 func NewCreateManagementConfig(
 	kubeConfigPath string,
 	publicHost string, publicPort string,
-	dockerUsername string, dockerPassword string,
-	platformType string) *CreateManagementConfig {
+	platformType string, environment string) *CreateManagementConfig {
 	return &CreateManagementConfig{
 		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateManagementConfig),
@@ -42,9 +40,8 @@ func NewCreateManagementConfig(
 		},
 		PublicHost:     publicHost,
 		PublicPort:     publicPort,
-		DockerUsername: dockerUsername,
-		DockerPassword: dockerPassword,
 		PlatformType: platformType,
+		Environment: environment,
 	}
 }
 
@@ -75,6 +72,7 @@ func (cmc *CreateManagementConfig) createConfigMap() derrors.Error {
 			"dns_host": cmc.DNSHost,
 			"dns_port": cmc.DNSPort,
 			"platform_type": cmc.PlatformType,
+			"environment": cmc.Environment,
 		},
 	}
 
@@ -85,32 +83,6 @@ func (cmc *CreateManagementConfig) createConfigMap() derrors.Error {
 		return derrors.AsError(err, "cannot create configmap")
 	}
 	log.Debug().Interface("created", created).Msg("new config map has been created")
-	return nil
-}
-
-func (cmc *CreateManagementConfig) createDockerSecret() derrors.Error {
-	docker := &v1.Secret{
-		TypeMeta: v12.TypeMeta{
-			Kind:       "Secret",
-			APIVersion: "v1",
-		},
-		ObjectMeta: v12.ObjectMeta{
-			Name:      "docker-credentials",
-			Namespace: TargetNamespace,
-			Labels:    map[string]string{"cluster": "management"},
-		},
-		Data: map[string][]byte{
-			"username": []byte(cmc.DockerUsername),
-			"password": []byte(cmc.DockerPassword),
-		},
-		Type: v1.SecretTypeOpaque,
-	}
-	client := cmc.Client.CoreV1().Secrets(docker.Namespace)
-	created, err := client.Create(docker)
-	if err != nil {
-		return derrors.AsError(err, "cannot create docker secret")
-	}
-	log.Debug().Interface("created", created).Msg("new secret has been created")
 	return nil
 }
 
@@ -156,11 +128,6 @@ func (cmc *CreateManagementConfig) Run(workflowID string) (*entities.CommandResu
 			false, "cannot create management config", err), nil
 	}
 
-	err = cmc.createDockerSecret()
-	if err != nil {
-		return entities.NewCommandResult(
-			false, "cannot create management config", err), nil
-	}
 	err = cmc.createAuthSecret()
 	if err != nil {
 		return entities.NewCommandResult(
@@ -177,12 +144,12 @@ func (cmc *CreateManagementConfig) String() string {
 func (cmc *CreateManagementConfig) PrettyPrint(indentation int) string {
 	simpleIden := strings.Repeat(" ", indentation) +  "  "
 	entrySep := simpleIden +  "  "
-	msg := fmt.Sprintf("\n%sConfig:\n%sPublicHost: %s:%s\n%sDNSHost: %s:%s\n%sDocker credentials: %s:%s\n%sPlatform Type:%s",
+	msg := fmt.Sprintf("\n%sConfig:\n%sPublicHost: %s:%s\n%sDNSHost: %s:%s\n%sPlatform Type:%s\n%sEnvironment:%s",
 		simpleIden,
 		entrySep, cmc.PublicHost, cmc.PublicPort,
 		entrySep, cmc.DNSHost, cmc.DNSPort,
-		entrySep, cmc.DockerUsername, strings.Repeat("*", len(cmc.DockerPassword)),
 		entrySep, cmc.PlatformType,
+		entrySep, cmc.Environment,
 	)
 	return strings.Repeat(" ", indentation) + cmc.String() + msg
 }
