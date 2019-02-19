@@ -38,6 +38,7 @@ func NewInstallerFromCLI(
 	useStaticIPAddresses bool,
 	ipAddressIngress string,
 	ipAddressDNS string,
+	ipAddressZtPlanet string,
 	appClusterInstall bool,
 	environment entities.Environment,
 ) (*Installer, derrors.Error) {
@@ -56,6 +57,7 @@ func NewInstallerFromCLI(
 		UseStaticIp: useStaticIPAddresses,
 		Ingress:     ipAddressIngress,
 		Dns:         ipAddressDNS,
+		ZtPlanet:    ipAddressZtPlanet,
 	}
 
 	request := grpc_installer_go.InstallRequest{

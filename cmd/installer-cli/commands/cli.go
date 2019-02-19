@@ -29,6 +29,7 @@ var managementPublicHost string
 var useStaticIPAddresses bool
 var ipAddressIngress string
 var ipAddressDNS string
+var ipAddressZTPlanet string
 
 var dnsClusterHost string
 var dnsClusterPort int
@@ -74,6 +75,8 @@ func init() {
 		"Public IP Address assigned to the public ingress service")
 	cliCmd.PersistentFlags().StringVar(&ipAddressDNS, "ipAddressDNS", "",
 		"Public IP Address assigned to the DNS server service")
+	cliCmd.PersistentFlags().StringVar(&ipAddressZTPlanet, "ipAddressZTPlanet", "",
+		"Public IP Address assigned to the ZT Planet service")
 
 	cliCmd.PersistentFlags().StringVar(&dnsClusterHost, "dnsClusterPublicHost", "",
 		"Public FQDN where the management cluster is reachable for DNS requests by the application clusters")

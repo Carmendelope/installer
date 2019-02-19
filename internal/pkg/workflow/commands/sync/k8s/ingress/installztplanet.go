@@ -15,15 +15,19 @@ import (
 type InstallZtPlanetLB struct {
 	k8s.Kubernetes
 	PlatformType    string `json:"platform_type"`
+	UseStaticIp     bool   `json:"use_static_ip"`
+	StaticIpAddress string `json:"static_ip_address"`
 }
 
-func NewInstallZtPlanetLB (kubeConfigPath string, platformType string) *InstallZtPlanetLB {
+func NewInstallZtPlanetLB (kubeConfigPath string, platformType string, useStaticIp bool, staticIpAddress string) *InstallZtPlanetLB {
 	return &InstallZtPlanetLB{
 		Kubernetes: k8s.Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallZtPlanetLB),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		PlatformType:    platformType,
+		UseStaticIp:     useStaticIp,
+		StaticIpAddress: staticIpAddress,
 	}
 }
 
@@ -56,6 +60,9 @@ func (imd *InstallZtPlanetLB) Run (workflowID string) (*entities.CommandResult, 
 
 func (imd *InstallZtPlanetLB) InstallAzure (workflowID string) (*entities.CommandResult, derrors.Error) {
 	azureService := AzureZTPlanetService
+	if imd.UseStaticIp {
+		azureService.Spec.LoadBalancerIP = imd.StaticIpAddress
+	}
 	err := imd.CreateService(&azureService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ZT Planet LB service")
