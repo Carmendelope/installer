@@ -80,7 +80,8 @@ func NewInstallerFromCLI(
 		dnsClusterHost, dnsClusterPort,
 		environment.Target,
 		appClusterInstall,
-		registryCredentials)
+		registryCredentials,
+	*workflow.EmptyNetworkConfig)
 	return NewInstaller(*params), nil
 }
 

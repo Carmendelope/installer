@@ -33,6 +33,8 @@ spec:
           readOnly: true
         - name: temp-dir
           mountPath: "/tmp/nalej"
+        - name: zt-planet-secret-volume
+          mountPath: "/nalej/zt"
         env:
         - name: MNGT_PUBLIC_HOST
           valueFrom:
@@ -142,6 +144,7 @@ spec:
           - "--binaryPath=/nalej/bin/"
           - "--tempPath=/tmp/nalej/"
           - "--targetEnvironment=$(TARGET_ENVIRONMENT)"
+          - "--ztPlanetSecretPath=/nalej/zt/planet"
         securityContext:
           runAsUser: 2000
       volumes:
@@ -150,5 +153,9 @@ spec:
           name: installer-config
       - name: temp-dir
         emptyDir: {}
+      - name: zt-planet-secret-volume
+        secret:
+          secretName: zt-planet
       imagePullSecrets:
       - name: nalej-registry
+
