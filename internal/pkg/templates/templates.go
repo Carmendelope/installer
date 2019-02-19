@@ -44,7 +44,8 @@ const InstallManagementCluster = `
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"secret_name":"zt-planet",
 				"secret_key":"planet",
-				"secret_value":"{{$.NetworkConfig.ZTPlanetSecret}}"
+				"load_from_path":true,
+				"secret_value_from_path":"{{$.NetworkConfig.ZTPlanetSecretPath}}"
 			},
 		{{else}}
 			{"type":"sync", "name":"createManagementConfig",

@@ -85,8 +85,8 @@ func init() {
 
 	addRegistryOptions(runCmd)
 
-	runCmd.PersistentFlags().StringVar(&config.ZTPlanetSecretValue, "planetSecret", "",
-		"Secret for the ZeroTier Planet file")
+	runCmd.PersistentFlags().StringVar(&config.ZTPlanetSecretPath, "ztPlanetSecretPath", "",
+		"Path of the ZeroTier Planet secret file")
 
 	rootCmd.AddCommand(runCmd)
 }

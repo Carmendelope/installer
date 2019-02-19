@@ -6,6 +6,7 @@ import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
+	"io/ioutil"
 	"k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/rs/zerolog/log"
@@ -17,13 +18,17 @@ type CreateOpaqueSecret struct {
 	SecretName string `json:"secret_name"`
 	SecretKey    string `json:"secret_key"`
 	SecretValue string `json:"secret_value"`
+	LoadFromPath bool `json:"load_from_path"`
+	SecretValueFromPath string `json:"secret_value_from_path"`
 }
 
 func NewCreateOpaqueSecret(
 	kubeConfigPath string,
 	secretName string,
 	secretKey string,
-	secretValue string) *CreateOpaqueSecret {
+	secretValue string,
+	loadFromPath bool,
+	secretValueFromPath string) *CreateOpaqueSecret {
 	return &CreateOpaqueSecret{
 		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateOpaqueSecret),
@@ -32,6 +37,8 @@ func NewCreateOpaqueSecret(
 		SecretName: secretName,
 		SecretKey: secretKey,
 		SecretValue: secretValue,
+		LoadFromPath: loadFromPath,
+		SecretValueFromPath: secretValueFromPath,
 	}
 }
 
@@ -46,6 +53,18 @@ func NewCreateOpaqueSecretFromJSON (raw []byte) (*entities.Command, derrors.Erro
 }
 
 func (cmd *CreateOpaqueSecret) createKubernetesSecrets() derrors.Error{
+
+	var secretRawContent []byte
+	if cmd.LoadFromPath {
+		c, err := ioutil.ReadFile(cmd.SecretValueFromPath)
+		if err != nil{
+			return derrors.AsError(err, "cannot load secret content")
+		}
+		secretRawContent = c
+	}else{
+		secretRawContent = []byte(cmd.SecretValue)
+	}
+
 	OpaqueSecret := &v1.Secret{
 		TypeMeta: metaV1.TypeMeta{
 			Kind:       "Secret",
@@ -57,7 +76,7 @@ func (cmd *CreateOpaqueSecret) createKubernetesSecrets() derrors.Error{
 			Namespace:    "nalej",
 		},
 		Data: map[string][]byte{
-			cmd.SecretKey: []byte(cmd.SecretValue),
+			cmd.SecretKey: secretRawContent,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -77,8 +96,8 @@ func (cmd *CreateOpaqueSecret) createKubernetesSecrets() derrors.Error{
 func (cmd *CreateOpaqueSecret) Run (workflowID string) (*entities.CommandResult, derrors.Error) {
 	err := cmd.Connect()
 	if err != nil{
-		log.Info().Str("kubeConfigPath", cmd.KubeConfigPath).Msg("error conectring to app cluster")
-		return nil, derrors.NewGenericError("error conectring to app cluster", err)
+		log.Info().Str("kubeConfigPath", cmd.KubeConfigPath).Msg("error connecting to cluster")
+		return nil, derrors.NewGenericError("error connecting to cluster", err)
 	}
 
 	dErr := cmd.createKubernetesSecrets()
@@ -86,11 +105,11 @@ func (cmd *CreateOpaqueSecret) Run (workflowID string) (*entities.CommandResult,
 		return nil, dErr
 	}
 
-	return entities.NewSuccessCommand([]byte("ZT Planet files and secrets successfully created.")), nil
+	return entities.NewSuccessCommand([]byte("Secret successfully created.")), nil
 }
 
 func (cmd *CreateOpaqueSecret) String () string {
-	return fmt.Sprintf("SYNC CreateOpaqueSecret on %s", cmd.KubeConfigPath)
+	return fmt.Sprintf("SYNC CreateOpaqueSecret %s", cmd.SecretName)
 }
 
 func (cmd *CreateOpaqueSecret) PrettyPrint (indentation int) string {

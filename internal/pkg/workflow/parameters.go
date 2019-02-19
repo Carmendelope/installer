@@ -49,12 +49,12 @@ var EmptyNetworkConfig = &NetworkConfig{}
 
 type NetworkConfig struct {
 	// ZT Planet Secret
-	ZTPlanetSecret string `json:"zt_planet_secret"`
+	ZTPlanetSecretPath string `json:"zt_planet_secret_path"`
 }
 
-func NewNetworkConfig (ztPlanetSecret string) *NetworkConfig {
+func NewNetworkConfig (ztPlanetSecretPath string) *NetworkConfig {
 	return &NetworkConfig{
-		ZTPlanetSecret: ztPlanetSecret,
+		ZTPlanetSecretPath: ztPlanetSecretPath,
 	}
 }
 

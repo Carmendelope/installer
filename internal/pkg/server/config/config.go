@@ -23,7 +23,7 @@ type Config struct {
 	ManagementClusterPort  string
 	DNSClusterHost         string
 	DNSClusterPort         string
-	ZTPlanetSecretValue    string
+	ZTPlanetSecretPath    string
 	Environment entities.Environment
 }
 
@@ -36,7 +36,7 @@ func NewConfiguration(
 	managementClusterPort string,
 	dnsClusterHost string,
 	dnsClusterPort string,
-	ztPlanetSecretValue string,
+	ztPlanetSecretPath string,
 	environment entities.Environment,
 ) *Config {
 	return &Config{
@@ -48,7 +48,7 @@ func NewConfiguration(
 		ManagementClusterPort: managementClusterPort,
 		DNSClusterHost:        dnsClusterHost,
 		DNSClusterPort:        dnsClusterPort,
-		ZTPlanetSecretValue:   ztPlanetSecretValue,
+		ZTPlanetSecretPath:   ztPlanetSecretPath,
 		Environment: environment,
 	}
 }
@@ -99,6 +99,10 @@ func (conf *Config) Validate() derrors.Error {
 		return derrors.NewInvalidArgumentError("dnsClusterPort must be set")
 	}
 
+	if conf.ZTPlanetSecretPath == "" {
+		return derrors.NewInvalidArgumentError("ztPlanetSecretPath must be set")
+	}
+
 	return nil
 }
 
@@ -112,6 +116,8 @@ func (conf *Config) Print() {
 		Str("port", conf.ManagementClusterPort).Msg("Management cluster")
 	log.Info().Str("host", conf.DNSClusterHost).
 		Str("port", conf.DNSClusterPort).Msg("DNS")
+	log.Info().Str("path", conf.ZTPlanetSecretPath).Msg("ZT Planet")
+
 	conf.Environment.Print()
 
 }

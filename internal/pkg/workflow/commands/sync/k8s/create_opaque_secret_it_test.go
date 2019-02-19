@@ -36,7 +36,7 @@ var _ = ginkgo.Describe("A Create ZT command", func(){
 
 	ginkgo.It("should be able to create the secret", func(){
 		// Create secret in Kubernetes
-		cmd := NewCreateOpaqueSecret(itKubeConfigFile, "zt-planet", "planet", "AQAAAH")
+		cmd := NewCreateOpaqueSecret(itKubeConfigFile, "zt-planet", "planet", "AQAAAH", false, "")
 		result, err := cmd.Run("createZtPlanetFiles")
 		gomega.Expect(err).To(gomega.Succeed())
 		gomega.Expect(result.Success).Should(gomega.BeTrue())
