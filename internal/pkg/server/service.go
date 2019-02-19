@@ -32,6 +32,9 @@ func NewService(conf config.Config) *Service {
 
 // Run the service, launch the REST service handler.
 func (s *Service) Run() error {
+
+	s.Configuration.Environment.Resolve()
+
 	s.Configuration.ComponentsPath = utils.ExtendComponentsPath(s.Configuration.ComponentsPath, true)
 	vErr := s.Configuration.Validate()
 	if vErr != nil {

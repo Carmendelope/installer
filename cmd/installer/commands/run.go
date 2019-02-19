@@ -27,6 +27,39 @@ var runCmd = &cobra.Command{
 	},
 }
 
+// Add parameters related to the usage of registries.
+func addRegistryOptions(cliCmd *cobra.Command){
+	cliCmd.Flags().StringVar(&config.Environment.TargetEnvironment, "targetEnvironment", "PRODUCTION", "Target environment to be installed: PRODUCTION, STAGING, or DEVELOPMENT")
+	// Production
+	cliCmd.PersistentFlags().StringVar(&config.Environment.ProdRegistryUsername, "prodRegistryUsername", "",
+		"Username to download internal images from the production docker registry. Alternatively you may use PROD_REGISTRY_USERNAME")
+	cliCmd.PersistentFlags().StringVar(&config.Environment.ProdRegistryPassword, "prodRegistryPassword", "",
+		"Password to download internal images from the production docker registry. Alternatively you may use PROD_REGISTRY_PASSWORD")
+	cliCmd.PersistentFlags().StringVar(&config.Environment.ProdRegistryURL, "prodRegistryURL", "",
+		"URL of the production docker registry. Alternatively you may use PROD_REGISTRY_URL")
+	// Staging
+	cliCmd.PersistentFlags().StringVar(&config.Environment.StagingRegistryUsername, "stagingRegistryUsername", "",
+		"Username to download internal images from the staging docker registry. Alternatively you may use STAGING_REGISTRY_USERNAME")
+	cliCmd.PersistentFlags().StringVar(&config.Environment.StagingRegistryPassword, "stagingRegistryPassword", "",
+		"Password to download internal images from the staging docker registry. Alternatively you may use STAGING_REGISTRY_PASSWORD")
+	cliCmd.PersistentFlags().StringVar(&config.Environment.StagingRegistryURL, "stagingRegistryURL", "",
+		"URL of the staging docker registry. Alternatively you may use STAGING_REGISTRY_URL")
+	// Development
+	cliCmd.PersistentFlags().StringVar(&config.Environment.DevRegistryUsername, "devRegistryUsername", "",
+		"Username to download internal images from the development docker registry. Alternatively you may use DEV_REGISTRY_USERNAME")
+	cliCmd.PersistentFlags().StringVar(&config.Environment.DevRegistryPassword, "devRegistryPassword", "",
+		"Password to download internal images from the development docker registry. Alternatively you may use DEV_REGISTRY_PASSWORD")
+	cliCmd.PersistentFlags().StringVar(&config.Environment.DevRegistryURL, "devRegistryURL", "",
+		"URL of the development docker registry. Alternatively you may use DEV_REGISTRY_URL")
+	// Public
+	cliCmd.PersistentFlags().StringVar(&config.Environment.PublicRegistryUsername, "publicRegistryUsername", "",
+		"Username to download internal images from the public docker registry. Alternatively you may use PUBLIC_REGISTRY_USERNAME")
+	cliCmd.PersistentFlags().StringVar(&config.Environment.PublicRegistryPassword, "publicRegistryPassword", "",
+		"Password to download internal images from the public docker registry. Alternatively you may use PUBLIC_REGISTRY_PASSWORD")
+	cliCmd.PersistentFlags().StringVar(&config.Environment.PublicRegistryURL, "publicRegistryURL", "",
+		"URL of the public docker registry. Alternatively you may use PUBLIC_REGISTRY_URL")
+}
+
 func init() {
 
 	runCmd.Flags().IntVar(&config.Port, "port", 8900, "Port to launch the Installer")
@@ -50,10 +83,7 @@ func init() {
 	runCmd.PersistentFlags().StringVar(&config.TempPath, "tempPath", "./temp/",
 		"Directory to store temporal files")
 
-	runCmd.PersistentFlags().StringVar(&config.DockerRegistryUsername, "dockerUsername", "",
-		"Username to download internal images from the docker repository")
-	runCmd.PersistentFlags().StringVar(&config.DockerRegistryPassword, "dockerPassword", "",
-		"Password to download internal images from the docker repository")
+	addRegistryOptions(runCmd)
 
 	runCmd.PersistentFlags().StringVar(&config.ZTPlanetSecretValue, "planetSecret", "",
 		"Secret for the ZeroTier Planet file")

@@ -5,13 +5,12 @@
 package config
 
 import (
-	"os"
-	"strings"
-
 	"github.com/nalej/derrors"
+	"github.com/nalej/installer/internal/pkg/entities"
 	"github.com/nalej/installer/internal/pkg/utils"
 	"github.com/nalej/installer/version"
 	"github.com/rs/zerolog/log"
+	"os"
 )
 
 type Config struct {
@@ -24,9 +23,8 @@ type Config struct {
 	ManagementClusterPort  string
 	DNSClusterHost         string
 	DNSClusterPort         string
-	DockerRegistryUsername string
-	DockerRegistryPassword string
 	ZTPlanetSecretValue    string
+	Environment entities.Environment
 }
 
 func NewConfiguration(
@@ -34,12 +32,12 @@ func NewConfiguration(
 	componentsPath string,
 	binaryPath string,
 	tempPath string,
-	clusterPublicHostname string,
 	managementClusterHost string,
 	managementClusterPort string,
 	dnsClusterHost string,
 	dnsClusterPort string,
 	ztPlanetSecretValue string,
+	environment entities.Environment,
 ) *Config {
 	return &Config{
 		Port:                  port,
@@ -51,6 +49,7 @@ func NewConfiguration(
 		DNSClusterHost:        dnsClusterHost,
 		DNSClusterPort:        dnsClusterPort,
 		ZTPlanetSecretValue:   ztPlanetSecretValue,
+		Environment: environment,
 	}
 }
 
@@ -79,6 +78,11 @@ func (conf *Config) Validate() derrors.Error {
 	if err := conf.CheckPath(conf.TempPath); err != nil {
 		return derrors.NewInvalidArgumentError("tempPath").CausedBy(err)
 	}
+
+	if err := conf.Environment.Validate(); err != nil{
+		return err
+	}
+
 	if conf.Port == 0 {
 		return derrors.NewInvalidArgumentError("port must be set")
 	}
@@ -94,9 +98,6 @@ func (conf *Config) Validate() derrors.Error {
 	if conf.DNSClusterPort == "" {
 		return derrors.NewInvalidArgumentError("dnsClusterPort must be set")
 	}
-	if conf.DockerRegistryUsername == "" || conf.DockerRegistryPassword == "" {
-		return derrors.NewInvalidArgumentError("docker credentials must be set")
-	}
 
 	return nil
 }
@@ -111,6 +112,6 @@ func (conf *Config) Print() {
 		Str("port", conf.ManagementClusterPort).Msg("Management cluster")
 	log.Info().Str("host", conf.DNSClusterHost).
 		Str("port", conf.DNSClusterPort).Msg("DNS")
-	log.Info().Str("username", conf.DockerRegistryUsername).
-		Str("password", strings.Repeat("*", len(conf.DockerRegistryPassword))).Msg("Docker registry")
+	conf.Environment.Print()
+
 }

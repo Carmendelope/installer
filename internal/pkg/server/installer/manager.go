@@ -80,16 +80,17 @@ func (m *Manager) launchInstall(installID string) {
 		return
 	}
 
-	registryCredentials := workflow.NewRegistryCredentials(
-		m.Config.DockerRegistryUsername, m.Config.DockerRegistryPassword)
+	registryCredentials := workflow.NewRegistryCredentialsFromEnvironment(m.Config.Environment)
 
 	// Create Parameters
 	params := workflow.NewParameters(
 		request, workflow.Assets{}, m.Paths,
 		m.Config.ManagementClusterHost, m.Config.ManagementClusterPort,
 		m.Config.DNSClusterHost, m.Config.DNSClusterPort,
-		true, *registryCredentials,
+		m.Config.Environment.Target,
+		true, registryCredentials,
 		*workflow.NewNetworkConfig(m.Config.ZTPlanetSecretValue))
+
 	status.Params = params
 	err := status.Params.LoadCredentials()
 	if err != nil {
