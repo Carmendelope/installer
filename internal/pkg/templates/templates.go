@@ -66,6 +66,7 @@ const InstallManagementCluster = `
 		{{end}}
 		{"type":"sync", "name":"installIngress",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}",
 				"management_public_host":"{{$.InstallRequest.Hostname}}",
 				"on_management_cluster":{{ not $.AppClusterInstall}},
 				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
