@@ -113,7 +113,8 @@ func (cmd *CreateRegistrySecrets) Run(workflowID string) (*entities.CommandResul
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}
-	if cmd.OnManagementCluster{
+	// For the public registry we must create the opaque secret on the application clusters.
+	if cmd.OnManagementCluster || cmd.CredentialsName == "nalej-public-registry" {
 		sErr := cmd.createEnvironmentSecret()
 		if sErr != nil{
 			return entities.NewCommandResult(false, "cannot create environment secret", sErr), nil

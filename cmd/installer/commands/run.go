@@ -87,6 +87,8 @@ func init() {
 
 	runCmd.PersistentFlags().StringVar(&config.ZTPlanetSecretPath, "ztPlanetSecretPath", "",
 		"Path of the ZeroTier Planet secret file")
+	runCmd.PersistentFlags().StringVar(&config.AuthSecret, "authSecret", "",
+		"Authorization secret")
 
 	rootCmd.AddCommand(runCmd)
 }

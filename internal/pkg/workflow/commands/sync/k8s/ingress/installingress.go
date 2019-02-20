@@ -60,7 +60,10 @@ func (ii *InstallIngress) getAppClusterIngressRules() []*v1beta1.Ingress {
 	appClusterAPI := AppClusterAPIIngressRules
 	appClusterAPI.Spec.TLS[0].Hosts[0] = fmt.Sprintf("appcluster.%s", ii.ManagementPublicHost)
 	appClusterAPI.Spec.Rules[0].Host = fmt.Sprintf("appcluster.%s", ii.ManagementPublicHost)
-	return []*v1beta1.Ingress{&appClusterAPI}
+	deviceController := DeviceControllerIngressRules
+	deviceController.Spec.TLS[0].Hosts[0] = fmt.Sprintf("device-controller.%s", ii.ManagementPublicHost)
+	deviceController.Spec.Rules[0].Host = fmt.Sprintf("device-controller.%s", ii.ManagementPublicHost)
+	return []*v1beta1.Ingress{&appClusterAPI, &deviceController}
 }
 
 func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {

@@ -47,6 +47,12 @@ const InstallManagementCluster = `
 				"load_from_path":true,
 				"secret_value_from_path":"{{$.NetworkConfig.ZTPlanetSecretPath}}"
 			},
+			{"type":"sync", "name":"createOpaqueSecret",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"secret_name":"authx-secret",
+				"secret_key":"secret",
+				"secret_value":"{{$.AuthSecret}}"
+			},
 		{{else}}
 			{"type":"sync", "name":"createManagementConfig",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
@@ -103,7 +109,8 @@ const InstallManagementCluster = `
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespaces":["nalej", "ingress-nginx"],
 			"componentsDir":"{{$.Paths.ComponentsPath}}",
-			"platform_type":"{{$.InstallRequest.TargetPlatform}}"
+			"platform_type":"{{$.InstallRequest.TargetPlatform}}",
+			"environment":"{{$.TargetEnvironment}}"
 		}
 	]
 }

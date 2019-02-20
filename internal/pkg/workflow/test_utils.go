@@ -68,7 +68,8 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		"dns_host", "53",
 		entities.Production,
 		appClusterInstall,
-	[]RegistryCredentials{*registryCredentials},
+		[]RegistryCredentials{*registryCredentials},
 		*networkParameters,
-		)
+		"authxSecret",
+	)
 }

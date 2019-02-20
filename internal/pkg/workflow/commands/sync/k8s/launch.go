@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-installer-go"
+	entities2 "github.com/nalej/installer/internal/pkg/entities"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 	"github.com/rs/zerolog/log"
@@ -29,22 +30,42 @@ import (
 
 const AzureStorageClass = "managed-premium"
 
-type LaunchComponents struct {
-	Kubernetes
-	Namespaces []string `json:"namespaces"`
-	ComponentsDir string `json:"componentsDir"`
-	PlatformType string `json:"platform_type"`
+var ProductionImagePullSecret = &v1.LocalObjectReference{
+	Name: entities2.ProdRegistryName,
 }
 
-func NewLaunchComponents(kubeConfigPath string, namespaces []string, componentsDir string, targetPlatform string) * LaunchComponents {
+var StagingImagePullSecret = &v1.LocalObjectReference{
+	Name: entities2.StagingRegistryName,
+}
+
+var DevImagePullSecret = &v1.LocalObjectReference{
+	Name: entities2.DevRegistryName,
+}
+
+var ProductionImagePullSecrets = []v1.LocalObjectReference{*ProductionImagePullSecret}
+var StagingImagePullSecrets = []v1.LocalObjectReference{*ProductionImagePullSecret, *StagingImagePullSecret}
+var DevImagePullSecrets = []v1.LocalObjectReference{*ProductionImagePullSecret, *StagingImagePullSecret, *DevImagePullSecret}
+
+// LaunchComponents is a command that reads a directory for YAML files and triggers the creation
+// of those entities in Kubernetes.
+type LaunchComponents struct {
+	Kubernetes
+	Namespaces    []string `json:"namespaces"`
+	ComponentsDir string   `json:"componentsDir"`
+	PlatformType  string   `json:"platform_type"`
+	Environment   string   `json:"environment"`
+}
+
+// NewLaunchComponents creates a new LaunchComponents command.
+func NewLaunchComponents(kubeConfigPath string, namespaces []string, componentsDir string, targetPlatform string) *LaunchComponents {
 	return &LaunchComponents{
-		Kubernetes:    Kubernetes{
+		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.LaunchComponents),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		Namespaces: namespaces,
+		Namespaces:    namespaces,
 		ComponentsDir: componentsDir,
-		PlatformType: targetPlatform,
+		PlatformType:  targetPlatform,
 	}
 }
 
@@ -59,39 +80,48 @@ func NewLaunchComponentsFromJSON(raw []byte) (*entities.Command, derrors.Error) 
 	return &r, nil
 }
 
-func (lc * LaunchComponents) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
+// Run the command.
+func (lc *LaunchComponents) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 
-		connectErr := lc.Connect()
-		if connectErr != nil {
-		    return nil, connectErr
-		}
-		for _, target := range lc.Namespaces{
-			createErr := lc.createNamespace(target)
-			if createErr != nil{
-				return nil, createErr
-			}
-		}
+	connectErr := lc.Connect()
+	if connectErr != nil {
+		return nil, connectErr
+	}
 
-		fileInfo, err := ioutil.ReadDir(lc.ComponentsDir)
-		if err != nil {
-			return nil, derrors.AsError(err, "cannot read components dir")
+	targetEnvironment, found := entities2.TargetEnvironmentFromString[lc.Environment]
+	if !found {
+		return nil, derrors.NewInvalidArgumentError("cannot determine target environment").WithParams(lc.Environment)
+	}
+
+	for _, target := range lc.Namespaces {
+		createErr := lc.createNamespace(target)
+		if createErr != nil {
+			return nil, createErr
 		}
-		numLaunched := 0
-		for _, file := range fileInfo {
-			if strings.HasSuffix(file.Name(), ".yaml"){
-				log.Info().Str("file", file.Name()).Msg("processing component")
-				err := lc.launchComponent(path.Join(lc.ComponentsDir, file.Name()))
-				if err != nil {
-					return entities.NewCommandResult(false, "cannot launch component", err), nil
-				}
-				numLaunched++
+	}
+
+	fileInfo, err := ioutil.ReadDir(lc.ComponentsDir)
+	if err != nil {
+		return nil, derrors.AsError(err, "cannot read components dir")
+	}
+	numLaunched := 0
+	for _, file := range fileInfo {
+		if strings.HasSuffix(file.Name(), ".yaml") {
+			log.Info().Str("file", file.Name()).Msg("processing component")
+			err := lc.launchComponent(path.Join(lc.ComponentsDir, file.Name()), targetEnvironment)
+			if err != nil {
+				return entities.NewCommandResult(false, "cannot launch component", err), nil
 			}
+			numLaunched++
 		}
-		msg := fmt.Sprintf("%d components have been launched", numLaunched)
-		return entities.NewCommandResult(true, msg, nil), nil
+	}
+	msg := fmt.Sprintf("%d components have been launched", numLaunched)
+	return entities.NewCommandResult(true, msg, nil), nil
 }
 
-func (lc * LaunchComponents) ListComponents() []string {
+// ListComponents obtains a list of the files that need to be installed.
+// TODO Overwrite files if a *.yaml.minikube file is found on the same entity with a MINIKUBE environment.
+func (lc *LaunchComponents) ListComponents() []string {
 	fileInfo, err := ioutil.ReadDir(lc.ComponentsDir)
 	if err != nil {
 		log.Fatal().Err(err).Str("componentsDir", lc.ComponentsDir).Msg("cannot read components dir")
@@ -105,8 +135,26 @@ func (lc * LaunchComponents) ListComponents() []string {
 	return result
 }
 
-func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error {
-	log.Debug().Str("path", componentPath).Msg("launch component")
+// adaptDeployment modifies the deployment to include image pull secrets depending on the type of environment.
+func (lc *LaunchComponents) adaptDeployment(deployment *appsv1.Deployment, targetEnvironment entities2.TargetEnvironment) *appsv1.Deployment {
+	aux := deployment
+	switch targetEnvironment {
+	case entities2.Production:
+		aux.Spec.Template.Spec.ImagePullSecrets = ProductionImagePullSecrets
+	case entities2.Staging:
+		aux.Spec.Template.Spec.ImagePullSecrets = StagingImagePullSecrets
+	case entities2.Development:
+		aux.Spec.Template.Spec.ImagePullSecrets = DevImagePullSecrets
+	}
+	return aux
+}
+
+// launchComponent triggers the creation of a given component from a YAML file
+func (lc *LaunchComponents) launchComponent(componentPath string, targetEnvironment entities2.TargetEnvironment) derrors.Error {
+	log.Debug().
+		Str("path", componentPath).
+		Str("targetEnvironment", entities2.TargetEnvironmentToString[targetEnvironment]).
+		Msg("launch component")
 
 	raw, err := ioutil.ReadFile(componentPath)
 	if err != nil {
@@ -125,7 +173,7 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 	case *batchV1.Job:
 		return lc.CreateJob(obj.(*batchV1.Job))
 	case *appsv1.Deployment:
-		return lc.CreateDeployment(obj.(*appsv1.Deployment))
+		return lc.CreateDeployment(lc.adaptDeployment(obj.(*appsv1.Deployment), targetEnvironment))
 	case *appsv1.DaemonSet:
 		return lc.launchDaemonSet(obj.(*appsv1.DaemonSet))
 	case *v1.Service:
@@ -162,9 +210,8 @@ func (lc * LaunchComponents) launchComponent(componentPath string) derrors.Error
 	return derrors.NewInternalError("no case was executed")
 }
 
-
-
-func (lc * LaunchComponents) launchDaemonSet(daemonSet *appsv1.DaemonSet) derrors.Error {
+// LaunchDaemonSet creates a Kubernetes DaemonSet.
+func (lc *LaunchComponents) launchDaemonSet(daemonSet *appsv1.DaemonSet) derrors.Error {
 	client := lc.Client.AppsV1().DaemonSets(daemonSet.Namespace)
 	log.Debug().Interface("daemonSet", daemonSet).Msg("unmarshalled")
 	created, err := client.Create(daemonSet)
@@ -175,7 +222,8 @@ func (lc * LaunchComponents) launchDaemonSet(daemonSet *appsv1.DaemonSet) derror
 	return nil
 }
 
-func (lc * LaunchComponents) launchPodSecurityPolicy(policy *policyv1beta1.PodSecurityPolicy) derrors.Error {
+// LaunchPodSecurityPolicy creates a Kubernetes PodSecurityPolicy.
+func (lc *LaunchComponents) launchPodSecurityPolicy(policy *policyv1beta1.PodSecurityPolicy) derrors.Error {
 	client := lc.Client.PolicyV1beta1().PodSecurityPolicies()
 	log.Debug().Interface("policy", policy).Msg("unmarshalled")
 	created, err := client.Create(policy)
@@ -186,7 +234,8 @@ func (lc * LaunchComponents) launchPodSecurityPolicy(policy *policyv1beta1.PodSe
 	return nil
 }
 
-func (lc * LaunchComponents) launchSecret(secret *v1.Secret) derrors.Error {
+// LaunchSecret creates a Kubernetes Secret.
+func (lc *LaunchComponents) launchSecret(secret *v1.Secret) derrors.Error {
 	client := lc.Client.CoreV1().Secrets(secret.Namespace)
 	log.Debug().Interface("secret", secret).Msg("unmarshalled")
 	created, err := client.Create(secret)
@@ -197,11 +246,12 @@ func (lc * LaunchComponents) launchSecret(secret *v1.Secret) derrors.Error {
 	return nil
 }
 
-func (lc * LaunchComponents) createNamespace(name string) derrors.Error {
+// createNamespace creates a Kubernetes namespace.
+func (lc *LaunchComponents) createNamespace(name string) derrors.Error {
 	namespaceClient := lc.Client.CoreV1().Namespaces()
 	opts := metaV1.ListOptions{}
 	list, err := namespaceClient.List(opts)
-	if err != nil{
+	if err != nil {
 		return derrors.AsError(err, "cannot obtain the namespace list")
 	}
 	found := false
@@ -216,21 +266,22 @@ func (lc * LaunchComponents) createNamespace(name string) derrors.Error {
 	if !found {
 		toCreate := v1.Namespace{
 			ObjectMeta: metaV1.ObjectMeta{
-				Name:                       name,
+				Name: name,
 			},
 		}
 		created, err := namespaceClient.Create(&toCreate)
 		if err != nil {
-			return derrors.AsError(err,"cannot create namespace")
+			return derrors.AsError(err, "cannot create namespace")
 		}
 		log.Debug().Interface("created", created).Msg("namespaces has been created")
-	}else{
+	} else {
 		log.Debug().Str("namespace", name).Msg("namespace already exists")
 	}
 	return nil
 }
 
-func (lc * LaunchComponents) launchPersistentVolume(pv *v1.PersistentVolume) derrors.Error {
+// LaunchPersistenceVolume creates a Kubernetes PersistenceVolume.
+func (lc *LaunchComponents) launchPersistentVolume(pv *v1.PersistentVolume) derrors.Error {
 	client := lc.Client.CoreV1().PersistentVolumes()
 
 	if lc.PlatformType == grpc_installer_go.Platform_AZURE.String() {
@@ -248,7 +299,8 @@ func (lc * LaunchComponents) launchPersistentVolume(pv *v1.PersistentVolume) der
 	return nil
 }
 
-func (lc * LaunchComponents) launchPersistentVolumeClaim(pvc *v1.PersistentVolumeClaim) derrors.Error {
+// LaunchPersistenceVolumeClaim creates a Kubernetes PersistentVolumeClaim.
+func (lc *LaunchComponents) launchPersistentVolumeClaim(pvc *v1.PersistentVolumeClaim) derrors.Error {
 	client := lc.Client.CoreV1().PersistentVolumeClaims(pvc.Namespace)
 
 	if lc.PlatformType == grpc_installer_go.Platform_AZURE.String() {
@@ -266,7 +318,7 @@ func (lc * LaunchComponents) launchPersistentVolumeClaim(pvc *v1.PersistentVolum
 	return nil
 }
 
-func (lc * LaunchComponents) launchPodDisruptionBudget(pdb *policyv1beta1.PodDisruptionBudget) derrors.Error {
+func (lc *LaunchComponents) launchPodDisruptionBudget(pdb *policyv1beta1.PodDisruptionBudget) derrors.Error {
 	client := lc.Client.PolicyV1beta1().PodDisruptionBudgets(pdb.Namespace)
 	log.Debug().Interface("pdb", pdb).Msg("unmarshalled")
 	created, err := client.Create(pdb)
@@ -277,19 +329,7 @@ func (lc * LaunchComponents) launchPodDisruptionBudget(pdb *policyv1beta1.PodDis
 	return nil
 }
 
-func (lc * LaunchComponents) launchStatefulSet(ss *appsv1.StatefulSet) derrors.Error {
-
-	/*
-	if lc.PlatformType == grpc_installer_go.Platform_AZURE.String() {
-		log.Debug().Msg("Modifying storageClass")
-		log.Debug().Int("num claims", len(ss.Spec.VolumeClaimTemplates)).Msg("stateful set contains claims")
-		for _, vct := range ss.Spec.VolumeClaimTemplates {
-			sc := AzureStorageClass
-			vct.Spec.StorageClassName = &sc
-		}
-	}
-	*/
-
+func (lc *LaunchComponents) launchStatefulSet(ss *appsv1.StatefulSet) derrors.Error {
 	client := lc.Client.AppsV1().StatefulSets(ss.Namespace)
 	log.Debug().Interface("ss", ss).Msg("unmarshalled")
 	created, err := client.Create(ss)
@@ -300,7 +340,7 @@ func (lc * LaunchComponents) launchStatefulSet(ss *appsv1.StatefulSet) derrors.E
 	return nil
 }
 
-func (lc * LaunchComponents) launchIngress(ingress *v1beta1.Ingress) derrors.Error {
+func (lc *LaunchComponents) launchIngress(ingress *v1beta1.Ingress) derrors.Error {
 	client := lc.Client.ExtensionsV1beta1().Ingresses(ingress.Namespace)
 	log.Debug().Interface("ingress", ingress).Msg("unmarshalled")
 	created, err := client.Create(ingress)
@@ -311,13 +351,13 @@ func (lc * LaunchComponents) launchIngress(ingress *v1beta1.Ingress) derrors.Err
 	return nil
 }
 
-func (lc * LaunchComponents) String() string {
+func (lc *LaunchComponents) String() string {
 	return fmt.Sprintf("SYNC LaunchComponents from %s", lc.ComponentsDir)
 }
 
-func (lc * LaunchComponents) PrettyPrint(indentation int) string {
-	simpleIden := strings.Repeat(" ", indentation) +  "  "
-	entrySep := simpleIden +  "  "
+func (lc *LaunchComponents) PrettyPrint(indentation int) string {
+	simpleIden := strings.Repeat(" ", indentation) + "  "
+	entrySep := simpleIden + "  "
 	cStr := ""
 	for _, c := range lc.ListComponents() {
 		cStr = cStr + "\n" + entrySep + c
@@ -325,7 +365,6 @@ func (lc * LaunchComponents) PrettyPrint(indentation int) string {
 	return strings.Repeat(" ", indentation) + lc.String() + cStr
 }
 
-func (lc * LaunchComponents) UserString() string {
-	return fmt.Sprintf("Launching K8s components from %s", lc.ComponentsDir)
+func (lc *LaunchComponents) UserString() string {
+	return fmt.Sprintf("Launching K8s components from %s for %s", lc.ComponentsDir, lc.Environment)
 }
-
