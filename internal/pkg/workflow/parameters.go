@@ -41,6 +41,21 @@ type Parameters struct {
 	AppClusterInstall bool `json:"app_cluster_install"`
 	//Registries contains the credentials to access the available docker registries to deploy internal images.
 	Registries []RegistryCredentials `json:"registries"`
+	// NetworkConfig contains the configuration of the networking of the cluster.
+	NetworkConfig NetworkConfig `json:"network_config"`
+}
+
+var EmptyNetworkConfig = &NetworkConfig{}
+
+type NetworkConfig struct {
+	// ZT Planet Secret
+	ZTPlanetSecretPath string `json:"zt_planet_secret_path"`
+}
+
+func NewNetworkConfig (ztPlanetSecretPath string) *NetworkConfig {
+	return &NetworkConfig{
+		ZTPlanetSecretPath: ztPlanetSecretPath,
+	}
 }
 
 // TODO Remove assets if not used anymore
@@ -135,7 +150,9 @@ func NewParameters(
 	dnsClusterPort string,
 	targetEnvironment entities.TargetEnvironment,
 	appClusterInstall bool,
-	registryCredentials []RegistryCredentials) *Parameters {
+	registryCredentials []RegistryCredentials,
+	networkConfig NetworkConfig,
+	) *Parameters {
 	return &Parameters{
 		request,
 		InstallCredentials{},
@@ -146,6 +163,7 @@ func NewParameters(
 		entities.TargetEnvironmentToString[targetEnvironment],
 		appClusterInstall,
 		registryCredentials,
+		networkConfig,
 	}
 }
 

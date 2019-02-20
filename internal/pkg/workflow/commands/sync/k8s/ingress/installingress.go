@@ -10,6 +10,7 @@ package ingress
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nalej/grpc-installer-go"
 	"strings"
 
 	"github.com/nalej/derrors"
@@ -22,29 +23,23 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type InstallTargetType int32
-
-const (
-	MinikubeCluster InstallTargetType = iota + 1
-	AzureCluster
-	Unknown
-)
-
 // TODO Refactor using the new parameter to define the target platform instead of detecting it.
 type InstallIngress struct {
 	k8s.Kubernetes
+	PlatformType    string `json:"platform_type"`
 	ManagementPublicHost string `json:"management_public_host"`
 	OnManagementCluster  bool   `json:"on_management_cluster"`
 	UseStaticIP          bool   `json:"use_static_ip"`
 	StaticIPAddress      string `json:"static_ip_address"`
 }
 
-func NewInstallIngress(kubeConfigPath string, managementPublicHost string, useStaticIP bool, staticIPAddress string) *InstallIngress {
+func NewInstallIngress(kubeConfigPath string, platformType string, managementPublicHost string, useStaticIP bool, staticIPAddress string) *InstallIngress {
 	return &InstallIngress{
 		Kubernetes: k8s.Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallIngress),
 			KubeConfigPath:     kubeConfigPath,
 		},
+		PlatformType:    platformType,
 		ManagementPublicHost: managementPublicHost,
 		UseStaticIP:          useStaticIP,
 		StaticIPAddress:      staticIPAddress,
@@ -103,8 +98,8 @@ func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
 
 }
 
-func (ii *InstallIngress) getService(installType InstallTargetType) (*v1.Service, *v1.Service) {
-	if installType == MinikubeCluster {
+func (ii *InstallIngress) getService(installType grpc_installer_go.Platform) (*v1.Service, *v1.Service) {
+	if installType == grpc_installer_go.Platform_MINIKUBE {
 		return &MinikubeService, &MinikubeServiceDefaultBackend
 	}
 
@@ -149,7 +144,7 @@ func (ii *InstallIngress) GetExistingIngress() (*v1beta1.Ingress, derrors.Error)
 	return nil, nil
 }
 
-func (ii *InstallIngress) triggerInstall(installType InstallTargetType) derrors.Error {
+func (ii *InstallIngress) triggerInstall(installType grpc_installer_go.Platform) derrors.Error {
 	if ii.OnManagementCluster {
 		return ii.triggerManagementInstall(installType)
 	}
@@ -157,7 +152,7 @@ func (ii *InstallIngress) triggerInstall(installType InstallTargetType) derrors.
 }
 
 // Trigger the installation of the ingress infrastructure for the application clusters.
-func (ii *InstallIngress) triggerAppClusterInstall(installType InstallTargetType) derrors.Error {
+func (ii *InstallIngress) triggerAppClusterInstall(installType grpc_installer_go.Platform) derrors.Error {
 	err := ii.CreateNamespacesIfNotExist("nalej")
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating nalej namespace")
@@ -245,7 +240,7 @@ func (ii *InstallIngress) triggerAppClusterInstall(installType InstallTargetType
 
 	var ingressDeployment = IngressDeployment
 
-	if installType == MinikubeCluster {
+	if installType == grpc_installer_go.Platform_MINIKUBE {
 		log.Debug().Msg("Adding extra arguments and ports for Minikube dev install")
 		// args - --report-node-internal-ip-address
 		args := ingressDeployment.Spec.Template.Spec.Containers[0].Args
@@ -278,7 +273,7 @@ func (ii *InstallIngress) triggerAppClusterInstall(installType InstallTargetType
 }
 
 // Trigger the installation of the ingress infrastructure for the management cluster.
-func (ii *InstallIngress) triggerManagementInstall(installType InstallTargetType) derrors.Error {
+func (ii *InstallIngress) triggerManagementInstall(installType grpc_installer_go.Platform) derrors.Error {
 
 	err := ii.CreateNamespacesIfNotExist("nalej")
 	if err != nil {
@@ -366,7 +361,7 @@ func (ii *InstallIngress) triggerManagementInstall(installType InstallTargetType
 
 	var ingressDeployment = IngressDeployment
 
-	if installType == MinikubeCluster {
+	if installType == grpc_installer_go.Platform_MINIKUBE {
 		log.Debug().Msg("Adding extra arguments and ports for Minikube dev install")
 		// args - --report-node-internal-ip-address
 		args := ingressDeployment.Spec.Template.Spec.Containers[0].Args
@@ -398,49 +393,6 @@ func (ii *InstallIngress) triggerManagementInstall(installType InstallTargetType
 	return nil
 }
 
-func (ii *InstallIngress) DetectInstallType(nodes *v1.NodeList) InstallTargetType {
-	// Check images for minikube
-	for _, n := range nodes.Items {
-		log.Debug().Interface("node", n).Msg("Analyzing node to detect install")
-		for k, _ := range n.Labels {
-			if strings.Contains(k, "kubernetes.azure.com") {
-				return AzureCluster
-			}
-		}
-		for _, img := range n.Status.Images {
-			if strings.Contains(img.Names[0], "k8s-minikube") {
-				return MinikubeCluster
-			}
-		}
-	}
-	return Unknown
-}
-
-func (ii *InstallIngress) InstallIngress() derrors.Error {
-	// Detect the type of target install
-	opts := metaV1.ListOptions{}
-	client := ii.Client.CoreV1().Nodes()
-	nodes, err := client.List(opts)
-	if err != nil {
-		return derrors.AsError(err, "cannot obtain server nodes")
-	}
-	detected := ii.DetectInstallType(nodes)
-	if detected == MinikubeCluster {
-		log.Debug().Msg("Installing ingress in a minikube cluster")
-	}
-	if detected == AzureCluster {
-		log.Debug().Msg("Installing ingress in an Azure cluster")
-	}
-	if detected == Unknown {
-		log.Warn().Msg("Cannot determine cluster type, assuming Minikube")
-		detected = MinikubeCluster
-	}
-	if detected != Unknown {
-		return ii.triggerInstall(detected)
-	}
-	return derrors.NewNotFoundError("cannot determine type of cluster for the ingress service")
-}
-
 func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 	connectErr := ii.Connect()
 	if connectErr != nil {
@@ -455,7 +407,13 @@ func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derro
 		return entities.NewSuccessCommand([]byte("[WARN] Ingress has not been installed as it already exists")), nil
 	}
 
-	err = ii.InstallIngress()
+	switch ii.PlatformType {
+	case grpc_installer_go.Platform_AZURE.String():
+		err = ii.triggerInstall(grpc_installer_go.Platform_AZURE)
+	case grpc_installer_go.Platform_MINIKUBE.String():
+		err = ii.triggerInstall(grpc_installer_go.Platform_MINIKUBE)
+	}
+
 	if err != nil {
 		return entities.NewCommandResult(
 			false, "cannot install an ingress", err), nil

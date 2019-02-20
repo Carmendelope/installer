@@ -12,7 +12,6 @@ COPY dockerenv/zerotier-idtool /nalej/bin/
 
 COPY installer /nalej/
 
-
 RUN chmod +x /nalej/bin/rke
 RUN chmod +x /nalej/bin/zerotier-idtool
 

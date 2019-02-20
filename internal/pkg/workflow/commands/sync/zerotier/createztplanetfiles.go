@@ -94,7 +94,7 @@ func (cmd * CreateZTPlanetFiles) generateZTIdentityFiles() derrors.Error{
 
 func (cmd * CreateZTPlanetFiles) initMoon() derrors.Error{
 	// Init Moon
-	log.Info().Msg(cmd.ZtIdToolBinaryPath+" initmoon "+"$(cat "+cmd.IdentityPublicPath+")")
+	log.Debug().Msg(cmd.ZtIdToolBinaryPath+" initmoon "+"$(cat "+cmd.IdentityPublicPath+")")
 	identityPublicRaw, err := ioutil.ReadFile(cmd.IdentityPublicPath)
 	if err != nil{
 		return derrors.NewGenericError("cannot read identity public", err)
@@ -129,7 +129,7 @@ func (cmd * CreateZTPlanetFiles) initMoon() derrors.Error{
 		return derrors.NewGenericError("Error parsing Planet JSON", err)
 	}
 
-	log.Info().Interface("json", planet).Msg("Planet")
+	log.Debug().Interface("json", planet).Msg("Planet")
 
 	if len(planet.Roots) != 1 {
 		log.Error().Msg("Unexpected number of roots found in zerotier planet file")

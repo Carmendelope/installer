@@ -1,8 +1,4 @@
-/*
- * Copyright (C) 2019 Nalej - All Rights Reserved
- */
-
-package zerotier
+package k8s
 
 import (
 	"github.com/nalej/installer/internal/pkg/utils"
@@ -10,14 +6,12 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 )
 
 /*
 RUN_INTEGRATION_TEST=true
 IT_K8S_KUBECONFIG=/Users/gaizka/.kube/config
-IT_ZT_BINARY=/Users/gaizka/development/zerotier-idtool
 */
 
 func createTempFilePath(name string) string{
@@ -26,29 +20,30 @@ func createTempFilePath(name string) string{
 	return filepath.Join(dir, name)
 }
 
-var _ = ginkgo.Describe("A Create ZT Planet Files command", func(){
+var _ = ginkgo.Describe("A Create ZT command", func(){
 
 	if ! utils.RunIntegrationTests() {
 		log.Warn().Msg("Integration tests are skipped")
 		return
 	}
 
-	ztBinaryPath := os.Getenv("IT_ZT_BINARY")
-
-	if itKubeConfigFile == "" || ztBinaryPath == "" {
+	if itKubeConfigFile == "" {
 		ginkgo.Fail("missing environment variables")
 	}
 
-	ginkgo.It("should be able to update the config map", func(){
-		cmd := NewCreateZTPlanetFiles(itKubeConfigFile, ztBinaryPath,
-			"managementPublicHost",
-			createTempFilePath("identitySecret"),
-			createTempFilePath("identityPublic"),
-			createTempFilePath("planetJson"),
-			createTempFilePath("planet"))
+	testChecker := NewTestChecker(itKubeConfigFile)
+	testChecker.Connect()
+
+	ginkgo.It("should be able to create the secret", func(){
+		// Create secret in Kubernetes
+		cmd := NewCreateOpaqueSecret(itKubeConfigFile, "zt-planet", "planet", "AQAAAH", false, "")
 		result, err := cmd.Run("createZtPlanetFiles")
 		gomega.Expect(err).To(gomega.Succeed())
 		gomega.Expect(result.Success).Should(gomega.BeTrue())
+		// Retrieve secret from kubernetes
+		retrieved := testChecker.GetSecret(cmd.SecretName, "nalej")
+		gomega.Expect(len(retrieved.Data)).Should(gomega.Equal(1))
+		secretContent := retrieved.Data
+		gomega.Expect(secretContent[cmd.SecretKey]).Should(gomega.Equal(cmd.SecretValue))
 	})
-
 })
