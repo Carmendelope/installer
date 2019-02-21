@@ -12,7 +12,7 @@ import (
 
 var AzureZTPort = v1.ServicePort{
 	Name:       "zt-udp",
-	Protocol:   v1.ProtocolUDP,
+	Protocol:   v1.ProtocolTCP,
 	Port:       9993,
 	TargetPort: intstr.IntOrString{
 		Type:   intstr.String,
@@ -22,7 +22,7 @@ var AzureZTPort = v1.ServicePort{
 
 var MinikubeZTPort = v1.ServicePort{
 	Name:       "zt-udp",
-	Protocol:   v1.ProtocolUDP,
+	Protocol:   v1.ProtocolTCP,
 	Port:       9993,
 	TargetPort: intstr.IntOrString{
 		Type:   intstr.String,

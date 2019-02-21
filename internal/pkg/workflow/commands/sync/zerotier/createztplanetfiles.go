@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright (C) 2019 Nalej - All Rights Reserved
  */
 
 package zerotier
@@ -136,7 +136,7 @@ func (cmd * CreateZTPlanetFiles) initMoon() derrors.Error{
 		return derrors.NewGenericError("Unexpected roots found in zerotier planet file")
 	}
 
-	planet.Roots[0].StableEndpoints = []string{cmd.MgmtClusterFQDN}
+	planet.Roots[0].StableEndpoints = []string{"zt-planet."+cmd.MgmtClusterFQDN}
 	planet.WorldType = "planet"
 
 	log.Debug().Interface("zeroTierPlanet", planet).Msg("Final ZT planet")
