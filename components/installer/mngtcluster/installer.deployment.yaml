@@ -133,6 +133,11 @@ spec:
               name: credentials-nalej-public-registry
               optional: true
               key: url
+        - name: AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: authx-secret
+              key: secret
         args:
           - "run"
           - "--debug"
@@ -145,6 +150,7 @@ spec:
           - "--tempPath=/tmp/nalej/"
           - "--targetEnvironment=$(TARGET_ENVIRONMENT)"
           - "--ztPlanetSecretPath=/nalej/zt/planet"
+          - "--authSecret=$(AUTH_SECRET)"
         securityContext:
           runAsUser: 2000
       volumes:

@@ -81,7 +81,7 @@ func NewInstallerFromCLI(
 		environment.Target,
 		appClusterInstall,
 		registryCredentials,
-	*workflow.EmptyNetworkConfig)
+	*workflow.EmptyNetworkConfig, "")
 	return NewInstaller(*params), nil
 }
 
@@ -137,7 +137,7 @@ func (i *Installer) Run() {
 	elapsed := time.Since(start)
 	fmt.Println("Installation took ", elapsed)
 	if wr.Error != nil {
-		fmt.Println("Installation failed ", wr.Error.Error())
-		log.Info().Str("error", wr.Error.DebugReport()).Msg("Installation failed")
+		fmt.Println("Installation failed due to ", wr.Error.Error())
+		log.Fatal().Str("error", wr.Error.DebugReport()).Msg("Installation failed")
 	}
 }

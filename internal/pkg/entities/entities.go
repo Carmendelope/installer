@@ -44,8 +44,11 @@ const (
 
 var TargetEnvironmentFromString = map[string]TargetEnvironment {
 	"production":Production,
+	"PRODUCTION":Production,
 	"staging":Staging,
+	"STAGING":Staging,
 	"development":Development,
+	"DEVELOPMENT":Development,
 }
 
 var TargetEnvironmentToString = map[TargetEnvironment]string{

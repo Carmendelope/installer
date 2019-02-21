@@ -43,6 +43,8 @@ type Parameters struct {
 	Registries []RegistryCredentials `json:"registries"`
 	// NetworkConfig contains the configuration of the networking of the cluster.
 	NetworkConfig NetworkConfig `json:"network_config"`
+	// AuthSecret contains the secret required to validate JWT tokens.
+	AuthSecret string `json:"auth_secret"`
 }
 
 var EmptyNetworkConfig = &NetworkConfig{}
@@ -152,6 +154,7 @@ func NewParameters(
 	appClusterInstall bool,
 	registryCredentials []RegistryCredentials,
 	networkConfig NetworkConfig,
+	authxSecret string,
 	) *Parameters {
 	return &Parameters{
 		request,
@@ -164,6 +167,7 @@ func NewParameters(
 		appClusterInstall,
 		registryCredentials,
 		networkConfig,
+		authxSecret,
 	}
 }
 

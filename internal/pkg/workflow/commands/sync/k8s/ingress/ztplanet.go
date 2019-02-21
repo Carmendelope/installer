@@ -15,8 +15,8 @@ var AzureZTPort = v1.ServicePort{
 	Protocol:   v1.ProtocolUDP,
 	Port:       9993,
 	TargetPort: intstr.IntOrString{
-		Type:   intstr.String,
-		StrVal: "zt-udp",
+		Type:   intstr.Int,
+		IntVal: 9993,
 	},
 }
 
@@ -25,8 +25,8 @@ var MinikubeZTPort = v1.ServicePort{
 	Protocol:   v1.ProtocolUDP,
 	Port:       9993,
 	TargetPort: intstr.IntOrString{
-		Type:   intstr.String,
-		StrVal: "zt-udp",
+		Type:   intstr.Int,
+		IntVal: 9993,
 	},
 	NodePort: 9993,
 }

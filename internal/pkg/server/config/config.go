@@ -11,6 +11,7 @@ import (
 	"github.com/nalej/installer/version"
 	"github.com/rs/zerolog/log"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -25,6 +26,8 @@ type Config struct {
 	DNSClusterPort         string
 	ZTPlanetSecretPath    string
 	Environment entities.Environment
+	// AuthSecret contains the shared authx secret.
+	AuthSecret string
 }
 
 func NewConfiguration(
@@ -38,6 +41,7 @@ func NewConfiguration(
 	dnsClusterPort string,
 	ztPlanetSecretPath string,
 	environment entities.Environment,
+	authxSecret string,
 ) *Config {
 	return &Config{
 		Port:                  port,
@@ -50,6 +54,7 @@ func NewConfiguration(
 		DNSClusterPort:        dnsClusterPort,
 		ZTPlanetSecretPath:   ztPlanetSecretPath,
 		Environment: environment,
+		AuthSecret: authxSecret,
 	}
 }
 
@@ -103,6 +108,10 @@ func (conf *Config) Validate() derrors.Error {
 		return derrors.NewInvalidArgumentError("ztPlanetSecretPath must be set")
 	}
 
+	if conf.AuthSecret == "" {
+		return derrors.NewInvalidArgumentError("Authorization secret must be set")
+	}
+
 	return nil
 }
 
@@ -117,6 +126,7 @@ func (conf *Config) Print() {
 	log.Info().Str("host", conf.DNSClusterHost).
 		Str("port", conf.DNSClusterPort).Msg("DNS")
 	log.Info().Str("path", conf.ZTPlanetSecretPath).Msg("ZT Planet")
+	log.Info().Str("secret", strings.Repeat("*", len(conf.AuthSecret))).Msg("Authorization")
 
 	conf.Environment.Print()
 
