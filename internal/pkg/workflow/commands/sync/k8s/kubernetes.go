@@ -12,8 +12,10 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	batchV1 "k8s.io/api/batch/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"net"
@@ -177,6 +179,18 @@ func (k *Kubernetes) CreateDeployment(deployment *appsv1.Deployment) derrors.Err
 	return nil
 }
 
+func (k *Kubernetes) CreateDeploymentBeta1(deployment *appsv1beta1.Deployment) derrors.Error {
+	deploymentClient := k.Client.AppsV1beta1().Deployments(deployment.Namespace)
+	log.Debug().Interface("deployment", deployment).Msg("unmarshalled")
+	created, err := deploymentClient.Create(deployment)
+	if err != nil {
+		return derrors.AsError(err, "cannot create deployment")
+	}
+	log.Debug().Interface("created", created).Msg("new deployment has been created")
+	return nil
+}
+
+
 func (k *Kubernetes) CreateJob(job *batchV1.Job) derrors.Error {
 	client := k.Client.BatchV1().Jobs(job.Namespace)
 	log.Debug().Interface("job", job).Msg("unmarshalled")
@@ -221,8 +235,30 @@ func (k *Kubernetes) CreateClusterRole(clusterRole *rbacv1.ClusterRole) derrors.
 	return nil
 }
 
+func (k *Kubernetes) CreateClusterRoleBeta1(clusterRole *rbacv1beta1.ClusterRole) derrors.Error {
+	client := k.Client.RbacV1beta1().ClusterRoles()
+	log.Debug().Interface("clusterRole", clusterRole).Msg("unmarshalled")
+	created, err := client.Create(clusterRole)
+	if err != nil {
+		return derrors.AsError(err, "cannot create cluster role")
+	}
+	log.Debug().Interface("created", created).Msg("new cluster role has been created")
+	return nil
+}
+
 func (k *Kubernetes) CreateClusterRoleBinding(clusterRoleBinding *rbacv1.ClusterRoleBinding) derrors.Error {
 	client := k.Client.RbacV1().ClusterRoleBindings()
+	log.Debug().Interface("clusterRoleBinding", clusterRoleBinding).Msg("unmarshalled")
+	created, err := client.Create(clusterRoleBinding)
+	if err != nil {
+		return derrors.AsError(err, "cannot create cluster role binding")
+	}
+	log.Debug().Interface("created", created).Msg("new cluster role binding has been created")
+	return nil
+}
+
+func (k *Kubernetes) CreateClusterRoleBindingBeta1(clusterRoleBinding *rbacv1beta1.ClusterRoleBinding) derrors.Error {
+	client := k.Client.RbacV1beta1().ClusterRoleBindings()
 	log.Debug().Interface("clusterRoleBinding", clusterRoleBinding).Msg("unmarshalled")
 	created, err := client.Create(clusterRoleBinding)
 	if err != nil {

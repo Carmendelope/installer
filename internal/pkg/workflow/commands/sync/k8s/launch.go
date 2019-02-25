@@ -20,11 +20,14 @@ import (
 
 	"io/ioutil"
 	appsv1 "k8s.io/api/apps/v1"
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	batchV1 "k8s.io/api/batch/v1"
 	"k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	storageV1 "k8s.io/api/storage/v1"
 	"strings"
 )
 
@@ -174,8 +177,13 @@ func (lc *LaunchComponents) launchComponent(componentPath string, targetEnvironm
 		return lc.CreateJob(obj.(*batchV1.Job))
 	case *appsv1.Deployment:
 		return lc.CreateDeployment(lc.adaptDeployment(obj.(*appsv1.Deployment), targetEnvironment))
+	case *appsv1beta1.Deployment:
+		// this is for openEBS. No secrets needed to pull the image.
+		return lc.CreateDeploymentBeta1(obj.(*appsv1beta1.Deployment))
 	case *appsv1.DaemonSet:
 		return lc.launchDaemonSet(obj.(*appsv1.DaemonSet))
+	case *v1beta1.DaemonSet:
+		return lc.launchDaemonSetBeta1(obj.(*v1beta1.DaemonSet))
 	case *v1.Service:
 		return lc.CreateService(obj.(*v1.Service))
 	case *v1.Secret:
@@ -188,14 +196,20 @@ func (lc *LaunchComponents) launchComponent(componentPath string, targetEnvironm
 		return lc.CreateRoleBinding(obj.(*rbacv1.RoleBinding))
 	case *rbacv1.ClusterRole:
 		return lc.CreateClusterRole(obj.(*rbacv1.ClusterRole))
+	case *rbacv1beta1.ClusterRole:
+		return lc.CreateClusterRoleBeta1(obj.(*rbacv1beta1.ClusterRole))
 	case *rbacv1.ClusterRoleBinding:
 		return lc.CreateClusterRoleBinding(obj.(*rbacv1.ClusterRoleBinding))
+	case *rbacv1beta1.ClusterRoleBinding:
+		return lc.CreateClusterRoleBindingBeta1(obj.(*rbacv1beta1.ClusterRoleBinding))
 	case *policyv1beta1.PodSecurityPolicy:
 		return lc.launchPodSecurityPolicy(obj.(*policyv1beta1.PodSecurityPolicy))
 	case *v1.PersistentVolume:
 		return lc.launchPersistentVolume(obj.(*v1.PersistentVolume))
 	case *v1.PersistentVolumeClaim:
 		return lc.launchPersistentVolumeClaim(obj.(*v1.PersistentVolumeClaim))
+	case *storageV1.StorageClass:
+		return lc.launchStorageClass(obj.(*storageV1.StorageClass))
 	case *policyv1beta1.PodDisruptionBudget:
 		return lc.launchPodDisruptionBudget(obj.(*policyv1beta1.PodDisruptionBudget))
 	case *appsv1.StatefulSet:
@@ -213,6 +227,16 @@ func (lc *LaunchComponents) launchComponent(componentPath string, targetEnvironm
 // LaunchDaemonSet creates a Kubernetes DaemonSet.
 func (lc *LaunchComponents) launchDaemonSet(daemonSet *appsv1.DaemonSet) derrors.Error {
 	client := lc.Client.AppsV1().DaemonSets(daemonSet.Namespace)
+	log.Debug().Interface("daemonSet", daemonSet).Msg("unmarshalled")
+	created, err := client.Create(daemonSet)
+	if err != nil {
+		return derrors.AsError(err, "cannot create daemon set")
+	}
+	log.Debug().Interface("created", created).Msg("new daemon set has been created")
+	return nil
+}
+func (lc *LaunchComponents) launchDaemonSetBeta1(daemonSet *v1beta1.DaemonSet) derrors.Error {
+	client := lc.Client.ExtensionsV1beta1().DaemonSets(daemonSet.Namespace)
 	log.Debug().Interface("daemonSet", daemonSet).Msg("unmarshalled")
 	created, err := client.Create(daemonSet)
 	if err != nil {
@@ -315,6 +339,18 @@ func (lc *LaunchComponents) launchPersistentVolumeClaim(pvc *v1.PersistentVolume
 		return derrors.AsError(err, "cannot create persistent volume claim")
 	}
 	log.Debug().Interface("created", created).Msg("new persistent volume claim has been created")
+	return nil
+}
+
+func (lc *LaunchComponents) launchStorageClass(sc *storageV1.StorageClass) derrors.Error {
+
+	client := lc.Client.StorageV1().StorageClasses()
+	log.Debug().Interface("storageclass", sc).Msg("unmarshalled")
+	created, err := client.Create(sc)
+	if err != nil {
+		return derrors.AsError(err, "cannot create storage class")
+	}
+	log.Debug().Interface("created", created).Msg("New storage class has been created")
 	return nil
 }
 
