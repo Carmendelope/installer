@@ -20,9 +20,19 @@ var AzureZTPort = v1.ServicePort{
 	},
 }
 
+var AzureZTPortTCP = v1.ServicePort{
+	Name:       "zt-tcp",
+	Protocol:   v1.ProtocolTCP,
+	Port:       9993,
+	TargetPort: intstr.IntOrString{
+		Type:   intstr.Int,
+		IntVal: 9993,
+	},
+}
+
 var MinikubeZTPort = v1.ServicePort{
 	Name:       "zt-udp",
-	Protocol:   v1.ProtocolUDP,
+	Protocol:   v1.ProtocolTCP,
 	Port:       9993,
 	TargetPort: intstr.IntOrString{
 		Type:   intstr.Int,
@@ -45,7 +55,7 @@ var AzureZTPlanetService = v1.Service{
 		},
 	},
 	Spec: v1.ServiceSpec{
-		Ports: []v1.ServicePort{AzureZTPort},
+		Ports: []v1.ServicePort{AzureZTPortTCP},
 		Selector: map[string]string{
 			"cluster":  "management",
 			"component":	"network-manager",
