@@ -46,6 +46,9 @@ func (imd *InstallZtPlanetLB) Run (workflowID string) (*entities.CommandResult, 
 	switch imd.PlatformType {
 	case grpc_installer_go.Platform_AZURE.String():
 		return imd.InstallAzure(workflowID)
+	case grpc_installer_go.Platform_BAREMETAL.String():
+		// Baremetal relies on Loadbalancers.
+		return imd.InstallAzure(workflowID)
 	case grpc_installer_go.Platform_MINIKUBE.String():
 		return imd.InstallMinikube(workflowID)
 	}

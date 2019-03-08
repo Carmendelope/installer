@@ -19,6 +19,7 @@ var _ = ginkgo.Describe("Templates", func() {
 	availablePlatforms := []grpc_installer_go.Platform{
 		grpc_installer_go.Platform_MINIKUBE,
 		grpc_installer_go.Platform_AZURE,
+		grpc_installer_go.Platform_BAREMETAL,
 	}
 
 	ginkgo.Context("Install Template", func() {

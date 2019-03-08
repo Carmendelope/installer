@@ -4,11 +4,11 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-installer-go"
-    version="v0.0.29"
+    version="v0.0.31"
 
 [[constraint]]
     name="github.com/nalej/grpc-user-manager-go"
-    version="v0.0.20"
+    version="v0.0.27"
 
 [[constraint]]
     name="github.com/rs/zerolog"

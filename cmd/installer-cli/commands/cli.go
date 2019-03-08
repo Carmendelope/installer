@@ -63,7 +63,7 @@ func init() {
 		"Specify the private key path to connect to the remote machine (Only if installK8s is selected)")
 	cliCmd.PersistentFlags().StringVar(&nodes, "nodes", "",
 		"List of IPs of the nodes to be installed separated by comma (Only if installK8s is selected)")
-	cliCmd.PersistentFlags().StringVar(&targetPlatform, "targetPlatform", "MINIKUBE", "Target platform: MINIKUBE or AZURE")
+	cliCmd.PersistentFlags().StringVar(&targetPlatform, "targetPlatform", "MINIKUBE", "Target platform: MINIKUBE, AZURE or BAREMETAL")
 	cliCmd.PersistentFlags().StringVar(&managementPublicHost, "managementClusterPublicHost", "",
 		"Public FQDN where the management cluster is reachable by the application clusters")
 	cliCmd.MarkPersistentFlagRequired("managementClusterPublicHost")

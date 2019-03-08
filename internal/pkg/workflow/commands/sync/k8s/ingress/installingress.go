@@ -155,6 +155,7 @@ func (ii *InstallIngress) triggerInstall(installType grpc_installer_go.Platform)
 }
 
 // Trigger the installation of the ingress infrastructure for the application clusters.
+// TODO NP-946 Refactor the trigger method to extract common entities.
 func (ii *InstallIngress) triggerAppClusterInstall(installType grpc_installer_go.Platform) derrors.Error {
 	err := ii.CreateNamespacesIfNotExist("nalej")
 	if err != nil {
@@ -413,6 +414,8 @@ func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derro
 	switch ii.PlatformType {
 	case grpc_installer_go.Platform_AZURE.String():
 		err = ii.triggerInstall(grpc_installer_go.Platform_AZURE)
+	case grpc_installer_go.Platform_BAREMETAL.String():
+		err = ii.triggerInstall(grpc_installer_go.Platform_BAREMETAL)
 	case grpc_installer_go.Platform_MINIKUBE.String():
 		err = ii.triggerInstall(grpc_installer_go.Platform_MINIKUBE)
 	}
