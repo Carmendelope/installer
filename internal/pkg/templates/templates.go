@@ -92,6 +92,12 @@ const InstallManagementCluster = `
 				"planetJsonPath":"{{$.Paths.TempPath}}/planet.json",
 				"planetPath":"{{$.Paths.TempPath}}/planet"
 			},
+			{"type":"sync", "name":"installExtDNS",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}",
+				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
+				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.CorednsExt}}"
+			},
 		{{end}}
 
 		{{ range $index, $registry := $.Registries }}

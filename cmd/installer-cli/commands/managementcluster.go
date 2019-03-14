@@ -60,6 +60,7 @@ func LaunchManagementInstall() {
 		useStaticIPAddresses,
 		ipAddressIngress,
 		ipAddressDNS,
+		ipAddressCoreDNS,
 		false,
 		environment)
 

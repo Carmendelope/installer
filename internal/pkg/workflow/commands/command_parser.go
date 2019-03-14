@@ -107,6 +107,8 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return zerotier.NewCreateZTPlanetFilesFromJSON(raw)
 	case entities.CreateOpaqueSecret:
 		return k8s.NewCreateOpaqueSecretFromJSON(raw)
+	case entities.InstallExtDNS:
+		return ingress.NewInstallExtDNSFromJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}
