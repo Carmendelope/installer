@@ -104,3 +104,55 @@ var MinikubeConsulService = v1.Service{
 		Type: v1.ServiceTypeNodePort,
 	},
 }
+
+var AzureExtDnsService = v1.Service{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Service",
+		APIVersion: "v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "dns-server-consul-dns",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":                   "management",
+			"component": "dns-server",
+			"release" : "dns-server",
+			"app": "consul",
+		},
+	},
+	Spec: v1.ServiceSpec{
+		Ports: []v1.ServicePort{AzureDNSPort},
+		Selector: map[string]string{
+			"app":    "consul",
+			"hasDNS":"true",
+			"release": "dns-server",
+		},
+		Type: v1.ServiceTypeLoadBalancer,
+	},
+}
+
+var MinikubeExtDnsService = v1.Service{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Service",
+		APIVersion: "v1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "dns-server-consul-dns",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":                   "management",
+			"component": "dns-server",
+			"release" : "dns-server",
+			"app": "consul",
+		},
+	},
+	Spec: v1.ServiceSpec{
+		Ports: []v1.ServicePort{MinikubeDNSUDPPort, MinikubeDNSTCPPort, MinikubeDNSUIPort},
+		Selector: map[string]string{
+			"app":    "consul",
+			"hasDNS":"true",
+			"release": "dns-server",
+		},
+		Type: v1.ServiceTypeNodePort,
+	},
+}
