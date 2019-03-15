@@ -45,10 +45,10 @@ func (imd *InstallZtPlanetLB) Run (workflowID string) (*entities.CommandResult, 
 
 	switch imd.PlatformType {
 	case grpc_installer_go.Platform_AZURE.String():
-		return imd.InstallAzure(workflowID)
+		return imd.InstallLoadBalancer(workflowID)
 	case grpc_installer_go.Platform_BAREMETAL.String():
 		// Baremetal relies on Loadbalancers.
-		return imd.InstallAzure(workflowID)
+		return imd.InstallLoadBalancer(workflowID)
 	case grpc_installer_go.Platform_MINIKUBE.String():
 		return imd.InstallMinikube(workflowID)
 	}
@@ -57,7 +57,7 @@ func (imd *InstallZtPlanetLB) Run (workflowID string) (*entities.CommandResult, 
 		false, "unsupported platform type", nil), nil
 }
 
-func (imd *InstallZtPlanetLB) InstallAzure (workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallZtPlanetLB) InstallLoadBalancer (workflowID string) (*entities.CommandResult, derrors.Error) {
 	azureService := AzureZTPlanetService
 	err := imd.CreateService(&azureService)
 	if err != nil {
@@ -65,7 +65,8 @@ func (imd *InstallZtPlanetLB) InstallAzure (workflowID string) (*entities.Comman
 		return entities.NewCommandResult(
 			false, "cannot install service", err), nil
 	}
-	return entities.NewSuccessCommand([]byte("ZT planet installed on Azure")), nil
+	msg := fmt.Sprintf("ZT planet installed on %s", imd.PlatformType)
+	return entities.NewSuccessCommand([]byte(msg)), nil
 }
 
 func (imd *InstallZtPlanetLB) InstallMinikube (workflowID string) (*entities.CommandResult, derrors.Error) {

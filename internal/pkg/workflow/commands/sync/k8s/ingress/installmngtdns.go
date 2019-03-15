@@ -54,10 +54,10 @@ func (imd *InstallMngtDNS) Run(workflowID string) (*entities.CommandResult, derr
 
 	switch imd.PlatformType {
 	case grpc_installer_go.Platform_AZURE.String():
-		return imd.InstallAzure(workflowID)
+		return imd.InstallLoadBalancer(workflowID)
 	case grpc_installer_go.Platform_BAREMETAL.String():
 		// The baremetal type relies on MetalLB so it supports loadbalancers as in Azure.
-		return imd.InstallAzure(workflowID)
+		return imd.InstallLoadBalancer(workflowID)
 	case grpc_installer_go.Platform_MINIKUBE.String():
 		return imd.InstallMinikube(workflowID)
 	}
@@ -66,7 +66,7 @@ func (imd *InstallMngtDNS) Run(workflowID string) (*entities.CommandResult, derr
 		false, "unsupported platform type", nil), nil
 }
 
-func (imd *InstallMngtDNS) InstallAzure(workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallMngtDNS) InstallLoadBalancer(workflowID string) (*entities.CommandResult, derrors.Error) {
 	azureService := AzureConsulService
 	if imd.UseStaticIp {
 		azureService.Spec.LoadBalancerIP = imd.StaticIpAddress
