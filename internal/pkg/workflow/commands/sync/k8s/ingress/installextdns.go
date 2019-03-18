@@ -68,9 +68,9 @@ func (imd *InstallExtDNS) Run(workflowID string) (*entities.CommandResult, derro
 
 func (imd *InstallExtDNS) InstallAzure(workflowID string) (*entities.CommandResult, derrors.Error) {
 	azureService := AzureExtDnsService
-	//if imd.UseStaticIp {
-	//	azureService.Spec.LoadBalancerIP = imd.StaticIpAddress
-	//}
+	if imd.UseStaticIp {
+		azureService.Spec.LoadBalancerIP = imd.StaticIpAddress
+	}
 	err := imd.CreateService(&azureService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating External DNS service")
