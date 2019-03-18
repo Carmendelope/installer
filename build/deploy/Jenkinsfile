@@ -20,8 +20,10 @@ pipeline {
             steps { container("kubectl") {
                 stepRenderK8SYAMLFiles packagePath, yamlPath, appsList, params.namespace
                 dir(yamlPath) {
-                    def k8sCm = new org.daisho.k8s.ConfigMap()
-                    k8scm.generateYAML("installer.configmap.yaml", params.namespace, "installer-config", ["fake_file.yaml": "fake content"])
+                    script {
+                        def k8sCm = new org.daisho.k8s.ConfigMap()
+                        k8scm.generateYAML("installer.configmap.yaml", params.namespace, "installer-config", ["fake_file.yaml": "fake content"])
+                    }
                 }
             } }
         }
