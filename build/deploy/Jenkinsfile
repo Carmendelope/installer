@@ -24,7 +24,7 @@ pipeline {
                     script {
                         def k8sCm = new org.daisho.k8s.ConfigMap()
                         k8sCm.generateYAML("installer.configmap.yaml", params.namespace, "installer-config", ["fake_file.yaml": "fake content"])
-                        k8sCm.generateYAML("management-config.configmap.yaml", params.namespace, "management-config", [public_host: "http://localhost", public_port: "\"1234\"", dns_host: "http://localhost", dns_port: "\"1234\"", environment: "test"])
+                        k8sCm.generateYAML("management-config.configmap.yaml", params.namespace, "management-config", [public_host: "http://localhost", public_port: "\"1234\"", dns_host: "http://localhost", dns_port: "\"1234\"", environment: "DEVELOPMENT"])
                     }
                 }
                 stepCreateK8SSecret packagePath, params.namespace, "zt-planet", [test: "test"]
