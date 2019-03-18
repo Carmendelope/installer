@@ -22,7 +22,7 @@ pipeline {
                 dir(yamlPath) {
                     script {
                         def k8sCm = new org.daisho.k8s.ConfigMap()
-                        k8scm.generateYAML("installer.configmap.yaml", params.namespace, "installer-config", ["fake_file.yaml": "fake content"])
+                        k8sCm.generateYAML("installer.configmap.yaml", params.namespace, "installer-config", ["fake_file.yaml": "fake content"])
                     }
                 }
             } }
