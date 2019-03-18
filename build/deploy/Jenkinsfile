@@ -9,6 +9,7 @@ pipeline {
     agent { node { label 'k8s' } }
     parameters {
         string(name: "namespace", description: "Kubernetes namespace where it will be deployed", defaultValue: "nalej")
+        string(name: "sharedSecret", description: "Shared secret for authx component", defaultValue: "this-is-my-little-secret")
     }
     options {
         checkoutToSubdirectory("${packagePath}")
@@ -23,9 +24,15 @@ pipeline {
                     script {
                         def k8sCm = new org.daisho.k8s.ConfigMap()
                         k8sCm.generateYAML("installer.configmap.yaml", params.namespace, "installer-config", ["fake_file.yaml": "fake content"])
+                        k8sCm.generateYAML("management-config.configmap.yaml", params.namespace, "management-config", [public_host: "http://localhost", public_port: 1234, dns_host: "http://localhost", dns_port: 1234, environment: "test"])
                     }
                 }
-                container("kubectl") { stepCreateK8SSecret packagePath, params.namespace, "zt-planet", [test: "test"] }
+                stepCreateK8SSecret packagePath, params.namespace, "zt-planet", [test: "test"]
+                stepCreateK8SSecret packagePath, params.namespace, "authx-secret", [secret: params.sharedSecret]
+                stepCreateK8SSecret packagePath, params.namespace, "credentials-nalej-registry", [username: "test", password: "test", url: "http://localhost"]
+                stepCreateK8SSecret packagePath, params.namespace, "credentials-nalej-staging-registry", [username: "test", password: "test", url: "http://localhost"]
+                stepCreateK8SSecret packagePath, params.namespace, "credentials-nalej-dev-registry", [username: "test", password: "test", url: "http://localhost"]
+                stepCreateK8SSecret packagePath, params.namespace, "credentials-nalej-public-registry", [username: "test", password: "test", url: "http://localhost"]
             } }
         }
         stage("Create Kubernetes resources") {
