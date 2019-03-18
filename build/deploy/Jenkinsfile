@@ -25,6 +25,7 @@ pipeline {
                         k8sCm.generateYAML("installer.configmap.yaml", params.namespace, "installer-config", ["fake_file.yaml": "fake content"])
                     }
                 }
+                container("kubectl") { stepCreateK8SSecret packagePath, params.namespace, "zt-planet", [test: "test"] }
             } }
         }
         stage("Create Kubernetes resources") {
