@@ -1,0 +1,64 @@
+String packageName = "installer"
+String packagePath = "src/github.com/nalej/" + packageName
+String yamlPath = packagePath + "/bin/yaml/mngtcluster"
+String[] appsList = [
+    "installer"
+]
+
+pipeline {
+    agent { node { label 'k8s' } }
+    parameters {
+        string(name: "namespace", description: "Kubernetes namespace where it will be deployed", defaultValue: "nalej")
+        string(name: "sharedSecret", description: "Shared secret for authx component", defaultValue: "this-is-my-little-secret")
+    }
+    options {
+        checkoutToSubdirectory("${packagePath}")
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    stages {
+        stage("Render YAML files") {
+            steps { container("kubectl") {
+                stepRenderK8SYAMLFiles packagePath, yamlPath, appsList, params.namespace
+                dir(yamlPath) {
+                    script {
+                        def k8sCm = new org.daisho.k8s.ConfigMap()
+                        k8sCm.generateYAML("installer.configmap.yaml", params.namespace, "installer-config", ["fake_file.yaml": "fake content"])
+                        k8sCm.generateYAML("management-config.configmap.yaml", params.namespace, "management-config", [public_host: "http://localhost", public_port: "\"1234\"", dns_host: "http://localhost", dns_port: "\"1234\"", environment: "DEVELOPMENT"])
+                    }
+                }
+                stepCreateK8SSecret packagePath, params.namespace, "zt-planet", [test: "test"]
+                stepCreateK8SSecret packagePath, params.namespace, "authx-secret", [secret: params.sharedSecret]
+                stepCreateK8SSecret packagePath, params.namespace, "credentials-nalej-registry", [username: "test", password: "test", url: "http://localhost"]
+                stepCreateK8SSecret packagePath, params.namespace, "credentials-nalej-staging-registry", [username: "test", password: "test", url: "http://localhost"]
+                stepCreateK8SSecret packagePath, params.namespace, "credentials-nalej-dev-registry", [username: "test", password: "test", url: "http://localhost"]
+                stepCreateK8SSecret packagePath, params.namespace, "credentials-nalej-public-registry", [username: "test", password: "test", url: "http://localhost"]
+            } }
+        }
+        stage("Create Kubernetes resources") {
+            steps { container("kubectl") { stepCreateK8SResources yamlPath } }
+        }
+        stage("Check deploy is ready") {
+            steps {
+                container("kubectl") {
+                    timeout(10) {
+                        waitUntil {
+                            script {
+                                def k8sGet = new org.daisho.k8s.Get()
+                                expected = k8sGet.filterByJSONPath(params.namespace, "deployment", "installer", "'{.spec.replicas}'")
+                                ready = k8sGet.filterByJSONPath(params.namespace, "deployment", "installer", "'{.status.readyReplicas}'")
+                                echo "Expected: ${expected}"
+                                echo "Ready: ${ready}"
+                                ok = (ready == expected)
+                                if (!ok) {
+                                    sleep(10)
+                                }
+                                return ok
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
