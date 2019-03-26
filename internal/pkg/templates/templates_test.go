@@ -41,10 +41,9 @@ var _ = ginkgo.Describe("Templates", func() {
 			})
 		}
 
-		ginkgo.Context("installing an application cluster with coredns", func() {
+		ginkgo.Context("installing an application cluster", func() {
 			ginkgo.It("should be able to parse the template", func() {
 				params := workflow.GetTestParameters(numNodes, true)
-				params.InstallRequest.UseCoreDns = true
 				params.InstallRequest.StaticIpAddresses = &grpc_installer_go.StaticIPAddresses{
 					UseStaticIp: false,
 					Ingress:     "",
@@ -55,19 +54,6 @@ var _ = ginkgo.Describe("Templates", func() {
 				gomega.Expect(workflow).ShouldNot(gomega.BeNil())
 			})
 		})
-		ginkgo.Context("installing an application cluster with kubedns", func() {
-			ginkgo.It("should be able to parse the template", func() {
-				params := workflow.GetTestParameters(numNodes, true)
-				params.InstallRequest.UseKubeDns = true
-				params.InstallRequest.StaticIpAddresses = &grpc_installer_go.StaticIPAddresses{
-					UseStaticIp: false,
-					Ingress:     "",
-					Dns:         "",
-				}
-				workflow, err := parser.ParseWorkflow("test", InstallManagementCluster, "InstallAppCluster", *params)
-				gomega.Expect(err).To(gomega.Succeed())
-				gomega.Expect(workflow).ShouldNot(gomega.BeNil())
-			})
-		})
+
 	})
 })
