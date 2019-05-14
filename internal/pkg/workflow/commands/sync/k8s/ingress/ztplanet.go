@@ -21,7 +21,7 @@ var AzureVPNServerPort = v1.ServicePort{
 }
 
 var MinikubeVPNServerPort = v1.ServicePort{
-	Name:       "zt-udp",
+	Name:       "vpn-port",
 	Protocol:   v1.ProtocolTCP,
 	Port:       5555,
 	TargetPort: intstr.IntOrString{

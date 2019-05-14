@@ -24,7 +24,7 @@ type InstallVpnServerLB struct {
 func NewInstallVpnServerLB(kubeConfigPath string, platformType string) *InstallVpnServerLB {
 	return &InstallVpnServerLB{
 		Kubernetes: k8s.Kubernetes{
-			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallZtPlanetLB),
+			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallVpnServerLB),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		PlatformType:    platformType,
