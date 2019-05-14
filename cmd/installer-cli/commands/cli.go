@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright (C) 2019 Nalej - All Rights Reserved
  */
 
 package commands
@@ -30,6 +30,7 @@ var useStaticIPAddresses bool
 var ipAddressIngress string
 var ipAddressDNS string
 var ipAddressCoreDNS string
+var ipAddressVPNServer string
 
 var dnsClusterHost string
 var dnsClusterPort int
@@ -77,6 +78,8 @@ func init() {
 		"Public IP Address assigned to the DNS server service")
 	cliCmd.PersistentFlags().StringVar(&ipAddressCoreDNS, "ipAddressCoreDNS", "",
 		"Public IP Address assigned to the external CoreDNS server service")
+	cliCmd.PersistentFlags().StringVar(&ipAddressVPNServer, "ipAddressVPNServer", "",
+		"Public IP Address assigned to the VPN server service")
 
 
 	cliCmd.PersistentFlags().StringVar(&dnsClusterHost, "dnsClusterPublicHost", "",

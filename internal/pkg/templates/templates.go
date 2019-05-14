@@ -83,6 +83,10 @@ const InstallManagementCluster = `
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
 			},
+			{"type":"sync", "name":"installVpnServerLB",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}"
+			},
 			{"type":"sync", "name":"createZtPlanetFiles",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"ztIdToolBinaryPath":"{{$.Paths.BinaryPath}}/zerotier-idtool",

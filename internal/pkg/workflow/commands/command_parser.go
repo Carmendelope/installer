@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright (C) 2019 Nalej - All Rights Reserved
  */
 
 // This file contains the command parsing facilities to avoid import cycles.
@@ -103,6 +103,8 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return ingress.NewInstallMngtDNSFromJSON(raw)
 	case entities.InstallZtPlanetLB:
 		return ingress.NewInstallZtPlanetLBFromJSON(raw)
+	case entities.InstallVpnServerLB:
+		return ingress.NewInstallVpnServerLBFromJSON(raw)
 	case entities.CreateZTPlanetFiles:
 		return zerotier.NewCreateZTPlanetFilesFromJSON(raw)
 	case entities.CreateOpaqueSecret:

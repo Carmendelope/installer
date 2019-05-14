@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright (C) 2019 Nalej - All Rights Reserved
  */
 
 package installer
@@ -39,6 +39,7 @@ func NewInstallerFromCLI(
 	ipAddressIngress string,
 	ipAddressDNS string,
 	ipAddressCoreDNS string,
+	ipAddressVPNServer string,
 	appClusterInstall bool,
 	environment entities.Environment,
 ) (*Installer, derrors.Error) {
@@ -58,6 +59,7 @@ func NewInstallerFromCLI(
 		Ingress:     ipAddressIngress,
 		Dns:         ipAddressDNS,
 		CorednsExt: ipAddressCoreDNS,
+		VpnServer: ipAddressVPNServer,
 	}
 
 	request := grpc_installer_go.InstallRequest{
