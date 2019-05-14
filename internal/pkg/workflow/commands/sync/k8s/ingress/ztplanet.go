@@ -5,73 +5,73 @@
 package ingress
 
 import (
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+"k8s.io/api/core/v1"
+"k8s.io/apimachinery/pkg/util/intstr"
+metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var AzureVPNServerPort = v1.ServicePort{
-	Name:       "vpn-port",
-	Protocol:   v1.ProtocolTCP,
-	Port:       5555,
+var AzureZTPort = v1.ServicePort{
+	Name:       "zt-udp",
+	Protocol:   v1.ProtocolUDP,
+	Port:       9993,
 	TargetPort: intstr.IntOrString{
 		Type:   intstr.Int,
-		IntVal: 5555,
+		IntVal: 9993,
 	},
 }
 
-var MinikubeVPNServerPort = v1.ServicePort{
-	Name:       "vpn-port",
-	Protocol:   v1.ProtocolTCP,
-	Port:       5555,
+var MinikubeZTPort = v1.ServicePort{
+	Name:       "zt-udp",
+	Protocol:   v1.ProtocolUDP,
+	Port:       9993,
 	TargetPort: intstr.IntOrString{
 		Type:   intstr.Int,
-		IntVal: 5555,
+		IntVal: 9993,
 	},
-	NodePort: 5555,
+	NodePort: 9993,
 }
 
-var AzureVPNServerService = v1.Service{
+var AzureZTPlanetService = v1.Service{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Service",
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "vpn-server",
+		Name:      "zt-planet",
 		Namespace: "nalej",
 		Labels: map[string]string{
 			"cluster":                   "management",
-			"component": "vpn-server",
+			"component": "network-manager",
 		},
 	},
 	Spec: v1.ServiceSpec{
-		Ports: []v1.ServicePort{AzureVPNServerPort},
+		Ports: []v1.ServicePort{AzureZTPort},
 		Selector: map[string]string{
 			"cluster":  "management",
-			"component":	"vpn-server",
+			"component":	"network-manager",
 		},
 		Type: v1.ServiceTypeLoadBalancer,
 	},
 }
 
-var MinikubeVPNServerService = v1.Service{
+var MinikubeZTPlanetService = v1.Service{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Service",
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "vpn-servert",
+		Name:      "zt-planet",
 		Namespace: "nalej",
 		Labels: map[string]string{
 			"cluster":	"management",
-			"component": "vpn-server",
+			"component": "network-manager",
 		},
 	},
 	Spec: v1.ServiceSpec{
-		Ports: []v1.ServicePort{MinikubeVPNServerPort},
+		Ports: []v1.ServicePort{MinikubeZTPort},
 		Selector: map[string]string{
 			"cluster":  "management",
-			"component":	"vpn.-server",
+			"component":	"network-manager",
 		},
 		Type: v1.ServiceTypeNodePort,
 	},

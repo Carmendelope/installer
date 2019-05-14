@@ -10,70 +10,69 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var AzureZTPort = v1.ServicePort{
-	Name:       "zt-udp",
-	Protocol:   v1.ProtocolUDP,
-	Port:       9993,
+var AzureVPNServerPort = v1.ServicePort{
+	Name:       "vpn-port",
+	Protocol:   v1.ProtocolTCP,
+	Port:       5555,
 	TargetPort: intstr.IntOrString{
 		Type:   intstr.Int,
-		IntVal: 9993,
+		IntVal: 5555,
 	},
 }
 
-var MinikubeZTPort = v1.ServicePort{
-	Name:       "zt-udp",
-	Protocol:   v1.ProtocolUDP,
-	Port:       9993,
+var MinikubeVPNServerPort = v1.ServicePort{
+	Name:       "vpn-port",
+	Protocol:   v1.ProtocolTCP,
+	Port:       5555,
 	TargetPort: intstr.IntOrString{
 		Type:   intstr.Int,
-		IntVal: 9993,
+		IntVal: 5555,
 	},
-	NodePort: 9993,
+	NodePort: 5555,
 }
 
-var AzureZTPlanetService = v1.Service{
+var AzureVPNServerService = v1.Service{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Service",
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "zt-planet",
+		Name:      "vpn-server",
 		Namespace: "nalej",
 		Labels: map[string]string{
 			"cluster":                   "management",
-			"component": "network-manager",
+			"component": "vpn-server",
 		},
 	},
 	Spec: v1.ServiceSpec{
-		Ports: []v1.ServicePort{AzureZTPort},
+		Ports: []v1.ServicePort{AzureVPNServerPort},
 		Selector: map[string]string{
 			"cluster":  "management",
-			"component":	"network-manager",
+			"component":	"vpn-server",
 		},
 		Type: v1.ServiceTypeLoadBalancer,
 	},
 }
 
-var MinikubeZTPlanetService = v1.Service{
+var MinikubeVPNServerService = v1.Service{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Service",
 		APIVersion: "v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "zt-planet",
+		Name:      "vpn-server",
 		Namespace: "nalej",
 		Labels: map[string]string{
 			"cluster":	"management",
-			"component": "network-manager",
+			"component": "vpn-server",
 		},
 	},
 	Spec: v1.ServiceSpec{
-		Ports: []v1.ServicePort{MinikubeZTPort},
+		Ports: []v1.ServicePort{MinikubeVPNServerPort},
 		Selector: map[string]string{
 			"cluster":  "management",
-			"component":	"network-manager",
+			"component":	"vpn-server",
 		},
 		Type: v1.ServiceTypeNodePort,
 	},
 }
-
