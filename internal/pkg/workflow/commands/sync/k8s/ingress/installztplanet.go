@@ -74,7 +74,7 @@ func (imd *InstallZtPlanetLB) InstallLoadBalancer (workflowID string) (*entities
 }
 
 func (imd *InstallZtPlanetLB) InstallMinikube (workflowID string) (*entities.CommandResult, derrors.Error) {
-	err := imd.CreateService(&MinikubeConsulService)
+	err := imd.CreateService(&MinikubeZTPlanetService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating  ZT Planet LB service")
 		return entities.NewCommandResult(
@@ -84,7 +84,7 @@ func (imd *InstallZtPlanetLB) InstallMinikube (workflowID string) (*entities.Com
 }
 
 func (imd *InstallZtPlanetLB) String () string {
-	return fmt.Sprintf("SYNC InstallVpnServerLB on %s", imd.PlatformType)
+	return fmt.Sprintf("SYNC InstallZTPlanetLB on %s", imd.PlatformType)
 }
 
 func (imd *InstallZtPlanetLB) PrettyPrint (indentation int) string {

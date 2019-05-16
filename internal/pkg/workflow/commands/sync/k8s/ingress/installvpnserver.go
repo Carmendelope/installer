@@ -62,7 +62,7 @@ func (imd *InstallVpnServerLB) Run (workflowID string) (*entities.CommandResult,
 }
 
 func (imd *InstallVpnServerLB) InstallLoadBalancer (workflowID string) (*entities.CommandResult, derrors.Error) {
-	azureService := AzureZTPlanetService
+	azureService := AzureVPNServerService
 	err := imd.CreateService(&azureService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating VPN Server LB service")
@@ -74,7 +74,7 @@ func (imd *InstallVpnServerLB) InstallLoadBalancer (workflowID string) (*entitie
 }
 
 func (imd *InstallVpnServerLB) InstallMinikube (workflowID string) (*entities.CommandResult, derrors.Error) {
-	err := imd.CreateService(&MinikubeConsulService)
+	err := imd.CreateService(&MinikubeVPNServerService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating  VPN Server LB service")
 		return entities.NewCommandResult(
