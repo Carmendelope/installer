@@ -100,7 +100,7 @@ func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
 	eicApi.Spec.Rules[0].Host = fmt.Sprintf("eic-api.%s", ii.ManagementPublicHost)
 
 	return []*v1beta1.Ingress{
-		&ingress, &login, &signup, &api, &cluster, &device, &deviceLogin,
+		&ingress, &login, &signup, &api, &cluster, &device, &deviceLogin, &eicApi,
 	}
 
 }
