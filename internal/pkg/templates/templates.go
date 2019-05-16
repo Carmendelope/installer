@@ -98,6 +98,12 @@ const InstallManagementCluster = `
 				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
 				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.CorednsExt}}"
 			},
+			{"type":"sync", "name":"installVpnServerLB",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"platform_type":"{{$.InstallRequest.TargetPlatform}}",
+				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
+				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.VpnServer}}"
+			},
 		{{end}}
 
 		{{ range $index, $registry := $.Registries }}

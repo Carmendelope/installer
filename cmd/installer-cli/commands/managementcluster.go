@@ -61,6 +61,7 @@ func LaunchManagementInstall() {
 		ipAddressIngress,
 		ipAddressDNS,
 		ipAddressCoreDNS,
+		ipAddressVPNServer,
 		false,
 		environment)
 

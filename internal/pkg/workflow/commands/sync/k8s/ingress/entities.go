@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright (C) 2019 Nalej - All Rights Reserved
  */
 
 package ingress
@@ -455,6 +455,52 @@ var DeviceLoginAPIIngressRules = v1beta1.Ingress{
 								Backend: v1beta1.IngressBackend{
 									ServiceName: "device-login-api",
 									ServicePort: intstr.IntOrString{IntVal: 6031},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var EICAPIIngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "extensions/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "eic-api-ingress",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":   "management",
+			"component": "ingress-nginx",
+		},
+		Annotations: map[string]string{
+			"kubernetes.io/ingress.class": "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
+			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+		},
+	},
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			v1beta1.IngressTLS{
+				Hosts:      []string{"eic-api.MANAGEMENT_HOST"},
+				SecretName: "ingress-tls",
+			},
+		},
+		Rules: []v1beta1.IngressRule{
+			v1beta1.IngressRule{
+				Host: "eic.MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
+					HTTP: &v1beta1.HTTPIngressRuleValue{
+						Paths: []v1beta1.HTTPIngressPath{
+							v1beta1.HTTPIngressPath{
+								Path: "/",
+								Backend: v1beta1.IngressBackend{
+									ServiceName: "eic-api",
+									ServicePort: intstr.IntOrString{IntVal: 5500},
 								},
 							},
 						},

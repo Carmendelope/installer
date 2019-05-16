@@ -16,23 +16,23 @@ import (
 	"strings"
 )
 
-type InstallZtPlanetLB struct {
+type InstallVpnServerLB struct {
 	k8s.Kubernetes
 	PlatformType    string `json:"platform_type"`
 }
 
-func NewInstallZtPlanetLB (kubeConfigPath string, platformType string) *InstallZtPlanetLB {
-	return &InstallZtPlanetLB{
+func NewInstallVpnServerLB(kubeConfigPath string, platformType string) *InstallVpnServerLB {
+	return &InstallVpnServerLB{
 		Kubernetes: k8s.Kubernetes{
-			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallZtPlanetLB),
+			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallVpnServerLB),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		PlatformType:    platformType,
 	}
 }
 
-func NewInstallZtPlanetLBFromJSON (raw []byte) (*entities.Command, derrors.Error) {
-	ccc := &InstallZtPlanetLB{}
+func NewInstallVpnServerLBFromJSON(raw []byte) (*entities.Command, derrors.Error) {
+	ccc := &InstallVpnServerLB{}
 	if err := json.Unmarshal(raw, &ccc); err != nil {
 		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 	}
@@ -41,7 +41,7 @@ func NewInstallZtPlanetLBFromJSON (raw []byte) (*entities.Command, derrors.Error
 	return &r, nil
 }
 
-func (imd *InstallZtPlanetLB) Run (workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallVpnServerLB) Run (workflowID string) (*entities.CommandResult, derrors.Error) {
 	connectErr := imd.Connect()
 	if connectErr != nil {
 		return nil, connectErr
@@ -61,36 +61,36 @@ func (imd *InstallZtPlanetLB) Run (workflowID string) (*entities.CommandResult, 
 		false, "unsupported platform type", nil), nil
 }
 
-func (imd *InstallZtPlanetLB) InstallLoadBalancer (workflowID string) (*entities.CommandResult, derrors.Error) {
-	azureService := AzureZTPlanetService
+func (imd *InstallVpnServerLB) InstallLoadBalancer (workflowID string) (*entities.CommandResult, derrors.Error) {
+	azureService := AzureVPNServerService
 	err := imd.CreateService(&azureService)
 	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating ZT Planet LB service")
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating VPN Server LB service")
 		return entities.NewCommandResult(
 			false, "cannot install service", err), nil
 	}
-	msg := fmt.Sprintf("ZT planet installed on %s", imd.PlatformType)
+	msg := fmt.Sprintf("VPN Server installed on %s", imd.PlatformType)
 	return entities.NewSuccessCommand([]byte(msg)), nil
 }
 
-func (imd *InstallZtPlanetLB) InstallMinikube (workflowID string) (*entities.CommandResult, derrors.Error) {
-	err := imd.CreateService(&MinikubeZTPlanetService)
+func (imd *InstallVpnServerLB) InstallMinikube (workflowID string) (*entities.CommandResult, derrors.Error) {
+	err := imd.CreateService(&MinikubeVPNServerService)
 	if err != nil {
-		log.Error().Str("trace", err.DebugReport()).Msg("error creating  ZT Planet LB service")
+		log.Error().Str("trace", err.DebugReport()).Msg("error creating  VPN Server LB service")
 		return entities.NewCommandResult(
 			false, "cannot install service", err), nil
 	}
-	return entities.NewSuccessCommand([]byte("ZT planet installed on Minikube")), nil
+	return entities.NewSuccessCommand([]byte("VPN Server installed on Minikube")), nil
 }
 
-func (imd *InstallZtPlanetLB) String () string {
-	return fmt.Sprintf("SYNC InstallZTPlanetLB on %s", imd.PlatformType)
+func (imd *InstallVpnServerLB) String () string {
+	return fmt.Sprintf("SYNC InstallVpnServerLB on %s", imd.PlatformType)
 }
 
-func (imd *InstallZtPlanetLB) PrettyPrint (indentation int) string {
+func (imd *InstallVpnServerLB) PrettyPrint (indentation int) string {
 	return strings.Repeat(" ", indentation) + imd.String()
 }
 
-func (imd *InstallZtPlanetLB) UserString () string {
-	return fmt.Sprintf("Installing ZT planet loadbalancer")
+func (imd *InstallVpnServerLB) UserString () string {
+	return fmt.Sprintf("Installing VPN Server loadbalancer")
 }

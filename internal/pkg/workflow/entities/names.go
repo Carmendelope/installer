@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright (C) 2019 Nalej - All Rights Reserved
  */
 
 // Enumeration of the supported commands.
@@ -70,6 +70,8 @@ const InstallIngress = "installIngress"
 const InstallMngtDNS = "installMngtDNS"
 
 const InstallZtPlanetLB = "installZtPlanetLB"
+
+const InstallVpnServerLB = "installVpnServerLB"
 
 const CreateZTPlanetFiles = "createZtPlanetFiles"
 
