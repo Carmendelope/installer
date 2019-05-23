@@ -51,6 +51,7 @@ var AzureVPNServerService = v1.Service{
 			"component":	"vpn-server",
 		},
 		Type: v1.ServiceTypeLoadBalancer,
+		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeLocal,
 	},
 }
 
