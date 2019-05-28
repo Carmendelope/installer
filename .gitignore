@@ -5,3 +5,4 @@ vendor
 vendor/*
 temp/*
 assets/*
+.DS_Store

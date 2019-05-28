@@ -1,11 +1,11 @@
 {
-    "language": "golang",
-    "application_list": [
-        "installer installer-cli"
-    ],
-    "tools": [
-        "azure",
-        "k8s",
-        "docker"
-    ]
+  "language": "golang",
+  "application_list": [
+    "installer installer-cli"
+  ],
+  "tools": [
+    "azure",
+    "k8s",
+    "docker"
+  ]
 }
