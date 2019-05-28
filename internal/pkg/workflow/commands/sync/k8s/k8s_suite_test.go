@@ -32,10 +32,10 @@ var _ = ginkgo.AfterSuite(func(){
 		os.RemoveAll(itComponentsDir)
 	}
 	if itKubeConfigFile != "" && len(itTargetNamespaces) > 0 {
-		for _, ns := range itTargetNamespaces{
-			tc := NewTestCleaner(itKubeConfigFile, ns)
-			gomega.Expect(tc.DeleteAll()).To(gomega.Succeed())
-		}
+		// for _, ns := range itTargetNamespaces{
+		//	tc := NewTestCleaner(itKubeConfigFile, ns)
+		//	gomega.Expect(tc.DeleteAll()).To(gomega.Succeed())
+		//}
 	}else{
 		log.Warn().Msg("TestCleaner skipped")
 	}

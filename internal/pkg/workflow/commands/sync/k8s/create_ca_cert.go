@@ -5,16 +5,20 @@
 package k8s
 
 import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
+	"bytes"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
+	"github.com/rs/zerolog/log"
+	"k8s.io/api/core/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math/big"
 	"strings"
 	"time"
@@ -27,6 +31,8 @@ type CreateCACert struct{
 	Kubernetes
 	PublicHost     string `json:"public_host"`
 	certificate []byte
+	certificatePEM string
+	privateKeyPEM string
 }
 
 func NewCreateCACert(
@@ -53,17 +59,13 @@ func NewCreateCACertFromJSON(raw []byte) (*entities.Command, derrors.Error){
 
 func (cc * CreateCACert) createCACertificate() derrors.Error{
 
-	privateKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil{
 		return derrors.AsError(err, "cannot create private key for CA cert")
 	}
 
 	caCert := x509.Certificate{
 
-		Signature:                   nil,
-		SignatureAlgorithm:          0,
-		PublicKeyAlgorithm:          0,
-		PublicKey:                   nil,
 		SerialNumber:                big.NewInt(1),
 		Issuer:                      pkix.Name{
 			Organization:       []string{"Nalej"},
@@ -81,11 +83,59 @@ func (cc * CreateCACert) createCACertificate() derrors.Error{
 		MaxPathLenZero:        true,
 		DNSNames:              []string{fmt.Sprintf("*.%s", cc.PublicHost)},
 	}
-	result, err := x509.CreateCertificate(rand.Reader, &caCert, &caCert, privateKey.PublicKey, privateKey)
+	publicKey := &privateKey.PublicKey
+	result, err := x509.CreateCertificate(rand.Reader, &caCert, &caCert, publicKey, privateKey)
 	if err != nil{
 		return derrors.AsError(err, "cannot create CA certificate")
 	}
 	cc.certificate = result
+
+	// Export the content to PEM
+	CAOut := &bytes.Buffer{}
+	err = pem.Encode(CAOut, &pem.Block{Type: "CERTIFICATE", Bytes: cc.certificate})
+	if err != nil{
+		return derrors.AsError(err, "cannot transform certificate to PEM")
+	}
+	cc.certificatePEM = CAOut.String()
+
+	PKOut := &bytes.Buffer{}
+	err = pem.Encode(PKOut, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	})
+	if err != nil{
+		return derrors.AsError(err, "cannot transform private key to PEM")
+	}
+	cc.privateKeyPEM = PKOut.String()
+	return nil
+}
+
+func (cc * CreateCACert) createCertSecret() derrors.Error{
+	tlsSecret := &v1.Secret{
+		TypeMeta: metaV1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:         "mngt-ca-cert",
+			GenerateName: "",
+			Namespace:    "nalej",
+		},
+		Data:       nil,
+		StringData: map[string]string{
+			"tls.crt": cc.certificatePEM,
+			"tls.key": cc.privateKeyPEM,
+		},
+		Type:       v1.SecretTypeTLS,
+	}
+	cc.Connect()
+	client := cc.Client.CoreV1().Secrets(tlsSecret.Namespace)
+	created, err := client.Create(tlsSecret)
+	if err != nil {
+		log.Error().Msg("Error creating secret")
+		return derrors.NewGenericError("Error creating secret", err)
+	}
+	log.Debug().Interface("created", created).Msg("secret has been created")
 	return nil
 }
 
@@ -99,6 +149,21 @@ func (cc *CreateCACert) Run(workflowID string) (*entities.CommandResult, derrors
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}
+
+	// Create certificate
+	err := cc.createCACertificate()
+	if err != nil{
+		log.Error().Str("trace", err.DebugReport()).Msg("cannot create CA certificate")
+		return entities.NewCommandResult(false, "cannot create CA certificate", err), nil
+	}
+
+	// Create secret in kubernetes
+	err = cc.createCertSecret()
+	if err != nil{
+		log.Error().Str("trace", err.DebugReport()).Msg("cannot create CA certificate secret")
+		return entities.NewCommandResult(false, "cannot create CA certificate secret", err), nil
+	}
+
 	return entities.NewSuccessCommand([]byte("CA cert created an installed on cluster")), nil
 }
 
