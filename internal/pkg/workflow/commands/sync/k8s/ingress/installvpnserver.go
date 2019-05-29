@@ -19,6 +19,8 @@ import (
 type InstallVpnServerLB struct {
 	k8s.Kubernetes
 	PlatformType    string `json:"platform_type"`
+	UseStaticIp     bool   `json:"use_static_ip"`
+	StaticIpAddress string `json:"static_ip_address"`
 }
 
 func NewInstallVpnServerLB(kubeConfigPath string, platformType string) *InstallVpnServerLB {
@@ -63,6 +65,9 @@ func (imd *InstallVpnServerLB) Run (workflowID string) (*entities.CommandResult,
 
 func (imd *InstallVpnServerLB) InstallLoadBalancer (workflowID string) (*entities.CommandResult, derrors.Error) {
 	azureService := AzureVPNServerService
+	if imd.UseStaticIp {
+		azureService.Spec.LoadBalancerIP = imd.StaticIpAddress
+	}
 	err := imd.CreateService(&azureService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating VPN Server LB service")

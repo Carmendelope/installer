@@ -48,7 +48,7 @@ func NewCreateCACert(
 }
 
 func NewCreateCACertFromJSON(raw []byte) (*entities.Command, derrors.Error){
-	cmc := &CreateManagementConfig{}
+	cmc := &CreateCACert{}
 	if err := json.Unmarshal(raw, &cmc); err != nil {
 		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 	}
