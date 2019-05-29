@@ -69,6 +69,10 @@ const InstallManagementCluster = `
 				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
 				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Dns}}"
 			},
+			{"type":"sync", "name":"createCACert",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"public_host":"{{$.ManagementClusterHost}}"
+			},
 		{{end}}
 		{"type":"sync", "name":"installIngress",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",

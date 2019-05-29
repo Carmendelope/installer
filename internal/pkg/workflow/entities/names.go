@@ -49,6 +49,8 @@ const CheckRequirements = "checkRequirements"
 
 const CreateClusterConfig = "createClusterConfig"
 
+const CreateCACert = "createCACert"
+
 const CreateManagementConfig = "createManagementConfig"
 
 const CreateRegistrySecrets = "createRegistrySecrets"
