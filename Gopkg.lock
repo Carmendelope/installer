@@ -209,12 +209,11 @@
   version = "v0.0.28"
 
 [[projects]]
-  digest = "1:d82bd8fd31d05468e3e1854c45c842fdd5352a14587f3f795c2f91cbcdc8c831"
+  digest = "1:bf28e4cd60be75438d6afaee7f1ef95fce32fd4a23ad83c1933e31a39b41d641"
   name = "github.com/nalej/grpc-utils"
   packages = [
     "pkg/conversions",
     "pkg/test",
-    "pkg/tools",
   ]
   pruneopts = "UT"
   revision = "926e5152669ee71c0e6904055ebe6cfb5492b599"
@@ -689,7 +688,6 @@
     "github.com/nalej/grpc-user-manager-go",
     "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/nalej/grpc-utils/pkg/test",
-    "github.com/nalej/grpc-utils/pkg/tools",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "github.com/rs/zerolog",
