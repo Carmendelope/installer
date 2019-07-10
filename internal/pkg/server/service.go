@@ -7,7 +7,6 @@ package server
 import (
 	"fmt"
 	"github.com/nalej/grpc-installer-go"
-	"github.com/nalej/grpc-utils/pkg/tools"
 	"github.com/nalej/installer/internal/pkg/server/config"
 	"github.com/nalej/installer/internal/pkg/server/installer"
 	"github.com/nalej/installer/internal/pkg/utils"
@@ -19,14 +18,12 @@ import (
 
 type Service struct {
 	Configuration config.Config
-	Server * tools.GenericGRPCServer
 }
 
 // NewService creates a new system model service.
 func NewService(conf config.Config) *Service {
 	return &Service{
 		conf,
-		tools.NewGenericGRPCServer(uint32(conf.Port)),
 	}
 }
 
