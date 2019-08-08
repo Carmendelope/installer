@@ -6,29 +6,40 @@ package k8s
 
 import (
 	"github.com/nalej/derrors"
+
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
+
 	"github.com/rs/zerolog/log"
+
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+
+	"k8s.io/apimachinery/pkg/api/meta"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	appsv1 "k8s.io/api/apps/v1"
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
-	batchV1 "k8s.io/api/batch/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
-	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/clientcmd"
 	"net"
 )
 
 type Kubernetes struct {
 	entities.GenericSyncCommand
-	KubeConfigPath string                `json:"kubeConfigPath"`
-	Client         *kubernetes.Clientset `json:"-"`
+	KubeConfigPath string		`json:"kubeConfigPath"`
+	Client	 *kubernetes.Clientset `json:"-"`
+
+	// Used to get the right REST resource from a GroupVersionKind
+	mapper	 meta.RESTMapper
+	// Dynamic client used to create all resources
+	dynClient      dynamic.Interface
 }
 
 func (k *Kubernetes) Connect() derrors.Error {
-
 	config, err := clientcmd.BuildConfigFromFlags("", k.KubeConfigPath)
 	if err != nil {
 		log.Error().Err(err).Msg("error building configuration from kubeconfig")
@@ -43,6 +54,26 @@ func (k *Kubernetes) Connect() derrors.Error {
 	}
 
 	k.Client = clientset
+
+	// Create the REST mapper through a discovery client
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
+	if err != nil {
+		return derrors.NewInternalError("failed to create discovery client", err)
+	}
+	resources, err := restmapper.GetAPIGroupResources(discoveryClient)
+	if err != nil {
+		return derrors.NewInternalError("failed to get api group resources", err)
+	}
+	k.mapper = restmapper.NewDiscoveryRESTMapper(resources)
+
+	// Create the dynamic client that can be used to create any object
+	// by specifying what resource we're dealing with by using the REST mapper
+	dynClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return derrors.NewInternalError("failed to create dynamic client", err)
+	}
+	k.dynClient = dynClient
+
 	return nil
 }
 
@@ -61,7 +92,7 @@ func (k *Kubernetes) ResolveIP(address string) ([]string, derrors.Error){
 	return result, nil
 }
 
-func (k *Kubernetes) ExistNamespace(name string) (bool, derrors.Error) {
+func (k *Kubernetes) ExistsNamespace(name string) (bool, derrors.Error) {
 	namespaceClient := k.Client.CoreV1().Namespaces()
 	opts := metaV1.ListOptions{}
 	list, err := namespaceClient.List(opts)
@@ -80,24 +111,21 @@ func (k *Kubernetes) ExistNamespace(name string) (bool, derrors.Error) {
 }
 
 func (k *Kubernetes) CreateNamespace(name string) derrors.Error {
-	namespaceClient := k.Client.CoreV1().Namespaces()
-
 	toCreate := v1.Namespace{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name: name,
 		},
 	}
-	created, err := namespaceClient.Create(&toCreate)
+	err := k.Create(&toCreate)
 	if err != nil {
 		return derrors.AsError(err, "cannot create namespace")
 	}
-	log.Debug().Interface("created", created).Msg("namespaces has been created")
 
 	return nil
 }
 
-func (k *Kubernetes) CreateNamespacesIfNotExist(name string) derrors.Error {
-	found, fErr := k.ExistNamespace(name)
+func (k *Kubernetes) CreateNamespaceIfNotExists(name string) derrors.Error {
+	found, fErr := k.ExistsNamespace(name)
 	if fErr != nil {
 		return fErr
 	}
@@ -113,7 +141,7 @@ func (k *Kubernetes) CreateNamespacesIfNotExist(name string) derrors.Error {
 	return nil
 }
 
-func (k *Kubernetes) ExitsService(deploymentName string, namespace string) (bool, derrors.Error){
+func (k *Kubernetes) ExistsService(deploymentName string, namespace string) (bool, derrors.Error){
 	serviceClient := k.Client.CoreV1().Services(namespace)
 	opts := metaV1.GetOptions{}
 	service, err := serviceClient.Get(deploymentName, opts)
@@ -124,29 +152,7 @@ func (k *Kubernetes) ExitsService(deploymentName string, namespace string) (bool
 	return true, nil
 }
 
-func (k *Kubernetes) CreateService(service *v1.Service) derrors.Error {
-	serviceClient := k.Client.CoreV1().Services(service.Namespace)
-	log.Debug().Interface("service", service).Msg("unmarshalled")
-	created, err := serviceClient.Create(service)
-	if err != nil {
-		return derrors.AsError(err, "cannot create service")
-	}
-	log.Debug().Interface("created", created).Msg("new service has been created")
-	return nil
-}
-
-func (k *Kubernetes) CreateConfigMap(configMap *v1.ConfigMap) derrors.Error {
-	cfClient := k.Client.CoreV1().ConfigMaps(configMap.Namespace)
-	log.Debug().Interface("configMap", configMap).Msg("unmarshalled")
-	created, err := cfClient.Create(configMap)
-	if err != nil {
-		return derrors.AsError(err, "cannot create config map")
-	}
-	log.Debug().Interface("created", created).Msg("new config map has been created")
-	return nil
-}
-
-func (k *Kubernetes) ExitsConfigMap(name string, namespace string) (bool, derrors.Error){
+func (k *Kubernetes) ExistsConfigMap(name string, namespace string) (bool, derrors.Error){
 	serviceClient := k.Client.CoreV1().ConfigMaps(namespace)
 	opts := metaV1.GetOptions{}
 	service, err := serviceClient.Get(name, opts)
@@ -157,125 +163,62 @@ func (k *Kubernetes) ExitsConfigMap(name string, namespace string) (bool, derror
 	return true, nil
 }
 
-func (k *Kubernetes) CreateIngress(ingress *v1beta1.Ingress) derrors.Error {
-	client := k.Client.ExtensionsV1beta1().Ingresses(ingress.Namespace)
-	log.Debug().Interface("ingress", ingress).Msg("unmarshalled")
-	created, err := client.Create(ingress)
+func (k *Kubernetes) Create(obj interface{}) derrors.Error {
+	// Create unstructured object
+	unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj.(runtime.Object))
 	if err != nil {
-		return derrors.AsError(err, "cannot create ingress")
+		return derrors.NewInvalidArgumentError("cannot convert object to unstructured", err).WithParams(obj)
 	}
-	log.Debug().Interface("created", created).Msg("new ingress set")
+	unstructuredObj := &unstructured.Unstructured{
+		Object: unstructuredMap,
+	}
+
+	gvk, derr := getKind(obj)
+	if derr != nil {
+		return derr
+	}
+
+	mapping, err := k.mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+	if err != nil {
+		return derrors.NewInternalError("unable to get REST mapping for object", err).WithParams(unstructuredObj)
+	}
+
+	var client dynamic.ResourceInterface
+	client = k.dynClient.Resource(mapping.Resource)
+	namespace := unstructuredObj.GetNamespace()
+	if namespace != "" {
+		client = k.dynClient.Resource(mapping.Resource).Namespace(namespace)
+	}
+
+	log.Debug().Interface("obj", unstructuredObj).Msg("creating resource")
+
+	created, err := client.Create(unstructuredObj, metaV1.CreateOptions{})
+	if err != nil {
+		return derrors.NewInternalError("unable to create object", err).WithParams(unstructuredObj)
+	}
+
+	log.Debug().Str("resource", created.GetSelfLink()).Msg("created")
+
 	return nil
 }
 
-func (k *Kubernetes) CreateDeployment(deployment *appsv1.Deployment) derrors.Error {
-	deploymentClient := k.Client.AppsV1().Deployments(deployment.Namespace)
-	log.Debug().Interface("deployment", deployment).Msg("unmarshalled")
-	created, err := deploymentClient.Create(deployment)
+func getKind(obj interface{}) (schema.GroupVersionKind, derrors.Error) {
+	kinds, _, err := scheme.Scheme.ObjectKinds(obj.(runtime.Object))
 	if err != nil {
-		return derrors.AsError(err, "cannot create deployment")
+		return schema.GroupVersionKind{}, derrors.NewInvalidArgumentError("invalid object received")
 	}
-	log.Debug().Interface("created", created).Msg("new deployment has been created")
-	return nil
-}
 
-func (k *Kubernetes) CreateDeploymentBeta1(deployment *appsv1beta1.Deployment) derrors.Error {
-	deploymentClient := k.Client.AppsV1beta1().Deployments(deployment.Namespace)
-	log.Debug().Interface("deployment", deployment).Msg("unmarshalled")
-	created, err := deploymentClient.Create(deployment)
-	if err != nil {
-		return derrors.AsError(err, "cannot create deployment")
+	// Not sure what to do if an object matches multiple kinds, let's
+	// at least warn
+	if len(kinds) > 1 {
+		kindLog := log.Warn()
+		for _, k := range(kinds) {
+			kindLog = kindLog.Str("candidate", k.String())
+		}
+		kindLog.Msg("received ambiguous object, picking first candidate")
 	}
-	log.Debug().Interface("created", created).Msg("new deployment has been created")
-	return nil
+
+	kind := kinds[0]
+
+	return kind, nil
 }
-
-
-func (k *Kubernetes) CreateJob(job *batchV1.Job) derrors.Error {
-	client := k.Client.BatchV1().Jobs(job.Namespace)
-	log.Debug().Interface("job", job).Msg("unmarshalled")
-	created, err := client.Create(job)
-	if err != nil {
-		return derrors.AsError(err, "cannot create job")
-	}
-	log.Debug().Interface("created", created).Msg("new job has been created")
-	return nil
-}
-
-func (k *Kubernetes) CreateServiceAccount(serviceAccount *v1.ServiceAccount) derrors.Error {
-	client := k.Client.CoreV1().ServiceAccounts(serviceAccount.Namespace)
-	log.Debug().Interface("serviceAccount", serviceAccount).Msg("unmarshalled")
-	created, err := client.Create(serviceAccount)
-	if err != nil {
-		return derrors.AsError(err, "cannot create service account")
-	}
-	log.Debug().Interface("created", created).Msg("new service account has been created")
-	return nil
-}
-
-func (k *Kubernetes) CreateRole(role *rbacv1.Role) derrors.Error {
-	client := k.Client.RbacV1().Roles(role.Namespace)
-	log.Debug().Interface("role", role).Msg("unmarshalled")
-	created, err := client.Create(role)
-	if err != nil {
-		return derrors.AsError(err, "cannot create role")
-	}
-	log.Debug().Interface("created", created).Msg("new role has been created")
-	return nil
-}
-
-func (k *Kubernetes) CreateClusterRole(clusterRole *rbacv1.ClusterRole) derrors.Error {
-	client := k.Client.RbacV1().ClusterRoles()
-	log.Debug().Interface("clusterRole", clusterRole).Msg("unmarshalled")
-	created, err := client.Create(clusterRole)
-	if err != nil {
-		return derrors.AsError(err, "cannot create cluster role")
-	}
-	log.Debug().Interface("created", created).Msg("new cluster role has been created")
-	return nil
-}
-
-func (k *Kubernetes) CreateClusterRoleBeta1(clusterRole *rbacv1beta1.ClusterRole) derrors.Error {
-	client := k.Client.RbacV1beta1().ClusterRoles()
-	log.Debug().Interface("clusterRole", clusterRole).Msg("unmarshalled")
-	created, err := client.Create(clusterRole)
-	if err != nil {
-		return derrors.AsError(err, "cannot create cluster role")
-	}
-	log.Debug().Interface("created", created).Msg("new cluster role has been created")
-	return nil
-}
-
-func (k *Kubernetes) CreateClusterRoleBinding(clusterRoleBinding *rbacv1.ClusterRoleBinding) derrors.Error {
-	client := k.Client.RbacV1().ClusterRoleBindings()
-	log.Debug().Interface("clusterRoleBinding", clusterRoleBinding).Msg("unmarshalled")
-	created, err := client.Create(clusterRoleBinding)
-	if err != nil {
-		return derrors.AsError(err, "cannot create cluster role binding")
-	}
-	log.Debug().Interface("created", created).Msg("new cluster role binding has been created")
-	return nil
-}
-
-func (k *Kubernetes) CreateClusterRoleBindingBeta1(clusterRoleBinding *rbacv1beta1.ClusterRoleBinding) derrors.Error {
-	client := k.Client.RbacV1beta1().ClusterRoleBindings()
-	log.Debug().Interface("clusterRoleBinding", clusterRoleBinding).Msg("unmarshalled")
-	created, err := client.Create(clusterRoleBinding)
-	if err != nil {
-		return derrors.AsError(err, "cannot create cluster role binding")
-	}
-	log.Debug().Interface("created", created).Msg("new cluster role binding has been created")
-	return nil
-}
-
-func (k *Kubernetes) CreateRoleBinding(roleBinding *rbacv1.RoleBinding) derrors.Error {
-	client := k.Client.RbacV1().RoleBindings(roleBinding.Namespace)
-	log.Debug().Interface("roleBinding", roleBinding).Msg("unmarshalled")
-	created, err := client.Create(roleBinding)
-	if err != nil {
-		return derrors.AsError(err, "cannot create role binding")
-	}
-	log.Debug().Interface("created", created).Msg("new role binding has been created")
-	return nil
-}
-

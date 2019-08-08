@@ -11,7 +11,6 @@ import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
-	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
@@ -68,7 +67,7 @@ func (cmd *CreateDockerSecret) Run(workflowID string) (*entities.CommandResult, 
 	if connectErr != nil {
 		return nil, connectErr
 	}
-	cErr := cmd.CreateNamespacesIfNotExist("nalej")
+	cErr := cmd.CreateNamespaceIfNotExists("nalej")
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}
@@ -89,13 +88,11 @@ func (cmd *CreateDockerSecret) Run(workflowID string) (*entities.CommandResult, 
 		Type: v1.SecretTypeDockerConfigJson,
 	}
 
-	client := cmd.Client.CoreV1().Secrets(secret.Namespace)
-	created, err := client.Create(secret)
-	if err != nil {
+	derr := cmd.Create(secret)
+	if derr != nil {
 		return entities.NewCommandResult(
-			false, "cannot create docker registry credentials", derrors.AsError(err, "cannot create registry credentials")), nil
+			false, "cannot create docker registry credentials", derrors.AsError(derr, "cannot create registry credentials")), nil
 	}
-	log.Debug().Interface("created", created).Msg("new secret has been created")
 	return entities.NewSuccessCommand([]byte("docker registry credentials have been created")), nil
 }
 

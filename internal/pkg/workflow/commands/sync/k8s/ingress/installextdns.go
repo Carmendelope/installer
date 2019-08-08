@@ -71,7 +71,7 @@ func (imd *InstallExtDNS) InstallAzure(workflowID string) (*entities.CommandResu
 	if imd.UseStaticIp {
 		azureService.Spec.LoadBalancerIP = imd.StaticIpAddress
 	}
-	err := imd.CreateService(&azureService)
+	err := imd.Create(&azureService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating External DNS service")
 		return entities.NewCommandResult(
@@ -82,7 +82,7 @@ func (imd *InstallExtDNS) InstallAzure(workflowID string) (*entities.CommandResu
 }
 
 func (imd *InstallExtDNS) InstallMinikube(workflowID string) (*entities.CommandResult, derrors.Error) {
-	err := imd.CreateService(&MinikubeExtDnsService)
+	err := imd.Create(&MinikubeExtDnsService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating External DNS service")
 		return entities.NewCommandResult(

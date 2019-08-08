@@ -12,7 +12,6 @@ import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
-	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -79,7 +78,7 @@ func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult,
 		return nil, rErr
 	}
 
-	cErr := ccc.CreateNamespacesIfNotExist("nalej")
+	cErr := ccc.CreateNamespaceIfNotExists("nalej")
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}
@@ -109,14 +108,10 @@ func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult,
 		},
 	}
 
-	client := ccc.Client.CoreV1().ConfigMaps(config.Namespace)
-	log.Debug().Interface("configMap", config).Msg("creating cluster config")
-	created, err := client.Create(config)
-	if err != nil {
-		return entities.NewCommandResult(
-			false, "cannot create cluster config", derrors.AsError(err, "cannot create configmap")), nil
+	derr := ccc.Create(config)
+	if derr != nil {
+		return entities.NewCommandResult(false, "cannot create cluster config", derr), nil
 	}
-	log.Debug().Interface("created", created).Msg("new config map has been created")
 	return entities.NewSuccessCommand([]byte("cluster config has been created")), nil
 }
 

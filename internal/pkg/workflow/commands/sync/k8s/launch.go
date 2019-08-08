@@ -7,28 +7,24 @@ package k8s
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"path"
+	"strings"
+
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-installer-go"
 	entities2 "github.com/nalej/installer/internal/pkg/entities"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
-	"github.com/rs/zerolog/log"
-	"k8s.io/api/extensions/v1beta1"
-	"k8s.io/client-go/kubernetes/scheme"
-	"path"
-	"reflect"
 
-	"io/ioutil"
+	"github.com/rs/zerolog/log"
+
+	"k8s.io/client-go/kubernetes/scheme"
+
 	appsv1 "k8s.io/api/apps/v1"
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
-	batchV1 "k8s.io/api/batch/v1"
 	"k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	rbacv1 "k8s.io/api/rbac/v1"
-	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	storageV1 "k8s.io/api/storage/v1"
-	"strings"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const AzureStorageClass = "managed-premium"
@@ -97,7 +93,7 @@ func (lc *LaunchComponents) Run(workflowID string) (*entities.CommandResult, der
 	}
 
 	for _, target := range lc.Namespaces {
-		createErr := lc.createNamespace(target)
+		createErr := lc.CreateNamespaceIfNotExists(target)
 		if createErr != nil {
 			return nil, createErr
 		}
@@ -138,20 +134,6 @@ func (lc *LaunchComponents) ListComponents() []string {
 	return result
 }
 
-// adaptDeployment modifies the deployment to include image pull secrets depending on the type of environment.
-func (lc *LaunchComponents) adaptDeployment(deployment *appsv1.Deployment, targetEnvironment entities2.TargetEnvironment) *appsv1.Deployment {
-	aux := deployment
-	switch targetEnvironment {
-	case entities2.Production:
-		aux.Spec.Template.Spec.ImagePullSecrets = ProductionImagePullSecrets
-	case entities2.Staging:
-		aux.Spec.Template.Spec.ImagePullSecrets = StagingImagePullSecrets
-	case entities2.Development:
-		aux.Spec.Template.Spec.ImagePullSecrets = DevImagePullSecrets
-	}
-	return aux
-}
-
 // launchComponent triggers the creation of a given component from a YAML file
 func (lc *LaunchComponents) launchComponent(componentPath string, targetEnvironment entities2.TargetEnvironment) derrors.Error {
 	log.Debug().
@@ -172,219 +154,56 @@ func (lc *LaunchComponents) launchComponent(componentPath string, targetEnvironm
 		fmt.Printf("%#v", err)
 	}
 
+	// For some times, we have a conversion step before we launch
 	switch o := obj.(type) {
-	case *batchV1.Job:
-		return lc.CreateJob(obj.(*batchV1.Job))
 	case *appsv1.Deployment:
-		return lc.CreateDeployment(lc.adaptDeployment(obj.(*appsv1.Deployment), targetEnvironment))
-	case *appsv1beta1.Deployment:
-		// this is for openEBS. No secrets needed to pull the image.
-		return lc.CreateDeploymentBeta1(obj.(*appsv1beta1.Deployment))
-	case *appsv1.DaemonSet:
-		return lc.launchDaemonSet(obj.(*appsv1.DaemonSet))
-	case *v1beta1.DaemonSet:
-		return lc.launchDaemonSetBeta1(obj.(*v1beta1.DaemonSet))
-	case *v1.Service:
-		return lc.CreateService(obj.(*v1.Service))
-	case *v1.Secret:
-		return lc.launchSecret(obj.(*v1.Secret))
-	case *v1.ServiceAccount:
-		return lc.CreateServiceAccount(obj.(*v1.ServiceAccount))
-	case *v1.ConfigMap:
-		return lc.CreateConfigMap(obj.(*v1.ConfigMap))
-	case *rbacv1.RoleBinding:
-		return lc.CreateRoleBinding(obj.(*rbacv1.RoleBinding))
-	case *rbacv1.ClusterRole:
-		return lc.CreateClusterRole(obj.(*rbacv1.ClusterRole))
-	case *rbacv1beta1.ClusterRole:
-		return lc.CreateClusterRoleBeta1(obj.(*rbacv1beta1.ClusterRole))
-	case *rbacv1.ClusterRoleBinding:
-		return lc.CreateClusterRoleBinding(obj.(*rbacv1.ClusterRoleBinding))
-	case *rbacv1beta1.ClusterRoleBinding:
-		return lc.CreateClusterRoleBindingBeta1(obj.(*rbacv1beta1.ClusterRoleBinding))
-	case *policyv1beta1.PodSecurityPolicy:
-		return lc.launchPodSecurityPolicy(obj.(*policyv1beta1.PodSecurityPolicy))
+		obj = runtime.Object(lc.patchDeployment(o, targetEnvironment))
 	case *v1.PersistentVolume:
-		return lc.launchPersistentVolume(obj.(*v1.PersistentVolume))
+		obj = runtime.Object(lc.patchPersistentVolume(o))
 	case *v1.PersistentVolumeClaim:
-		return lc.launchPersistentVolumeClaim(obj.(*v1.PersistentVolumeClaim))
-	case *storageV1.StorageClass:
-		return lc.launchStorageClass(obj.(*storageV1.StorageClass))
-	case *policyv1beta1.PodDisruptionBudget:
-		return lc.launchPodDisruptionBudget(obj.(*policyv1beta1.PodDisruptionBudget))
-	case *appsv1.StatefulSet:
-		return lc.launchStatefulSet(obj.(*appsv1.StatefulSet))
-	case *v1beta1.Ingress:
-		return lc.launchIngress(obj.(*v1beta1.Ingress))
-	default:
-		log.Warn().Str("type", reflect.TypeOf(o).String()).Msg("Unknown entity")
-		return derrors.NewUnimplementedError("object not supported").WithParams(o)
+		obj = runtime.Object(lc.patchPersistentVolumeClaim(o))
 	}
 
-	return derrors.NewInternalError("no case was executed")
+	return lc.Create(obj)
 }
 
-// LaunchDaemonSet creates a Kubernetes DaemonSet.
-func (lc *LaunchComponents) launchDaemonSet(daemonSet *appsv1.DaemonSet) derrors.Error {
-	client := lc.Client.AppsV1().DaemonSets(daemonSet.Namespace)
-	log.Debug().Interface("daemonSet", daemonSet).Msg("unmarshalled")
-	created, err := client.Create(daemonSet)
-	if err != nil {
-		return derrors.AsError(err, "cannot create daemon set")
+// patchDeployment modifies the deployment to include image pull secrets depending on the type of environment.
+func (lc *LaunchComponents) patchDeployment(deployment *appsv1.Deployment, targetEnvironment entities2.TargetEnvironment) *appsv1.Deployment {
+	aux := deployment
+	switch targetEnvironment {
+	case entities2.Production:
+		aux.Spec.Template.Spec.ImagePullSecrets = ProductionImagePullSecrets
+	case entities2.Staging:
+		aux.Spec.Template.Spec.ImagePullSecrets = StagingImagePullSecrets
+	case entities2.Development:
+		aux.Spec.Template.Spec.ImagePullSecrets = DevImagePullSecrets
 	}
-	log.Debug().Interface("created", created).Msg("new daemon set has been created")
-	return nil
-}
-func (lc *LaunchComponents) launchDaemonSetBeta1(daemonSet *v1beta1.DaemonSet) derrors.Error {
-	client := lc.Client.ExtensionsV1beta1().DaemonSets(daemonSet.Namespace)
-	log.Debug().Interface("daemonSet", daemonSet).Msg("unmarshalled")
-	created, err := client.Create(daemonSet)
-	if err != nil {
-		return derrors.AsError(err, "cannot create daemon set")
-	}
-	log.Debug().Interface("created", created).Msg("new daemon set has been created")
-	return nil
+	return aux
 }
 
-// LaunchPodSecurityPolicy creates a Kubernetes PodSecurityPolicy.
-func (lc *LaunchComponents) launchPodSecurityPolicy(policy *policyv1beta1.PodSecurityPolicy) derrors.Error {
-	client := lc.Client.PolicyV1beta1().PodSecurityPolicies()
-	log.Debug().Interface("policy", policy).Msg("unmarshalled")
-	created, err := client.Create(policy)
-	if err != nil {
-		return derrors.AsError(err, "cannot create pod security policy")
-	}
-	log.Debug().Interface("created", created).Msg("new pod security policy has been created")
-	return nil
-}
-
-// LaunchSecret creates a Kubernetes Secret.
-func (lc *LaunchComponents) launchSecret(secret *v1.Secret) derrors.Error {
-	client := lc.Client.CoreV1().Secrets(secret.Namespace)
-	log.Debug().Interface("secret", secret).Msg("unmarshalled")
-	created, err := client.Create(secret)
-	if err != nil {
-		return derrors.AsError(err, "cannot create secret")
-	}
-	log.Debug().Interface("created", created).Msg("new secret has been created")
-	return nil
-}
-
-// createNamespace creates a Kubernetes namespace.
-func (lc *LaunchComponents) createNamespace(name string) derrors.Error {
-	namespaceClient := lc.Client.CoreV1().Namespaces()
-	opts := metaV1.ListOptions{}
-	list, err := namespaceClient.List(opts)
-	if err != nil {
-		return derrors.AsError(err, "cannot obtain the namespace list")
-	}
-	found := false
-	for _, n := range list.Items {
-		log.Debug().Interface("n", n).Msg("A namespace")
-		if n.Name == name {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		toCreate := v1.Namespace{
-			ObjectMeta: metaV1.ObjectMeta{
-				Name: name,
-			},
-		}
-		created, err := namespaceClient.Create(&toCreate)
-		if err != nil {
-			return derrors.AsError(err, "cannot create namespace")
-		}
-		log.Debug().Interface("created", created).Msg("namespaces has been created")
-	} else {
-		log.Debug().Str("namespace", name).Msg("namespace already exists")
-	}
-	return nil
-}
-
-// LaunchPersistenceVolume creates a Kubernetes PersistenceVolume.
-func (lc *LaunchComponents) launchPersistentVolume(pv *v1.PersistentVolume) derrors.Error {
-	client := lc.Client.CoreV1().PersistentVolumes()
-
+// patchPersistenceVolume modifies the storage class
+func (lc *LaunchComponents) patchPersistentVolume(pv *v1.PersistentVolume) *v1.PersistentVolume {
 	if lc.PlatformType == grpc_installer_go.Platform_AZURE.String() {
 		log.Debug().Msg("Modifying storageClass")
+		patched := pv.DeepCopy()
 		sc := AzureStorageClass
-		pv.Spec.StorageClassName = sc
+		patched.Spec.StorageClassName = sc
+		pv = patched
 	}
-
-	log.Debug().Interface("pv", pv).Msg("unmarshalled")
-	created, err := client.Create(pv)
-	if err != nil {
-		return derrors.AsError(err, "cannot create persistent volume")
-	}
-	log.Debug().Interface("created", created).Msg("new persistent volume has been created")
-	return nil
+	return pv
 }
 
-// LaunchPersistenceVolumeClaim creates a Kubernetes PersistentVolumeClaim.
-func (lc *LaunchComponents) launchPersistentVolumeClaim(pvc *v1.PersistentVolumeClaim) derrors.Error {
-	client := lc.Client.CoreV1().PersistentVolumeClaims(pvc.Namespace)
-
+// patchPersistenceVolumeClaim modifies the storage class of a pvc
+func (lc *LaunchComponents) patchPersistentVolumeClaim(pvc *v1.PersistentVolumeClaim) *v1.PersistentVolumeClaim {
 	if lc.PlatformType == grpc_installer_go.Platform_AZURE.String() {
 		log.Debug().Msg("Modifying storageClass")
+		patched := pvc.DeepCopy()
 		sc := AzureStorageClass
-		pvc.Spec.StorageClassName = &sc
+		patched.Spec.StorageClassName = &sc
+		pvc = patched
 	}
 
-	log.Debug().Interface("pvc", pvc).Msg("unmarshalled")
-	created, err := client.Create(pvc)
-	if err != nil {
-		return derrors.AsError(err, "cannot create persistent volume claim")
-	}
-	log.Debug().Interface("created", created).Msg("new persistent volume claim has been created")
-	return nil
-}
-
-func (lc *LaunchComponents) launchStorageClass(sc *storageV1.StorageClass) derrors.Error {
-
-	client := lc.Client.StorageV1().StorageClasses()
-	log.Debug().Interface("storageclass", sc).Msg("unmarshalled")
-	created, err := client.Create(sc)
-	if err != nil {
-		return derrors.AsError(err, "cannot create storage class")
-	}
-	log.Debug().Interface("created", created).Msg("New storage class has been created")
-	return nil
-}
-
-func (lc *LaunchComponents) launchPodDisruptionBudget(pdb *policyv1beta1.PodDisruptionBudget) derrors.Error {
-	client := lc.Client.PolicyV1beta1().PodDisruptionBudgets(pdb.Namespace)
-	log.Debug().Interface("pdb", pdb).Msg("unmarshalled")
-	created, err := client.Create(pdb)
-	if err != nil {
-		return derrors.AsError(err, "cannot create pod disruption budget")
-	}
-	log.Debug().Interface("created", created).Msg("new pod disruption budget")
-	return nil
-}
-
-func (lc *LaunchComponents) launchStatefulSet(ss *appsv1.StatefulSet) derrors.Error {
-	client := lc.Client.AppsV1().StatefulSets(ss.Namespace)
-	log.Debug().Interface("ss", ss).Msg("unmarshalled")
-	created, err := client.Create(ss)
-	if err != nil {
-		return derrors.AsError(err, "cannot create stateful set")
-	}
-	log.Debug().Interface("created", created).Msg("new stateful set")
-	return nil
-}
-
-func (lc *LaunchComponents) launchIngress(ingress *v1beta1.Ingress) derrors.Error {
-	client := lc.Client.ExtensionsV1beta1().Ingresses(ingress.Namespace)
-	log.Debug().Interface("ingress", ingress).Msg("unmarshalled")
-	created, err := client.Create(ingress)
-	if err != nil {
-		return derrors.AsError(err, "cannot create ingress")
-	}
-	log.Debug().Interface("created", created).Msg("new ingress set")
-	return nil
+	return pvc
 }
 
 func (lc *LaunchComponents) String() string {

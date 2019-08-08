@@ -76,13 +76,11 @@ func (cmc *CreateManagementConfig) createConfigMap() derrors.Error {
 		},
 	}
 
-	client := cmc.Client.CoreV1().ConfigMaps(config.Namespace)
 	log.Debug().Interface("configMap", config).Msg("creating management config")
-	created, err := client.Create(config)
-	if err != nil {
-		return derrors.AsError(err, "cannot create configmap")
+	derr := cmc.Create(config)
+	if derr != nil {
+		return derr
 	}
-	log.Debug().Interface("created", created).Msg("new config map has been created")
 	return nil
 }
 
@@ -102,12 +100,10 @@ func (cmc *CreateManagementConfig) createAuthSecret() derrors.Error {
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	client := cmc.Client.CoreV1().Secrets(docker.Namespace)
-	created, err := client.Create(docker)
-	if err != nil {
-		return derrors.AsError(err, "cannot create authx secret")
+	derr := cmc.Create(docker)
+	if derr != nil {
+		return derrors.AsError(derr, "cannot create authx secret")
 	}
-	log.Debug().Interface("created", created).Msg("new secret has been created")
 	return nil
 }
 
@@ -117,7 +113,7 @@ func (cmc *CreateManagementConfig) Run(workflowID string) (*entities.CommandResu
 		return nil, connectErr
 	}
 
-	cErr := cmc.CreateNamespacesIfNotExist(TargetNamespace)
+	cErr := cmc.CreateNamespaceIfNotExists(TargetNamespace)
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}

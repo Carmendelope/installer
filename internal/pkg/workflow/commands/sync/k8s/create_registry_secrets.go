@@ -77,12 +77,10 @@ func (cmd* CreateRegistrySecrets) createEnvironmentSecret() derrors.Error{
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	client := cmd.Client.CoreV1().Secrets(envSecret.Namespace)
-	created, err := client.Create(envSecret)
-	if err != nil {
-		return derrors.AsError(err, "cannot create environment registry-credentials secret")
+	derr := cmd.Create(envSecret)
+	if derr != nil {
+		return derrors.AsError(derr, "cannot create environment registry-credentials secret")
 	}
-	log.Debug().Interface("created", created).Msg("new secret has been created")
 	return nil
 }
 
@@ -109,7 +107,7 @@ func (cmd *CreateRegistrySecrets) Run(workflowID string) (*entities.CommandResul
 		return nil, connectErr
 	}
 
-	cErr := cmd.CreateNamespacesIfNotExist("nalej")
+	cErr := cmd.CreateNamespaceIfNotExists("nalej")
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}

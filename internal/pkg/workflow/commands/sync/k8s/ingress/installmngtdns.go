@@ -71,7 +71,7 @@ func (imd *InstallMngtDNS) InstallLoadBalancer(workflowID string) (*entities.Com
 	if imd.UseStaticIp {
 		azureService.Spec.LoadBalancerIP = imd.StaticIpAddress
 	}
-	err := imd.CreateService(&azureService)
+	err := imd.Create(&azureService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating DNS service")
 		return entities.NewCommandResult(
@@ -82,7 +82,7 @@ func (imd *InstallMngtDNS) InstallLoadBalancer(workflowID string) (*entities.Com
 }
 
 func (imd *InstallMngtDNS) InstallMinikube(workflowID string) (*entities.CommandResult, derrors.Error) {
-	err := imd.CreateService(&MinikubeConsulService)
+	err := imd.Create(&MinikubeConsulService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating DNS service")
 		return entities.NewCommandResult(

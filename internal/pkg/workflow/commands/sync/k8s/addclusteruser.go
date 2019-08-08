@@ -14,7 +14,6 @@ import (
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
-	"github.com/rs/zerolog/log"
 	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 	"k8s.io/api/core/v1"
@@ -106,12 +105,11 @@ func (acu *AddClusterUser) storeClusterUserCredentials(email string, password st
 		Type: v1.SecretTypeBasicAuth,
 	}
 
-	client := acu.Client.CoreV1().Secrets(secret.Namespace)
-	created, err := client.Create(secret)
-	if err != nil {
-		return derrors.AsError(err, "cannot create secret")
+	derr := acu.Create(secret)
+	if derr != nil {
+		return derr
 	}
-	log.Debug().Interface("created", created).Msg("secret has been created")
+
 	return nil
 }
 
