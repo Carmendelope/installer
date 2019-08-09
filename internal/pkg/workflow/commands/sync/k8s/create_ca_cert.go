@@ -131,7 +131,6 @@ func (cc * CreateCACert) createCertSecret() derrors.Error{
 	cc.Connect()
 	derr := cc.Create(tlsSecret)
 	if derr != nil {
-		log.Error().Msg("Error creating secret")
 		return derr
 	}
 	return nil

@@ -13,7 +13,6 @@ import (
 
 	"k8s.io/api/core/v1"
 
-	"k8s.io/apimachinery/pkg/api/meta"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,10 +32,11 @@ type Kubernetes struct {
 	KubeConfigPath string		`json:"kubeConfigPath"`
 	Client	 *kubernetes.Clientset `json:"-"`
 
-	// Used to get the right REST resource from a GroupVersionKind
-	mapper	 meta.RESTMapper
+	// Discovery client for REST mapper to use, so we can figure out
+	// the right endpoints for reserves
+	discoveryClient *discovery.DiscoveryClient
 	// Dynamic client used to create all resources
-	dynClient      dynamic.Interface
+	dynClient dynamic.Interface
 }
 
 func (k *Kubernetes) Connect() derrors.Error {
@@ -55,16 +55,12 @@ func (k *Kubernetes) Connect() derrors.Error {
 
 	k.Client = clientset
 
-	// Create the REST mapper through a discovery client
+	// Create the discovery client
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		return derrors.NewInternalError("failed to create discovery client", err)
 	}
-	resources, err := restmapper.GetAPIGroupResources(discoveryClient)
-	if err != nil {
-		return derrors.NewInternalError("failed to get api group resources", err)
-	}
-	k.mapper = restmapper.NewDiscoveryRESTMapper(resources)
+	k.discoveryClient = discoveryClient
 
 	// Create the dynamic client that can be used to create any object
 	// by specifying what resource we're dealing with by using the REST mapper
@@ -161,7 +157,18 @@ func (k *Kubernetes) Create(obj interface{}) derrors.Error {
 		return derr
 	}
 
-	mapping, err := k.mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+	// Create the REST mapper through a discovery client
+	// We do this every time we create a resource, because if we created
+	// a custom resource definition in a previous step, we need to
+	// update the list of supported resources.
+	resources, err := restmapper.GetAPIGroupResources(k.discoveryClient)
+	if err != nil {
+		return derrors.NewInternalError("failed to get api group resources", err)
+	}
+	mapper := restmapper.NewDiscoveryRESTMapper(resources)
+
+	// Get the right REST endpoint through the mapper
+	mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 	if err != nil {
 		return derrors.NewInternalError("unable to get REST mapping for object", err).WithParams(unstructuredObj)
 	}
