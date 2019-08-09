@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 
@@ -19,12 +20,14 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"k8s.io/client-go/kubernetes/scheme"
-
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 
+	"k8s.io/client-go/kubernetes/scheme"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 const AzureStorageClass = "managed-premium"
@@ -141,21 +144,46 @@ func (lc *LaunchComponents) launchComponent(componentPath string, targetEnvironm
 		Str("targetEnvironment", entities2.TargetEnvironmentToString[targetEnvironment]).
 		Msg("launch component")
 
-	raw, err := ioutil.ReadFile(componentPath)
+	f, err := os.Open(componentPath)
 	if err != nil {
-		return derrors.AsError(err, "cannot read component file")
+		return derrors.NewPermissionDeniedError("cannot read component file", err)
 	}
-	log.Debug().Msg("parsing component")
+	defer f.Close()
+	log.Debug().Str("path", componentPath).Msg("parsing component")
 
-	decode := scheme.Codecs.UniversalDeserializer().Decode
+	// We use a YAML decoder to decode the resource straight into an
+	// unstructured object. This way, we can deal with resources that are
+	// not known to this client - like CustomResourceDefinitions
+	obj := runtime.Object(&unstructured.Unstructured{})
 
-	obj, _, err := decode([]byte(raw), nil, nil)
+	yamlDecoder := yaml.NewYAMLOrJSONDecoder(f, 1024)
+	err = yamlDecoder.Decode(obj)
 	if err != nil {
-		fmt.Printf("%#v", err)
+		return derrors.NewInvalidArgumentError("cannot parse component file", err)
+	}
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	log.Debug().Str("resource", gvk.String()).Msg("decoded resource")
+
+	// Now let's see if it's a resource we know and can type, so we can
+	// decide if we need to do some modifications. We ignore the error
+	// because that just means we don't have the specific implementation of
+	// the resource type and that's ok
+	clientScheme := scheme.Scheme
+	typed, _ := scheme.Scheme.New(gvk)
+	if typed != nil {
+		// Ah, we can convert this to something specific to deal with!
+		err := clientScheme.Convert(obj, typed, nil)
+		if err != nil {
+			return derrors.NewInternalError("cannot convert resource to specific type", err)
+		}
 	}
 
-	// For some times, we have a conversion step before we launch
-	switch o := obj.(type) {
+	// Implement specific resource modifications for known types here. We
+	// make sure to cast it to a generic object again so we can assign it
+	// to the same variable as we had for the unstructured object.
+	// obj -> typed -> o -> obj
+	// We can do this switch even if typed might be nil.
+	switch o := typed.(type) {
 	case *appsv1.Deployment:
 		obj = runtime.Object(lc.patchDeployment(o, targetEnvironment))
 	case *v1.PersistentVolume:

@@ -112,6 +112,10 @@ func (k *Kubernetes) ExistsNamespace(name string) (bool, derrors.Error) {
 
 func (k *Kubernetes) CreateNamespace(name string) derrors.Error {
 	toCreate := v1.Namespace{
+		TypeMeta: metaV1.TypeMeta{
+			Kind:       "Namespace",
+			APIVersion: "v1",
+		},
 		ObjectMeta: metaV1.ObjectMeta{
 			Name: name,
 		},
@@ -141,27 +145,6 @@ func (k *Kubernetes) CreateNamespaceIfNotExists(name string) derrors.Error {
 	return nil
 }
 
-func (k *Kubernetes) ExistsService(deploymentName string, namespace string) (bool, derrors.Error){
-	serviceClient := k.Client.CoreV1().Services(namespace)
-	opts := metaV1.GetOptions{}
-	service, err := serviceClient.Get(deploymentName, opts)
-	if err != nil{
-		return false, derrors.AsError(err, "cannot list service")
-	}
-	log.Debug().Str("service", service.Name).Msg("Service exists")
-	return true, nil
-}
-
-func (k *Kubernetes) ExistsConfigMap(name string, namespace string) (bool, derrors.Error){
-	serviceClient := k.Client.CoreV1().ConfigMaps(namespace)
-	opts := metaV1.GetOptions{}
-	service, err := serviceClient.Get(name, opts)
-	if err != nil{
-		return false, derrors.AsError(err, "cannot list config maps")
-	}
-	log.Debug().Str("service", service.Name).Msg("Config map exists")
-	return true, nil
-}
 
 func (k *Kubernetes) Create(obj interface{}) derrors.Error {
 	// Create unstructured object
