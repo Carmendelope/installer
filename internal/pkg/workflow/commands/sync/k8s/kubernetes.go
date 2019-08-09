@@ -189,10 +189,11 @@ func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 	}
 
 	var client dynamic.ResourceInterface
-	client = k.dynClient.Resource(mapping.Resource)
 	namespace := unstructuredObj.GetNamespace()
 	if namespace != "" {
 		client = k.dynClient.Resource(mapping.Resource).Namespace(namespace)
+	} else {
+		client = k.dynClient.Resource(mapping.Resource)
 	}
 
 	log.Debug().Interface("obj", unstructuredObj).Msg("creating resource")
