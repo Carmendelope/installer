@@ -142,9 +142,9 @@ func (k *Kubernetes) CreateNamespaceIfNotExists(name string) derrors.Error {
 }
 
 
-func (k *Kubernetes) Create(obj interface{}) derrors.Error {
+func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 	// Create unstructured object
-	unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj.(runtime.Object))
+	unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
 		return derrors.NewInvalidArgumentError("cannot convert object to unstructured", err).WithParams(obj)
 	}
@@ -155,6 +155,23 @@ func (k *Kubernetes) Create(obj interface{}) derrors.Error {
 	gvk, derr := getKind(obj)
 	if derr != nil {
 		return derr
+	}
+
+	// This is commented out because it's not tested. If we have list
+	// resources we want to install, this is likely what we'd need to
+	// add to support that.
+	if unstructuredObj.IsList() {
+		log.Debug().Str("resource", gvk.String()).Msg("creating each item in list resource")
+		list, err := unstructuredObj.ToList()
+		if err != nil {
+			return derrors.NewInternalError("cannot create unstructured list", err)
+		}
+		err = list.EachListItem(func (obj runtime.Object) error { return k.Create(obj).(error) })
+		if err != nil {
+			return err.(derrors.Error)
+		}
+		log.Debug().Str("resource", gvk.String()).Msg("created all items in list resource")
+		return nil
 	}
 
 	// Create the REST mapper through a discovery client
