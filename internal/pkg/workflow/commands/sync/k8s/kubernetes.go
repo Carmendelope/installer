@@ -208,8 +208,12 @@ func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 	return nil
 }
 
-func getKind(obj interface{}) (schema.GroupVersionKind, derrors.Error) {
-	kinds, _, err := scheme.Scheme.ObjectKinds(obj.(runtime.Object))
+// We're using this function instead of just looking at the apiVersion and
+// kind defined in the object so that we don't necessarily have to define
+// those in typed objects. For unstructured objects, ObjectKinds will look
+// at those anyway, and for typed objects we'll look at the object type.
+func getKind(obj runtime.Object) (schema.GroupVersionKind, derrors.Error) {
+	kinds, _, err := scheme.Scheme.ObjectKinds(obj)
 	if err != nil {
 		return schema.GroupVersionKind{}, derrors.NewInvalidArgumentError("invalid object received")
 	}
