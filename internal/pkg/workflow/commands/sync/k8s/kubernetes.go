@@ -157,9 +157,7 @@ func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 		return derr
 	}
 
-	// This is commented out because it's not tested. If we have list
-	// resources we want to install, this is likely what we'd need to
-	// add to support that.
+	// Items in list resources need to be sent to the server one by one
 	if unstructuredObj.IsList() {
 		log.Debug().Str("resource", gvk.String()).Msg("creating each item in list resource")
 		list, err := unstructuredObj.ToList()
