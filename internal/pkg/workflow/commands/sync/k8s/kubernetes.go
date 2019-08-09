@@ -164,9 +164,13 @@ func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 		if err != nil {
 			return derrors.NewInternalError("cannot create unstructured list", err)
 		}
-		err = list.EachListItem(func (obj runtime.Object) error { return k.Create(obj).(error) })
+		err = list.EachListItem(func (obj runtime.Object) error { return k.Create(obj) })
 		if err != nil {
-			return err.(derrors.Error)
+			derr, ok := err.(derrors.Error)
+			if ok {
+				return derr
+			}
+			return derrors.NewInternalError("failed to create list item resource", err)
 		}
 		log.Debug().Str("resource", gvk.String()).Msg("created all items in list resource")
 		return nil
