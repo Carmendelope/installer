@@ -5,8 +5,6 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
-	"io/ioutil"
-	"path/filepath"
 )
 
 /*
@@ -14,13 +12,7 @@ RUN_INTEGRATION_TEST=true
 IT_K8S_KUBECONFIG=/Users/gaizka/.kube/config
 */
 
-func createTempFilePath(name string) string{
-	dir, err := ioutil.TempDir("", "ztplanets")
-	gomega.Expect(err).Should(gomega.Succeed())
-	return filepath.Join(dir, name)
-}
-
-var _ = ginkgo.Describe("A Create Opaque Secret command", func(){
+var _ = ginkgo.Describe("A Create TLS Secret command", func(){
 
 	if ! utils.RunIntegrationTests() {
 		log.Warn().Msg("Integration tests are skipped")
@@ -36,7 +28,7 @@ var _ = ginkgo.Describe("A Create Opaque Secret command", func(){
 
 	ginkgo.It("should be able to create the secret", func(){
 		// Create secret in Kubernetes
-		cmd := NewCreateOpaqueSecret(itKubeConfigFile, "zt-planet", "planet", "AQAAAH", false, "")
+		cmd := NewCreateTLSSecret(itKubeConfigFile, "tls-secret", "cert", "AQAAAH", false, "")
 		result, err := cmd.Run("createZtPlanetFiles")
 		gomega.Expect(err).To(gomega.Succeed())
 		gomega.Expect(result.Success).Should(gomega.BeTrue())

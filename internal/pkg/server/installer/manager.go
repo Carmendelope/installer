@@ -89,7 +89,7 @@ func (m *Manager) launchInstall(installID string) {
 		m.Config.DNSClusterHost, m.Config.DNSClusterPort,
 		m.Config.Environment.Target,
 		true, registryCredentials,
-		*workflow.NewNetworkConfig(m.Config.ZTPlanetSecretPath), m.Config.AuthSecret, m.Config.CACertPath)
+		*workflow.NewNetworkConfig(m.Config.ZTPlanetSecretPath), m.Config.AuthSecret, m.Config.ClusterCertIssuerCACertPath)
 
 	status.Params = params
 	err := status.Params.LoadCredentials()

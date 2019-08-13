@@ -28,7 +28,8 @@ type Config struct {
 	Environment entities.Environment
 	// AuthSecret contains the shared authx secret.
 	AuthSecret string
-	CACertPath string
+	// ClusterCertIssuerCACertPath contains the path where the app cluster certificate issuer CA certificate can be found
+	ClusterCertIssuerCACertPath string
 }
 
 func NewConfiguration(
@@ -43,7 +44,7 @@ func NewConfiguration(
 	ztPlanetSecretPath string,
 	environment entities.Environment,
 	authxSecret string,
-	caCertPath string,
+	clusterCertIssuerCACertPath string,
 ) *Config {
 	return &Config{
 		Port:                  port,
@@ -57,7 +58,7 @@ func NewConfiguration(
 		ZTPlanetSecretPath:   ztPlanetSecretPath,
 		Environment: environment,
 		AuthSecret: authxSecret,
-		CACertPath: caCertPath,
+		ClusterCertIssuerCACertPath: clusterCertIssuerCACertPath,
 	}
 }
 
@@ -115,7 +116,7 @@ func (conf *Config) Validate() derrors.Error {
 		return derrors.NewInvalidArgumentError("Authorization secret must be set")
 	}
 
-	if conf.CACertPath == "" {
+	if conf.ClusterCertIssuerCACertPath == "" {
 		return derrors.NewInvalidArgumentError("caCertPath must be set")
 	}
 
@@ -134,7 +135,7 @@ func (conf *Config) Print() {
 		Str("port", conf.DNSClusterPort).Msg("DNS")
 	log.Info().Str("path", conf.ZTPlanetSecretPath).Msg("ZT Planet")
 	log.Info().Str("secret", strings.Repeat("*", len(conf.AuthSecret))).Msg("Authorization")
-	log.Info().Str("path", conf.CACertPath).Msg("CA cert path")
+	log.Info().Str("path", conf.ClusterCertIssuerCACertPath).Msg("Cluster Certificate Issuer CA certificate path")
 
 	conf.Environment.Print()
 
