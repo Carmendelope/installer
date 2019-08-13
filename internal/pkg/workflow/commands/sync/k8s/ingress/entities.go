@@ -15,6 +15,10 @@ import (
 )
 
 
+// tls_certificate contains the name of the client secret.
+// This secret is used to create the ssl tunnel,
+// the components in management cluster use it to talk with app-cluster-api-ingress in the application cluster and
+// the components in application cluster use it to talk with the cluster-api in the management cluster
 const tls_certificate = "tls-client-certificate"
 
 /*
