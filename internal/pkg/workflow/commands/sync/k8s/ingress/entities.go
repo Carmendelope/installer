@@ -234,7 +234,7 @@ var IngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"web.MANAGEMENT_HOST"},
-				SecretName: tls_certificate,
+				SecretName: tlsCertificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -270,7 +270,7 @@ var SignupAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"signup.MANAGEMENT_HOST"},
-				SecretName: tls_certificate,
+				SecretName: tlsCertificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -315,7 +315,7 @@ var LoginAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"login.MANAGEMENT_HOST"},
-				SecretName: tls_certificate,
+				SecretName: tlsCertificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -405,7 +405,7 @@ var ClusterAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"cluster.MANAGEMENT_HOST"},
-				SecretName: tls_certificate,
+				SecretName: tlsCertificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
