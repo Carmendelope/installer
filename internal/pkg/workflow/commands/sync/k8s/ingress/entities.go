@@ -14,6 +14,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+
+const tls_certificate = "tls-client-certificate"
+
 /*
 kind: Service
 apiVersion: v1
@@ -227,7 +230,7 @@ var IngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"web.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -263,7 +266,7 @@ var SignupAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"signup.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -308,7 +311,7 @@ var LoginAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"login.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -353,7 +356,7 @@ var PublicAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"api.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -398,7 +401,7 @@ var ClusterAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"cluster.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -441,7 +444,7 @@ var DeviceLoginAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"device-login.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -487,7 +490,7 @@ var EICAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"eic-api.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -531,7 +534,7 @@ var DeviceAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"device.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -577,7 +580,7 @@ var AppClusterAPIIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"appcluster.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
@@ -621,7 +624,7 @@ var DeviceControllerIngressRules = v1beta1.Ingress{
 		TLS: []v1beta1.IngressTLS{
 			v1beta1.IngressTLS{
 				Hosts:      []string{"device-controller.MANAGEMENT_HOST"},
-				SecretName: "ingress-tls",
+				SecretName: tls_certificate,
 			},
 		},
 		Rules: []v1beta1.IngressRule{
