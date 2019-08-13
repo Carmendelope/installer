@@ -308,7 +308,7 @@
   version = "v3.0.0"
 
 [[projects]]
-  digest = "1:fb63fb6cb9cf7310c6bd83998cc430ee5af1ec52612572ecb42c7aad74bd3598"
+  digest = "1:6cf4e9f5ea82d48699eed7a836781037621227fb8551d7571b82aabde422fec1"
   name = "github.com/rs/zerolog"
   packages = [
     ".",
@@ -317,8 +317,8 @@
     "log",
   ]
   pruneopts = "UT"
-  revision = "acf3980132bfcdc48638724e6e3d9e5749b85999"
-  version = "v1.14.3"
+  revision = "b806a5ecbe5347ad9ef05121fea8f4acc65fa5fc"
+  version = "v1.15.0"
 
 [[projects]]
   digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
@@ -394,7 +394,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:afce8593ac5918df05a46499b04b8c4e46a91e99566055e4a8ba829a8f389a09"
+  digest = "1:6c97b4baa9cf774b42192e23632afc7dee7b899d4a3dc98057d24708ce1f60ac"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -402,7 +402,7 @@
     "windows",
   ]
   pruneopts = "UT"
-  revision = "51ab0e2deafac1f46c46ad59cf0921be2f180c3d"
+  revision = "fde4db37ae7ad8191b03d30d27f258b5291ae4e3"
 
 [[projects]]
   digest = "1:28deae5fe892797ff37a317b5bcda96d11d1c90dadd89f1337651df3bc4c586e"
@@ -730,7 +730,6 @@
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
     "k8s.io/api/rbac/v1",
-    "k8s.io/apimachinery/pkg/api/meta",
     "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
