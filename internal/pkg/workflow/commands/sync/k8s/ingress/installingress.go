@@ -161,63 +161,63 @@ func (ii *InstallIngress) triggerInstall(installType grpc_installer_go.Platform)
 // Trigger the installation of the ingress infrastructure for the application clusters.
 // TODO NP-946 Refactor the trigger method to extract common entities.
 func (ii *InstallIngress) triggerAppClusterInstall(installType grpc_installer_go.Platform) derrors.Error {
-	err := ii.CreateNamespacesIfNotExist("nalej")
+	err := ii.CreateNamespaceIfNotExists("nalej")
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating nalej namespace")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress service account")
-	err = ii.CreateServiceAccount(&IngressServiceAccount)
+	err = ii.Create(&IngressServiceAccount)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress service account")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress cluster role")
-	err = ii.CreateClusterRole(&IngressClusterRole)
+	err = ii.Create(&IngressClusterRole)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress cluster role")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress role")
-	err = ii.CreateRole(&IngressRole)
+	err = ii.Create(&IngressRole)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress role")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress role binding")
-	err = ii.CreateRoleBinding(&IngressRoleBinding)
+	err = ii.Create(&IngressRoleBinding)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress role binding")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress cluster role binding")
-	err = ii.CreateClusterRoleBinding(&IngressClusterRoleBinding)
+	err = ii.Create(&IngressClusterRoleBinding)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress cluster role binding")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress load balancer configmap")
-	err = ii.CreateConfigMap(&IngressLoadBalancerConfigMap)
+	err = ii.Create(&IngressLoadBalancerConfigMap)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress load balancer configmap")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress TCP configmap")
-	err = ii.CreateConfigMap(&IngressTCPServiceConfigMap)
+	err = ii.Create(&IngressTCPServiceConfigMap)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress TCP configmap")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress UDP configmap")
-	err = ii.CreateConfigMap(&IngressUDPServiceConfigMap)
+	err = ii.Create(&IngressUDPServiceConfigMap)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress UDP configmap")
 		return err
@@ -226,12 +226,12 @@ func (ii *InstallIngress) triggerAppClusterInstall(installType grpc_installer_go
 	log.Debug().Msg("Installing ingress service")
 	ingressBackend, defaultBackend := ii.getService(installType)
 
-	err = ii.CreateService(ingressBackend)
+	err = ii.Create(ingressBackend)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress service")
 		return err
 	}
-	err = ii.CreateService(defaultBackend)
+	err = ii.Create(defaultBackend)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress default service")
 		return err
@@ -239,7 +239,7 @@ func (ii *InstallIngress) triggerAppClusterInstall(installType grpc_installer_go
 
 	log.Debug().Msg("Installing app cluster ingress rules")
 	for _, ingressToInstall := range ii.getAppClusterIngressRules() {
-		err = ii.CreateIngress(ingressToInstall)
+		err = ii.Create(ingressToInstall)
 		if err != nil {
 			log.Error().Str("trace", err.DebugReport()).Str("name", ingressToInstall.Name).Msg("error creating ingress rules")
 			return err
@@ -265,13 +265,13 @@ func (ii *InstallIngress) triggerAppClusterInstall(installType grpc_installer_go
 	}
 
 	log.Debug().Msg("installing ingress deployment")
-	err = ii.CreateDeployment(&ingressDeployment)
+	err = ii.Create(&ingressDeployment)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress deployment")
 		return err
 	}
 	log.Debug().Msg("installing default ingress backend")
-	err = ii.CreateDeployment(&IngressDefaultBackend)
+	err = ii.Create(&IngressDefaultBackend)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress backend")
 		return err
@@ -283,63 +283,63 @@ func (ii *InstallIngress) triggerAppClusterInstall(installType grpc_installer_go
 // Trigger the installation of the ingress infrastructure for the management cluster.
 func (ii *InstallIngress) triggerManagementInstall(installType grpc_installer_go.Platform) derrors.Error {
 
-	err := ii.CreateNamespacesIfNotExist("nalej")
+	err := ii.CreateNamespaceIfNotExists("nalej")
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating nalej namespace")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress service account")
-	err = ii.CreateServiceAccount(&IngressServiceAccount)
+	err = ii.Create(&IngressServiceAccount)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress service account")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress cluster role")
-	err = ii.CreateClusterRole(&IngressClusterRole)
+	err = ii.Create(&IngressClusterRole)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress cluster role")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress role")
-	err = ii.CreateRole(&IngressRole)
+	err = ii.Create(&IngressRole)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress role")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress role binding")
-	err = ii.CreateRoleBinding(&IngressRoleBinding)
+	err = ii.Create(&IngressRoleBinding)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress role binding")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress cluster role binding")
-	err = ii.CreateClusterRoleBinding(&IngressClusterRoleBinding)
+	err = ii.Create(&IngressClusterRoleBinding)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress cluster role binding")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress load balancer configmap")
-	err = ii.CreateConfigMap(&IngressLoadBalancerConfigMap)
+	err = ii.Create(&IngressLoadBalancerConfigMap)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress load balancer configmap")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress TCP configmap")
-	err = ii.CreateConfigMap(&IngressTCPServiceConfigMap)
+	err = ii.Create(&IngressTCPServiceConfigMap)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress TCP configmap")
 		return err
 	}
 
 	log.Debug().Msg("Installing ingress UDP configmap")
-	err = ii.CreateConfigMap(&IngressUDPServiceConfigMap)
+	err = ii.Create(&IngressUDPServiceConfigMap)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress UDP configmap")
 		return err
@@ -348,19 +348,19 @@ func (ii *InstallIngress) triggerManagementInstall(installType grpc_installer_go
 	log.Debug().Msg("Installing ingress service")
 	ingressBackend, defaultBackend := ii.getService(installType)
 
-	err = ii.CreateService(ingressBackend)
+	err = ii.Create(ingressBackend)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress service")
 		return err
 	}
-	err = ii.CreateService(defaultBackend)
+	err = ii.Create(defaultBackend)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress default service")
 		return err
 	}
 	log.Debug().Msg("Installing ingress rules")
 	for _, ingressToInstall := range ii.getIngressRules() {
-		err = ii.CreateIngress(ingressToInstall)
+		err = ii.Create(ingressToInstall)
 		if err != nil {
 			log.Error().Str("trace", err.DebugReport()).Str("name", ingressToInstall.Name).Msg("error creating ingress rules")
 			return err
@@ -386,13 +386,13 @@ func (ii *InstallIngress) triggerManagementInstall(installType grpc_installer_go
 	}
 
 	log.Debug().Msg("installing ingress deployment")
-	err = ii.CreateDeployment(&ingressDeployment)
+	err = ii.Create(&ingressDeployment)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress deployment")
 		return err
 	}
 	log.Debug().Msg("installing default ingress backend")
-	err = ii.CreateDeployment(&IngressDefaultBackend)
+	err = ii.Create(&IngressDefaultBackend)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress backend")
 		return err

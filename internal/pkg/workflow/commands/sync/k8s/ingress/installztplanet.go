@@ -63,7 +63,7 @@ func (imd *InstallZtPlanetLB) Run (workflowID string) (*entities.CommandResult, 
 
 func (imd *InstallZtPlanetLB) InstallLoadBalancer (workflowID string) (*entities.CommandResult, derrors.Error) {
 	azureService := AzureZTPlanetService
-	err := imd.CreateService(&azureService)
+	err := imd.Create(&azureService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ZT Planet LB service")
 		return entities.NewCommandResult(
@@ -74,7 +74,7 @@ func (imd *InstallZtPlanetLB) InstallLoadBalancer (workflowID string) (*entities
 }
 
 func (imd *InstallZtPlanetLB) InstallMinikube (workflowID string) (*entities.CommandResult, derrors.Error) {
-	err := imd.CreateService(&MinikubeZTPlanetService)
+	err := imd.Create(&MinikubeZTPlanetService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating  ZT Planet LB service")
 		return entities.NewCommandResult(

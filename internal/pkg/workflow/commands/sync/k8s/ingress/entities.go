@@ -857,11 +857,10 @@ var IngressServiceAccount = v1.ServiceAccount{
 var IngressClusterRole = rbacv1.ClusterRole{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "ClusterRole",
-		APIVersion: "v1",
+		APIVersion: "rbac.authorization.k8s.io/v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
 		Name:      "system:nginx-ingress",
-		Namespace: "kube-system",
 		Labels: map[string]string{
 			"cluster":                         "management",
 			"kubernetes.io/bootstrapping":     "rbac-defaults",
@@ -905,7 +904,7 @@ var IngressClusterRole = rbacv1.ClusterRole{
 var IngressRole = rbacv1.Role{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Role",
-		APIVersion: "rbac.authorization.k8s.io/v1beta1",
+		APIVersion: "rbac.authorization.k8s.io/v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
 		Name:      "system::nginx-ingress-role",
@@ -943,7 +942,7 @@ var IngressRole = rbacv1.Role{
 var IngressRoleBinding = rbacv1.RoleBinding{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "RoleBinding",
-		APIVersion: "rbac.authorization.k8s.io/v1beta1",
+		APIVersion: "rbac.authorization.k8s.io/v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
 		Name:      "system::nginx-ingress-role-binding",
@@ -971,11 +970,10 @@ var IngressRoleBinding = rbacv1.RoleBinding{
 var IngressClusterRoleBinding = rbacv1.ClusterRoleBinding{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "ClusterRoleBinding",
-		APIVersion: "rbac.authorization.k8s.io/v1beta1",
+		APIVersion: "rbac.authorization.k8s.io/v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
 		Name:      "system:nginx-ingress",
-		Namespace: "kube-system",
 		Labels: map[string]string{
 			"cluster":                         "management",
 			"kubernetes.io/bootstrapping":     "rbac-defaults",

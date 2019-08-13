@@ -129,13 +129,10 @@ func (cc * CreateCACert) createCertSecret() derrors.Error{
 		Type:       v1.SecretTypeTLS,
 	}
 	cc.Connect()
-	client := cc.Client.CoreV1().Secrets(tlsSecret.Namespace)
-	created, err := client.Create(tlsSecret)
-	if err != nil {
-		log.Error().Msg("Error creating secret")
-		return derrors.NewGenericError("Error creating secret", err)
+	derr := cc.Create(tlsSecret)
+	if derr != nil {
+		return derr
 	}
-	log.Debug().Interface("created", created).Msg("secret has been created")
 	return nil
 }
 
@@ -145,7 +142,7 @@ func (cc *CreateCACert) Run(workflowID string) (*entities.CommandResult, derrors
 		return nil, connectErr
 	}
 
-	cErr := cc.CreateNamespacesIfNotExist(TargetNamespace)
+	cErr := cc.CreateNamespaceIfNotExists(TargetNamespace)
 	if cErr != nil {
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}

@@ -81,13 +81,10 @@ func (cmd *CreateOpaqueSecret) createKubernetesSecrets() derrors.Error{
 		Type: v1.SecretTypeOpaque,
 	}
 	cmd.Connect()
-	client := cmd.Client.CoreV1().Secrets(OpaqueSecret.Namespace)
-	created, err := client.Create(OpaqueSecret)
-	if err != nil {
-		log.Error().Msg("Error creating secret")
-		return derrors.NewGenericError("Error creating secret", err)
+	derr := cmd.Create(OpaqueSecret)
+	if derr != nil {
+		return derr
 	}
-	log.Debug().Interface("created", created).Msg("secret has been created")
 
 	return nil
 }
