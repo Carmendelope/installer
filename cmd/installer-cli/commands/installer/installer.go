@@ -85,7 +85,7 @@ func NewInstallerFromCLI(
 		environment.Target,
 		appClusterInstall,
 		registryCredentials,
-	*workflow.EmptyNetworkConfig, "")
+	*workflow.EmptyNetworkConfig, "", "")
 	return NewInstaller(*params), nil
 }
 

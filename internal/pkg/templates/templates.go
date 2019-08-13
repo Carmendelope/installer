@@ -58,7 +58,7 @@ const InstallManagementCluster = `
 				"secret_name":"tls-ca-certficate",
 				"secret_key":"cacert",
 				"load_from_path":true,
-				"secret_value_from_path":"{{$.Credentials.CACertSecretPath}}"
+				"secret_value_from_path":"{{$.CACertPath}}"
 			},
 		{{else}}
 			{"type":"sync", "name":"createManagementConfig",

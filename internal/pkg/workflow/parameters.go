@@ -45,6 +45,8 @@ type Parameters struct {
 	NetworkConfig NetworkConfig `json:"network_config"`
 	// AuthSecret contains the secret required to validate JWT tokens.
 	AuthSecret string `json:"auth_secret"`
+	// CACertPath contains the path for the CA Cert
+	CACertPath string `json:"ca_cert_path"`
 }
 
 var EmptyNetworkConfig = &NetworkConfig{}
@@ -155,6 +157,7 @@ func NewParameters(
 	registryCredentials []RegistryCredentials,
 	networkConfig NetworkConfig,
 	authxSecret string,
+	caCertPath string,
 	) *Parameters {
 	return &Parameters{
 		request,
@@ -168,6 +171,7 @@ func NewParameters(
 		registryCredentials,
 		networkConfig,
 		authxSecret,
+		caCertPath,
 	}
 }
 
