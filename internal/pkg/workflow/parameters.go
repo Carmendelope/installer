@@ -45,8 +45,10 @@ type Parameters struct {
 	NetworkConfig NetworkConfig `json:"network_config"`
 	// AuthSecret contains the secret required to validate JWT tokens.
 	AuthSecret string `json:"auth_secret"`
-	// CACertPath contains the path for the CA Cert
-	CACertPath string `json:"ca_cert_path"`
+	// PrivateKeyValue contains the value of the private key of a TLS secret
+	PrivateKeyValue string `json:"private_key_value"`
+	// CertValue contains the value of the certificate of a TLS secret
+	CertValue string `json:"cert_value"`
 }
 
 var EmptyNetworkConfig = &NetworkConfig{}
