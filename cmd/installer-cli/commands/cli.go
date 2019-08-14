@@ -40,6 +40,8 @@ var binaryPath string
 var confPath string
 var tempPath string
 
+var clusterCertIssuerCACertPath string
+
 var environment entities.Environment
 
 var cliCmd = &cobra.Command{
@@ -96,6 +98,8 @@ func init() {
 		"Directory with the configuration files")
 	cliCmd.PersistentFlags().StringVar(&tempPath, "tempPath", "./temp/",
 		"Directory to store temporal files")
+	cliCmd.PersistentFlags().StringVar(&clusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "/nalej/cacert/",
+		"Directory with the CA")
 
 	addRegistryOptions(cliCmd)
 
