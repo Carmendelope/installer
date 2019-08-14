@@ -68,7 +68,6 @@ func (cmd *CreateTLSSecret) createKubernetesSecrets() derrors.Error{
 			"tls.crt": certRawValue,
 		},
 	}
-	cmd.Connect()
 	derr := cmd.Create(TLSSecret)
 	if derr != nil {
 		return derr
