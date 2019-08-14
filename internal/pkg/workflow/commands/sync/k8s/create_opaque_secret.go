@@ -80,7 +80,6 @@ func (cmd *CreateOpaqueSecret) createKubernetesSecrets() derrors.Error{
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	cmd.Connect()
 	derr := cmd.Create(OpaqueSecret)
 	if derr != nil {
 		return derr
