@@ -7,11 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-/*
-RUN_INTEGRATION_TEST=true
-IT_K8S_KUBECONFIG=/Users/gaizka/.kube/config
-*/
-
 var _ = ginkgo.Describe("A Create TLS Secret command", func(){
 
 	if ! utils.RunIntegrationTests() {
@@ -28,14 +23,17 @@ var _ = ginkgo.Describe("A Create TLS Secret command", func(){
 
 	ginkgo.It("should be able to create the secret", func(){
 		// Create secret in Kubernetes
-		cmd := NewCreateTLSSecret(itKubeConfigFile, "tls-secret", "cert", "AQAAAH", false, "")
-		result, err := cmd.Run("createZtPlanetFiles")
-		gomega.Expect(err).To(gomega.Succeed())
+		cmd := NewCreateTLSSecret(itKubeConfigFile, "tls-secret", "", "AQAAAH")
+		result, err := cmd.Run("createTLSSecret")
+		gomega.Expect(err).To(gomega.BeNil())
 		gomega.Expect(result.Success).Should(gomega.BeTrue())
 		// Retrieve secret from kubernetes
 		retrieved := testChecker.GetSecret(cmd.SecretName, "nalej")
-		gomega.Expect(len(retrieved.Data)).Should(gomega.Equal(1))
+		gomega.Expect(len(retrieved.Data)).Should(gomega.Equal(2))
 		secretContent := retrieved.Data
-		gomega.Expect(secretContent[cmd.SecretKey]).Should(gomega.Equal(cmd.SecretValue))
+		expectedPrivateKeyValue := string(secretContent["tls.key"])
+		expectedCertValue := string(secretContent["tls.crt"])
+		gomega.Expect(expectedPrivateKeyValue).Should(gomega.Equal(cmd.PrivateKeyValue))
+		gomega.Expect(expectedCertValue).Should(gomega.Equal(cmd.CertValue))
 	})
 })

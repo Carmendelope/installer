@@ -6,7 +6,6 @@ import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
-	"io/ioutil"
 	"k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/rs/zerolog/log"
@@ -16,28 +15,23 @@ import (
 type CreateTLSSecret struct {
 	Kubernetes
 	SecretName string `json:"secret_name"`
-	SecretKey    string `json:"secret_key"`
-	SecretValue string `json:"secret_value"`
-	LoadFromPath bool `json:"load_from_path"`
-	SecretValueFromPath string `json:"secret_value_from_path"`
+	PrivateKeyValue string `json:"private_key_value"`
+	CertValue string `json:"cert_value"`
 }
 
 func NewCreateTLSSecret(
 	kubeConfigPath string,
 	secretName string,
-	secretKey string,
-	secretValue string,
-	loadFromPath bool,
-	secretValueFromPath string) *CreateTLSSecret {
+	privateKeyValue string,
+	certValue string) *CreateTLSSecret {
 	return &CreateTLSSecret{
 		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateTLSSecret),
 			KubeConfigPath: kubeConfigPath,
 		},
 		SecretName: secretName,
-		SecretValue: secretValue,
-		LoadFromPath: loadFromPath,
-		SecretValueFromPath: secretValueFromPath,
+		PrivateKeyValue: privateKeyValue,
+		CertValue: certValue,
 	}
 }
 
@@ -53,31 +47,26 @@ func NewCreateTLSSecretFromJSON (raw []byte) (*entities.Command, derrors.Error) 
 
 func (cmd *CreateTLSSecret) createKubernetesSecrets() derrors.Error{
 
-	var secretRawContent []byte
-	if cmd.LoadFromPath {
-		c, err := ioutil.ReadFile(cmd.SecretValueFromPath)
-		if err != nil{
-			return derrors.AsError(err, "cannot load secret content")
-		}
-		secretRawContent = c
-	}else{
-		secretRawContent = []byte(cmd.SecretValue)
-	}
+	var privateKeyRawContent []byte
+	var certRawValue []byte
+	privateKeyRawContent = []byte(cmd.PrivateKeyValue)
+	certRawValue = []byte(cmd.CertValue)
 
 	TLSSecret := &v1.Secret {
 		TypeMeta: metaV1.TypeMeta{
 			Kind:       "Secret",
 			APIVersion: "v1",
 		},
+		Type: v1.SecretTypeTLS,
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:         cmd.SecretName,
 			GenerateName: "",
 			Namespace:    "nalej",
 		},
 		Data: map[string][]byte{
-			cmd.SecretKey: secretRawContent,
+			"tls.key": privateKeyRawContent,
+			"tls.crt": certRawValue,
 		},
-		Type: v1.SecretTypeTLS,
 	}
 	cmd.Connect()
 	derr := cmd.Create(TLSSecret)
