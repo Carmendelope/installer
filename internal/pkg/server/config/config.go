@@ -28,8 +28,10 @@ type Config struct {
 	Environment entities.Environment
 	// AuthSecret contains the shared authx secret.
 	AuthSecret string
-	// ClusterCertIssuerCACertPath contains the path where the app cluster certificate issuer CA certificate can be found
-	ClusterCertIssuerCACertPath string
+	// ClusterCertIssuerPrivateKeyValue contains the value of the private key in a TLS secret
+	ClusterCertIssuerPrivateKeyValue string
+	// ClusterCertIssuerCertValue contains the value of the cert of the private key in a TLS secret
+	ClusterCertIssuerCertValue string
 }
 
 func NewConfiguration(
@@ -44,7 +46,8 @@ func NewConfiguration(
 	ztPlanetSecretPath string,
 	environment entities.Environment,
 	authxSecret string,
-	clusterCertIssuerCACertPath string,
+	clusterCertIssuerPrivateKeyValue string,
+	clusterCertIssuerCertValue string,
 ) *Config {
 	return &Config{
 		Port:                  port,
@@ -58,7 +61,8 @@ func NewConfiguration(
 		ZTPlanetSecretPath:   ztPlanetSecretPath,
 		Environment: environment,
 		AuthSecret: authxSecret,
-		ClusterCertIssuerCACertPath: clusterCertIssuerCACertPath,
+		ClusterCertIssuerPrivateKeyValue: clusterCertIssuerPrivateKeyValue,
+		ClusterCertIssuerCertValue: clusterCertIssuerCertValue,
 	}
 }
 
@@ -116,10 +120,6 @@ func (conf *Config) Validate() derrors.Error {
 		return derrors.NewInvalidArgumentError("Authorization secret must be set")
 	}
 
-	if conf.ClusterCertIssuerCACertPath == "" {
-		return derrors.NewInvalidArgumentError("caCertPath must be set")
-	}
-
 	return nil
 }
 
@@ -135,7 +135,8 @@ func (conf *Config) Print() {
 		Str("port", conf.DNSClusterPort).Msg("DNS")
 	log.Info().Str("path", conf.ZTPlanetSecretPath).Msg("ZT Planet")
 	log.Info().Str("secret", strings.Repeat("*", len(conf.AuthSecret))).Msg("Authorization")
-	log.Info().Str("path", conf.ClusterCertIssuerCACertPath).Msg("Cluster Certificate Issuer CA certificate path")
+	log.Info().Str("path", conf.ClusterCertIssuerPrivateKeyValue).Msg("Cluster Certificate Issuer TLS Secret Private Key Value")
+	log.Info().Str("path", conf.ClusterCertIssuerCertValue).Msg("Cluster Certificate Issuer TLS Secret Cert Value")
 
 	conf.Environment.Print()
 

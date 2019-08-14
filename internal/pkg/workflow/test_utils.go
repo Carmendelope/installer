@@ -70,6 +70,6 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		appClusterInstall,
 		[]RegistryCredentials{*registryCredentials},
 		*networkParameters,
-		"authxSecret", "caCertPath",
+		"authxSecret", "privateKeyValue", "certValue",
 	)
 }

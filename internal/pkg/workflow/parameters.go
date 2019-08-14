@@ -159,7 +159,8 @@ func NewParameters(
 	registryCredentials []RegistryCredentials,
 	networkConfig NetworkConfig,
 	authxSecret string,
-	caCertPath string,
+	privateKeyValue string,
+	certValue string,
 	) *Parameters {
 	return &Parameters{
 		request,
@@ -173,7 +174,8 @@ func NewParameters(
 		registryCredentials,
 		networkConfig,
 		authxSecret,
-		caCertPath,
+		privateKeyValue,
+		certValue,
 	}
 }
 
