@@ -35,6 +35,8 @@ spec:
           mountPath: "/tmp/nalej"
         - name: zt-planet-secret-volume
           mountPath: "/nalej/zt"
+        - name: tls-ca-certificate-volume
+          mountPath: "/nalej/cacert"
         env:
         - name: MNGT_PUBLIC_HOST
           valueFrom:
@@ -151,6 +153,7 @@ spec:
           - "--targetEnvironment=$(TARGET_ENVIRONMENT)"
           - "--ztPlanetSecretPath=/nalej/zt/planet"
           - "--authSecret=$(AUTH_SECRET)"
+          - "--clusterCertIssuerCACertPath=/nalej/cacert/"
         securityContext:
           runAsUser: 2000
       volumes:
@@ -162,5 +165,8 @@ spec:
       - name: zt-planet-secret-volume
         secret:
           secretName: zt-planet
+      - name: tls-ca-certificate-volume
+        secret:
+          secretName: tls-ca-certificate
       imagePullSecrets:
       - name: nalej-registry
