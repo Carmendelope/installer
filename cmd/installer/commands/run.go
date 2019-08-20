@@ -91,7 +91,7 @@ func init() {
 		"Authorization secret")
 	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerPrivateKeyValue, "clusterCertIssuerPrivateKeyValue", "",
 		"Cluster Cert Issuer Private Key Value")
-	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCertValue, "ClusterCertIssuerCertValue", "",
+	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCertValue, "clusterCertIssuerCertValue", "",
 		"Cluster Cert Issuer Cert Value")
 
 	rootCmd.AddCommand(runCmd)
