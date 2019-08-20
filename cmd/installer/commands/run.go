@@ -93,6 +93,8 @@ func init() {
 		"Cluster Cert Issuer Private Key Value")
 	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCertValue, "clusterCertIssuerCertValue", "",
 		"Cluster Cert Issuer Cert Value")
+	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "",
+		"Cluster Cert Issuer Cert Value")
 
 	rootCmd.AddCommand(runCmd)
 }

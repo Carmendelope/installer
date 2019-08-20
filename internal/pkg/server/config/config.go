@@ -32,6 +32,8 @@ type Config struct {
 	ClusterCertIssuerPrivateKeyValue string
 	// ClusterCertIssuerCertValue contains the value of the cert of the private key in a TLS secret
 	ClusterCertIssuerCertValue string
+	// clusterCertIssuerCACertPath contains the path where tls-ca-certificate will be mounted
+	ClusterCertIssuerCACertPath string
 }
 
 func NewConfiguration(
@@ -48,6 +50,7 @@ func NewConfiguration(
 	authxSecret string,
 	clusterCertIssuerPrivateKeyValue string,
 	clusterCertIssuerCertValue string,
+	clusterCertIssuerCACertPath string,
 ) *Config {
 	return &Config{
 		Port:                  port,
@@ -63,6 +66,7 @@ func NewConfiguration(
 		AuthSecret: authxSecret,
 		ClusterCertIssuerPrivateKeyValue: clusterCertIssuerPrivateKeyValue,
 		ClusterCertIssuerCertValue: clusterCertIssuerCertValue,
+		ClusterCertIssuerCACertPath: clusterCertIssuerCACertPath,
 	}
 }
 
@@ -114,6 +118,10 @@ func (conf *Config) Validate() derrors.Error {
 
 	if conf.ZTPlanetSecretPath == "" {
 		return derrors.NewInvalidArgumentError("ztPlanetSecretPath must be set")
+	}
+
+	if conf.ClusterCertIssuerCACertPath == "" {
+		return derrors.NewInvalidArgumentError("clusterCertIssuerCACertPath must be set")
 	}
 
 	if conf.AuthSecret == "" {
