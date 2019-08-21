@@ -28,8 +28,6 @@ type Config struct {
 	Environment entities.Environment
 	// AuthSecret contains the shared authx secret.
 	AuthSecret string
-	// ClusterCertIssuerPrivateKeyValue contains the value of the private key in a TLS secret
-	ClusterCertIssuerPrivateKeyValue string
 	// ClusterCertIssuerCertValue contains the value of the cert of the private key in a TLS secret
 	ClusterCertIssuerCertValue string
 	// clusterCertIssuerCACertPath contains the path where tls-ca-certificate will be mounted
@@ -48,7 +46,6 @@ func NewConfiguration(
 	ztPlanetSecretPath string,
 	environment entities.Environment,
 	authxSecret string,
-	clusterCertIssuerPrivateKeyValue string,
 	clusterCertIssuerCertValue string,
 	clusterCertIssuerCACertPath string,
 ) *Config {
@@ -64,7 +61,6 @@ func NewConfiguration(
 		ZTPlanetSecretPath:   ztPlanetSecretPath,
 		Environment: environment,
 		AuthSecret: authxSecret,
-		ClusterCertIssuerPrivateKeyValue: clusterCertIssuerPrivateKeyValue,
 		ClusterCertIssuerCertValue: clusterCertIssuerCertValue,
 		ClusterCertIssuerCACertPath: clusterCertIssuerCACertPath,
 	}
@@ -128,6 +124,10 @@ func (conf *Config) Validate() derrors.Error {
 		return derrors.NewInvalidArgumentError("Authorization secret must be set")
 	}
 
+	if conf.ClusterCertIssuerCertValue == "" {
+		return derrors.NewInvalidArgumentError("clusterCertIssuerCertValue must be set")
+	}
+
 	return nil
 }
 
@@ -143,8 +143,8 @@ func (conf *Config) Print() {
 		Str("port", conf.DNSClusterPort).Msg("DNS")
 	log.Info().Str("path", conf.ZTPlanetSecretPath).Msg("ZT Planet")
 	log.Info().Str("secret", strings.Repeat("*", len(conf.AuthSecret))).Msg("Authorization")
-	log.Info().Str("path", conf.ClusterCertIssuerPrivateKeyValue).Msg("Cluster Certificate Issuer TLS Secret Private Key Value")
-	log.Info().Str("path", conf.ClusterCertIssuerCertValue).Msg("Cluster Certificate Issuer TLS Secret Cert Value")
+	log.Info().Str("path", conf.ClusterCertIssuerCACertPath).Msg("cluster cert issuer ca cert path")
+	log.Info().Str("secret", strings.Repeat("*", len(conf.ClusterCertIssuerCertValue))).Msg("client cert value")
 
 	conf.Environment.Print()
 

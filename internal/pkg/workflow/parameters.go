@@ -45,10 +45,8 @@ type Parameters struct {
 	NetworkConfig NetworkConfig `json:"network_config"`
 	// AuthSecret contains the secret required to validate JWT tokens.
 	AuthSecret string `json:"auth_secret"`
-	// PrivateKeyValue contains the value of the private key of a TLS secret
-	PrivateKeyValue string `json:"private_key_value"`
-	// CertValue contains the value of the certificate of a TLS secret
-	CertValue string `json:"cert_value"`
+	// ClientCertValue contains the value of the certificate of a TLS secret
+	ClientCertValue string `json:"cert_value"`
 }
 
 var EmptyNetworkConfig = &NetworkConfig{}
@@ -159,8 +157,7 @@ func NewParameters(
 	registryCredentials []RegistryCredentials,
 	networkConfig NetworkConfig,
 	authxSecret string,
-	privateKeyValue string,
-	certValue string,
+	clientCertValue string,
 	) *Parameters {
 	return &Parameters{
 		request,
@@ -174,8 +171,7 @@ func NewParameters(
 		registryCredentials,
 		networkConfig,
 		authxSecret,
-		privateKeyValue,
-		certValue,
+		clientCertValue,
 	}
 }
 
@@ -205,6 +201,10 @@ func (p *Parameters) Validate() derrors.Error {
 
 	if len(p.Registries) == 0{
 		return derrors.NewInvalidArgumentError("at least one registry must be specified")
+	}
+
+	if p.ClientCertValue == "" {
+		return derrors.NewInvalidArgumentError("client cert value can't be empty")
 	}
 
 	return nil
