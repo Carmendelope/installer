@@ -141,7 +141,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: authx-secret
-              key: secret
+              key: tls.crt
         args:
           - "run"
           - "--debug"
@@ -156,8 +156,8 @@ spec:
           - "--ztPlanetSecretPath=/nalej/zt/planet"
           - "--authSecret=$(AUTH_SECRET)"
           - "--clusterCertIssuerCACertPath=/nalej/cacert/"
-          - "--clusterCertIssuerPrivateKeyValue=/nalej/cacert/tls.key"
-          - "--clusterCertIssuerCertValue=/nalej/cacert/tls.crt"
+          - "--clusterCertIssuerPrivateKeyValue=/nalej/clientcert/tls.key"
+          - "--clusterCertIssuerCertValue=/nalej/clientcert/tls.crt"
         securityContext:
           runAsUser: 2000
       volumes:

@@ -47,15 +47,15 @@ const InstallManagementCluster = `
 				"load_from_path":true,
 				"secret_value_from_path":"{{$.NetworkConfig.ZTPlanetSecretPath}}"
 			},
-			{"type":"sync", "name":"createOpaqueSecret",
+			{"type":"sync", "name":"createTLSSecret",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"secret_name":"authx-secret",
-				"secret_key":"secret",
-				"secret_value":"{{$.AuthSecret}}"
+				"private_key_value":"{{$.PrivateKeyValue}}",
+				"cert_value":"{{$.AuthSecret}}"
 			},
 			{"type":"sync", "name":"createTLSSecret",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-				"secret_name":"tls-ca-certficate",
+				"secret_name":"tls-ca-certificate",
 				"private_key_value":"{{$.PrivateKeyValue}}",
 				"cert_value":"{{$.CertValue}}"
 			},
