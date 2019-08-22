@@ -33,7 +33,7 @@ var _ = ginkgo.Describe("A Create TLS Secret command", func(){
 		secretContent := retrieved.Data
 		expectedPrivateKeyValue := string(secretContent["tls.key"])
 		expectedCertValue := string(secretContent["tls.crt"])
-		gomega.Expect(expectedPrivateKeyValue).Should(gomega.Equal(cmd.PrivateKeyValue))
-		gomega.Expect(expectedCertValue).Should(gomega.Equal(cmd.CertValue))
+		gomega.Expect(expectedPrivateKeyValue).Should(gomega.Equal(cmd.PrivateKeyPath))
+		gomega.Expect(expectedCertValue).Should(gomega.Equal(cmd.CertPath))
 	})
 })

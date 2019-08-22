@@ -203,10 +203,6 @@ func (p *Parameters) Validate() derrors.Error {
 		return derrors.NewInvalidArgumentError("at least one registry must be specified")
 	}
 
-	if p.CACertValue == "" {
-		return derrors.NewInvalidArgumentError("client cert value can't be empty")
-	}
-
 	return nil
 }
 

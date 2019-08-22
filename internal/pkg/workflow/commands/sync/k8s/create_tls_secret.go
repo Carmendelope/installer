@@ -6,6 +6,7 @@ import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
+	"io/ioutil"
 	"k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/rs/zerolog/log"
@@ -14,24 +15,24 @@ import (
 
 type CreateTLSSecret struct {
 	Kubernetes
-	SecretName string `json:"secret_name"`
-	PrivateKeyValue string `json:"private_key_value"`
-	CertValue string `json:"cert_value"`
+	SecretName     string `json:"secret_name"`
+	PrivateKeyPath string `json:"private_key_path"`
+	CertPath       string `json:"cert_path"`
 }
 
 func NewCreateTLSSecret(
 	kubeConfigPath string,
 	secretName string,
-	privateKeyValue string,
-	certValue string) *CreateTLSSecret {
+	privateKeyPath string,
+	certPath string) *CreateTLSSecret {
 	return &CreateTLSSecret{
 		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateTLSSecret),
 			KubeConfigPath: kubeConfigPath,
 		},
-		SecretName: secretName,
-		PrivateKeyValue: privateKeyValue,
-		CertValue: certValue,
+		SecretName:     secretName,
+		PrivateKeyPath: privateKeyPath,
+		CertPath:       certPath,
 	}
 }
 
@@ -48,9 +49,19 @@ func NewCreateTLSSecretFromJSON (raw []byte) (*entities.Command, derrors.Error) 
 func (cmd *CreateTLSSecret) createKubernetesSecrets() derrors.Error{
 
 	var privateKeyRawContent []byte
-	var certRawValue []byte
-	privateKeyRawContent = []byte(cmd.PrivateKeyValue)
-	certRawValue = []byte(cmd.CertValue)
+	var certRawContent []byte
+
+	pkc, err := ioutil.ReadFile(cmd.PrivateKeyPath)
+	if err != nil{
+		return derrors.AsError(err, "cannot load private key content")
+	}
+	privateKeyRawContent = pkc
+
+	cc, err := ioutil.ReadFile(cmd.CertPath)
+	if err != nil{
+		return derrors.AsError(err, "cannot load cert content")
+	}
+	privateKeyRawContent = cc
 
 	TLSSecret := &v1.Secret {
 		TypeMeta: metaV1.TypeMeta{
@@ -65,7 +76,7 @@ func (cmd *CreateTLSSecret) createKubernetesSecrets() derrors.Error{
 		},
 		Data: map[string][]byte{
 			"tls.key": privateKeyRawContent,
-			"tls.crt": certRawValue,
+			"tls.crt": certRawContent,
 		},
 	}
 	derr := cmd.Create(TLSSecret)
