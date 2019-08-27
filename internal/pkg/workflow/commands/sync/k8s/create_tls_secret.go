@@ -51,11 +51,15 @@ func (cmd *CreateTLSSecret) createKubernetesSecrets() derrors.Error{
 	var privateKeyRawContent []byte
 	var certRawContent []byte
 
-	pkc, err := ioutil.ReadFile(cmd.PrivateKeyPath)
-	if err != nil{
-		return derrors.AsError(err, "cannot load private key content")
+	if cmd.PrivateKeyPath != "" {
+		pkc, err := ioutil.ReadFile(cmd.PrivateKeyPath)
+		if err != nil{
+			return derrors.AsError(err, "cannot load private key content")
+		}
+		privateKeyRawContent = pkc
+	} else {
+		privateKeyRawContent = make([]byte,0)
 	}
-	privateKeyRawContent = pkc
 
 	cc, err := ioutil.ReadFile(cmd.CertPath)
 	if err != nil{

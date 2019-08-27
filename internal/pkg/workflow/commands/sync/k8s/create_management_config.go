@@ -96,10 +96,9 @@ func (cmc *CreateManagementConfig) createAuthSecret() derrors.Error {
 			Labels:    map[string]string{"cluster": "management", "component": "authx"},
 		},
 		Data: map[string][]byte{
-			"tls.crt": []byte(uuid.NewV4().String()),
-			"tls.key": []byte(""),
+			"secret": []byte(uuid.NewV4().String()),
 		},
-		Type: v1.SecretTypeTLS,
+		Type: v1.SecretTypeOpaque,
 	}
 	derr := cmc.Create(docker)
 	if derr != nil {

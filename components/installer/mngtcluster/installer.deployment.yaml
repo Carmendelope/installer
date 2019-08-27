@@ -141,7 +141,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: authx-secret
-              key: tls.crt
+              key: secret
         args:
           - "run"
           - "--debug"
