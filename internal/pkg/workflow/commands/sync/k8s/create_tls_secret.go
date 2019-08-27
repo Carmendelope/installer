@@ -97,6 +97,7 @@ func (cmd *CreateTLSSecret) Run (workflowID string) (*entities.CommandResult, de
 
 	dErr := cmd.createKubernetesSecrets()
 	if dErr != nil{
+		log.Error().Str("trace", dErr.DebugReport()).Msg("cannot create kubernetes secrets")
 		return nil, dErr
 	}
 

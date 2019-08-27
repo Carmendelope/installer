@@ -88,6 +88,7 @@ func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult,
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}
 
+	log.Debug().Str("creating namespace", "nalej").Msg("creating namespace nalej")
 	config := &v1.ConfigMap{
 		TypeMeta: v12.TypeMeta{
 			Kind:       "ConfigMap",
