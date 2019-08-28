@@ -89,7 +89,6 @@ func init() {
 		"Path of the ZeroTier Planet secret file")
 	runCmd.PersistentFlags().StringVar(&config.AuthSecret, "authSecret", "",
 		"Authorization secret")
-	// runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCertValue, "clusterCertIssuerCertValue", "", "Cluster Cert Issuer Cert Value")
 	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "", "Cluster Cert Issuer Cert Value")
 
 	rootCmd.AddCommand(runCmd)
