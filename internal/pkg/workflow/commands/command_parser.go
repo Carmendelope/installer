@@ -113,6 +113,8 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return ingress.NewInstallExtDNSFromJSON(raw)
 	case entities.CreateCACert:
 		return k8s.NewCreateCACertFromJSON(raw)
+	case entities.CreateTLSSecret:
+		return k8s.NewCreateTLSSecretFromJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}

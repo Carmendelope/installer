@@ -27,7 +27,7 @@ var _ = ginkgo.Describe("A create CA certificate command", func() {
 		ginkgo.Fail("missing environment variables")
 	}
 
-	ginkgo.FIt("should be able to create the CA certificate", func() {
+	ginkgo.It("should be able to create the CA certificate", func() {
 		cc := NewCreateCACert(
 			itKubeConfigFile, "nalej39.nalej.tech")
 		result, err := cc.Run("createCACert")

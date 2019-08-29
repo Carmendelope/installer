@@ -98,8 +98,8 @@ func init() {
 		"Directory with the configuration files")
 	cliCmd.PersistentFlags().StringVar(&tempPath, "tempPath", "./temp/",
 		"Directory to store temporal files")
-	cliCmd.PersistentFlags().StringVar(&clusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "/nalej/cacert/",
-		"Directory with the CA")
+	cliCmd.PersistentFlags().StringVar(&clusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "",
+		"Directory with the CA certificate")
 
 	addRegistryOptions(cliCmd)
 
@@ -179,8 +179,8 @@ func GetPaths() (*workflow.Paths, derrors.Error) {
 
 func ValidateInstallParameters() derrors.Error {
 	if installKubernetes {
-		if username == "" || privateKeyPath == "" {
-			return derrors.NewInvalidArgumentError("username and privateKeyPath expected on kubernetes install mode")
+		if username == "" || clusterCertIssuerCACertPath == "" {
+			return derrors.NewInvalidArgumentError("username and clusterCertIssuerCACertPath expected on kubernetes install mode")
 		}
 		if nodes == "" {
 			return derrors.NewInvalidArgumentError("nodes expected on kubernetes install mode")
@@ -193,7 +193,7 @@ func ValidateInstallParameters() derrors.Error {
 	log.Info().Bool("set", installKubernetes).Msg("Install Kubernetes")
 	if installKubernetes {
 		log.Info().Str("value", username).Msg("Username")
-		log.Info().Str("path", privateKeyPath).Msg("Private Key")
+		log.Info().Str("path", clusterCertIssuerCACertPath).Msg("CA Cert path expected")
 	}
 	log.Info().Str("path", kubeConfigPath).Msg("KubeConfig")
 	return nil

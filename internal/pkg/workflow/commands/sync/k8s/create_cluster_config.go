@@ -7,6 +7,7 @@ package k8s
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"strings"
 
 	"github.com/nalej/derrors"
@@ -65,24 +66,29 @@ func NewCreateClusterConfigFromJSON(raw []byte) (*entities.Command, derrors.Erro
 func (ccc *CreateClusterConfig) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 	connectErr := ccc.Connect()
 	if connectErr != nil {
+		log.Error().Str("connection error", connectErr.DebugReport()).Str("connection error", connectErr.DebugReport())
 		return nil, connectErr
 	}
 
 	mgntIPs, rErr := ccc.ResolveIP(ccc.ManagementPublicHost)
 	if rErr != nil {
+		log.Error().Str("resolve ip error mngt", rErr.DebugReport()).Str("resolve ip error mngt", rErr.DebugReport())
 		return nil, rErr
 	}
 
 	dnsIPs, rErr := ccc.ResolveIP(ccc.DNSPublicHost)
 	if rErr != nil {
+		log.Error().Str("resolve ip error dns", rErr.DebugReport()).Str("resolve ip error dns", rErr.DebugReport())
 		return nil, rErr
 	}
 
 	cErr := ccc.CreateNamespaceIfNotExists("nalej")
 	if cErr != nil {
+		log.Error().Str("namespace creation error", cErr.DebugReport()).Str("namespace creation error", cErr.DebugReport())
 		return entities.NewCommandResult(false, "cannot create namespace", cErr), nil
 	}
 
+	log.Debug().Str("creating namespace", "nalej").Msg("creating namespace nalej")
 	config := &v1.ConfigMap{
 		TypeMeta: v12.TypeMeta{
 			Kind:       "ConfigMap",
