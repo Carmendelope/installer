@@ -65,7 +65,7 @@ func (cmd *CreateTLSSecret) createKubernetesSecrets() derrors.Error{
 	if err != nil{
 		return derrors.AsError(err, "cannot load cert content")
 	}
-	privateKeyRawContent = cc
+	certRawContent = cc
 
 	TLSSecret := &v1.Secret {
 		TypeMeta: metaV1.TypeMeta{
