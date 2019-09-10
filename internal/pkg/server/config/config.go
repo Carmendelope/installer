@@ -28,7 +28,7 @@ type Config struct {
 	Environment entities.Environment
 	// AuthSecret contains the shared authx secret.
 	AuthSecret string
-	// clusterCertIssuerCACertPath contains the path where tls-ca-certificate will be mounted
+	// clusterCertIssuerCACertPath contains the path where ca-certificate will be mounted
 	ClusterCertIssuerCACertPath string
 }
 

@@ -54,11 +54,12 @@ const InstallManagementCluster = `
 				"load_from_path":false,
 				"secret_value":"{{$.AuthSecret}}"
 			},
-			{"type":"sync", "name":"createTLSSecret",
+			{"type":"sync", "name":"createOpaqueSecret",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-				"secret_name":"tls-ca-certificate",
-				"private_key_path":"",
-				"cert_path":"{{$.CACertPath}}"
+				"secret_name":"ca-certificate",
+				"secret_key":"ca.crt",
+				"load_from_path":true,
+				"secret_value_from_path":"{{$.CACertPath}}"
 			},
 		{{else}}
 			{"type":"sync", "name":"createManagementConfig",
