@@ -399,6 +399,9 @@ var ClusterAPIIngressRules = v1beta1.Ingress{
 			"kubernetes.io/ingress.class":                  "nginx",
 			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
+			"nginx.ingress.kubernetes.io/auth-tls-secret": "nalej/ca-certificate",
+			"nginx.ingress.kubernetes.io/auth-tls-verify-depth": "1",
 		},
 	},
 	Spec: v1beta1.IngressSpec{
