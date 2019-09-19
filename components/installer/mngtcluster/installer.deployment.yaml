@@ -155,7 +155,7 @@ spec:
           - "--targetEnvironment=$(TARGET_ENVIRONMENT)"
           - "--ztPlanetSecretPath=/nalej/zt/planet"
           - "--authSecret=$(AUTH_SECRET)"
-          - "--clusterCertIssuerCACertPath=/nalej/cacert/tls.crt"
+          - "--clusterCertIssuerCACertPath=/nalej/cacert/"
         securityContext:
           runAsUser: 2000
       volumes:
