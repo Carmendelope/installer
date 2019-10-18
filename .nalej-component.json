@@ -1,7 +1,11 @@
 {
   "language": "golang",
+  "version": "v0.4.0",
   "application_list": [
     "installer installer-cli"
+  ],
+  "image_list": [
+    "installer"
   ],
   "tools": [
     "azure",
