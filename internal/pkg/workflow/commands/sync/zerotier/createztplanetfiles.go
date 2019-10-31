@@ -21,6 +21,7 @@ import (
 	"strings"
 )
 
+// Deprecated: CreateZTPlanetFiles should not be used as the platform will remove ZT support.
 type CreateZTPlanetFiles struct {
 	k8s.Kubernetes
 	ZtIdToolBinaryPath string `json:"ztIdToolBinaryPath"`
@@ -31,6 +32,7 @@ type CreateZTPlanetFiles struct {
 	PlanetPath string `json:"planetPath"`
 }
 
+// Deprecated: NewCreateZTPlanetFiles should not be used as the platform will remove ZT support.
 func NewCreateZTPlanetFiles (
 	kubeConfigPath string,
 	ztIdToolBinaryPath string,

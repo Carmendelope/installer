@@ -24,7 +24,6 @@ type Config struct {
 	ManagementClusterPort  string
 	DNSClusterHost         string
 	DNSClusterPort         string
-	ZTPlanetSecretPath    string
 	Environment entities.Environment
 	// AuthSecret contains the shared authx secret.
 	AuthSecret string
@@ -55,7 +54,6 @@ func NewConfiguration(
 		ManagementClusterPort: managementClusterPort,
 		DNSClusterHost:        dnsClusterHost,
 		DNSClusterPort:        dnsClusterPort,
-		ZTPlanetSecretPath:   ztPlanetSecretPath,
 		Environment: environment,
 		AuthSecret: authxSecret,
 		ClusterCertIssuerCACertPath: clusterCertIssuerCACertPath,
@@ -107,15 +105,9 @@ func (conf *Config) Validate() derrors.Error {
 	if conf.DNSClusterPort == "" {
 		return derrors.NewInvalidArgumentError("dnsClusterPort must be set")
 	}
-
-	if conf.ZTPlanetSecretPath == "" {
-		return derrors.NewInvalidArgumentError("ztPlanetSecretPath must be set")
-	}
-
 	if conf.ClusterCertIssuerCACertPath == "" {
 		return derrors.NewInvalidArgumentError("clusterCertIssuerCACertPath must be set")
 	}
-
 	if conf.AuthSecret == "" {
 		return derrors.NewInvalidArgumentError("Authorization secret must be set")
 	}
@@ -133,7 +125,6 @@ func (conf *Config) Print() {
 		Str("port", conf.ManagementClusterPort).Msg("Management cluster")
 	log.Info().Str("host", conf.DNSClusterHost).
 		Str("port", conf.DNSClusterPort).Msg("DNS")
-	log.Info().Str("path", conf.ZTPlanetSecretPath).Msg("ZT Planet")
 	log.Info().Str("secret", strings.Repeat("*", len(conf.AuthSecret))).Msg("Authorization")
 	log.Info().Str("path", conf.ClusterCertIssuerCACertPath).Msg("cluster cert issuer ca cert path")
 

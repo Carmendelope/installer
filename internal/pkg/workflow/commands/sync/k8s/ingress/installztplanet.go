@@ -16,11 +16,13 @@ import (
 	"strings"
 )
 
+// Deprecated: InstallZtPlanetLB should not be used as the platform will remove ZT support.
 type InstallZtPlanetLB struct {
 	k8s.Kubernetes
 	PlatformType    string `json:"platform_type"`
 }
 
+// Deprecated: NewInstallZtPlanetLB should not be used as the platform will remove ZT support.
 func NewInstallZtPlanetLB (kubeConfigPath string, platformType string) *InstallZtPlanetLB {
 	return &InstallZtPlanetLB{
 		Kubernetes: k8s.Kubernetes{

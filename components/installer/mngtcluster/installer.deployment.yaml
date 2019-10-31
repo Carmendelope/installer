@@ -33,8 +33,6 @@ spec:
           readOnly: true
         - name: temp-dir
           mountPath: "/tmp/nalej"
-        - name: zt-planet-secret-volume
-          mountPath: "/nalej/zt"
         - name: ca-certificate-volume
           mountPath: "/nalej/cacert"
         - name: tls-client-certificate-volume
@@ -153,7 +151,6 @@ spec:
           - "--binaryPath=/nalej/bin/"
           - "--tempPath=/tmp/nalej/"
           - "--targetEnvironment=$(TARGET_ENVIRONMENT)"
-          - "--ztPlanetSecretPath=/nalej/zt/planet"
           - "--authSecret=$(AUTH_SECRET)"
           - "--clusterCertIssuerCACertPath=/nalej/cacert/ca.crt"
         securityContext:
@@ -164,9 +161,6 @@ spec:
           name: installer-config
       - name: temp-dir
         emptyDir: {}
-      - name: zt-planet-secret-volume
-        secret:
-          secretName: zt-planet
       - name: ca-certificate-volume
         secret:
           secretName: ca-certificate

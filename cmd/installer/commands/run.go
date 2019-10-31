@@ -85,8 +85,6 @@ func init() {
 
 	addRegistryOptions(runCmd)
 
-	runCmd.PersistentFlags().StringVar(&config.ZTPlanetSecretPath, "ztPlanetSecretPath", "",
-		"Path of the ZeroTier Planet secret file")
 	runCmd.PersistentFlags().StringVar(&config.AuthSecret, "authSecret", "",
 		"Authorization secret")
 	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "", "Cluster Cert Issuer Cert Value")
