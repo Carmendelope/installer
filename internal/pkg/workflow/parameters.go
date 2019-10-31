@@ -51,11 +51,13 @@ type Parameters struct {
 
 var EmptyNetworkConfig = &NetworkConfig{}
 
+// Deprecated: This will be removed as ZT will be removed
 type NetworkConfig struct {
 	// ZT Planet Secret
 	ZTPlanetSecretPath string `json:"zt_planet_secret_path"`
 }
 
+// Deprecated: This will be removed as ZT will be removed.
 func NewNetworkConfig (ztPlanetSecretPath string) *NetworkConfig {
 	return &NetworkConfig{
 		ZTPlanetSecretPath: ztPlanetSecretPath,
