@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package workflow
@@ -74,7 +87,7 @@ const parallelMaxParallelismWorkflow = `
 func getWorkflow(name string, template string) *Workflow {
 	p := NewParser()
 	workflow, err := p.ParseWorkflow(name, template, name, EmptyParameters)
-	ginkgo.It("must be returned", func(){
+	ginkgo.It("must be returned", func() {
 		gomega.Expect(err).To(gomega.BeNil())
 		gomega.Expect(workflow).ToNot(gomega.BeNil())
 	})
@@ -82,7 +95,7 @@ func getWorkflow(name string, template string) *Workflow {
 }
 
 func expectSuccess(result *WorkflowResult) {
-	ginkgo.It("must finish", func(){
+	ginkgo.It("must finish", func() {
 		gomega.Expect(result.Called).To(gomega.BeTrue())
 		gomega.Expect(result.Error).To(gomega.BeNil())
 	})
@@ -92,7 +105,7 @@ var _ = ginkgo.Describe("Executor", func() {
 
 	const maxWait = 5
 
-	ginkgo.Context("with basic workflow", func(){
+	ginkgo.Context("with basic workflow", func() {
 		w := getWorkflow("TestBasicWorkflow", basicWorkflow)
 		wr := &WorkflowResult{}
 		exec := NewWorkflowExecutor(w, wr.Callback)
@@ -104,7 +117,7 @@ var _ = ginkgo.Describe("Executor", func() {
 		expectSuccess(wr)
 	})
 
-	ginkgo.Context("with a parallel construct", func(){
+	ginkgo.Context("with a parallel construct", func() {
 		w := getWorkflow("TestBasicParallel", basicParallelWorkflow)
 		wr := &WorkflowResult{}
 
@@ -117,7 +130,7 @@ var _ = ginkgo.Describe("Executor", func() {
 		expectSuccess(wr)
 	})
 
-	ginkgo.Context("with a fail command", func(){
+	ginkgo.Context("with a fail command", func() {
 		w := getWorkflow("TestFailParallel", failParallelWorkflow)
 		wr := &WorkflowResult{}
 
@@ -127,13 +140,13 @@ var _ = ginkgo.Describe("Executor", func() {
 		for i := 0; i < maxWait && !wr.Finished(); i++ {
 			time.Sleep(time.Second * 1)
 		}
-		ginkgo.It("must fail", func(){
+		ginkgo.It("must fail", func() {
 			gomega.Expect(wr.Called).To(gomega.BeTrue())
 			gomega.Expect(wr.Error).ToNot(gomega.BeNil())
 		})
 	})
 
-	ginkgo.Context("with a max parallelism spec", func(){
+	ginkgo.Context("with a max parallelism spec", func() {
 		w := getWorkflow("TestMaxParallel", parallelMaxParallelismWorkflow)
 		wr := &WorkflowResult{}
 

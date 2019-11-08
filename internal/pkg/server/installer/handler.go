@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package installer
@@ -17,11 +30,11 @@ type Handler struct {
 	Manager Manager
 }
 
-func NewHandler(manager Manager) *Handler{
+func NewHandler(manager Manager) *Handler {
 	return &Handler{manager}
 }
 
-func (h * Handler) ValidInstallRequest(installRequest *grpc_installer_go.InstallRequest) derrors.Error {
+func (h *Handler) ValidInstallRequest(installRequest *grpc_installer_go.InstallRequest) derrors.Error {
 	if installRequest.InstallId == "" {
 		return derrors.NewInvalidArgumentError("expecting InstallId")
 	}
@@ -57,21 +70,21 @@ func (h * Handler) ValidInstallRequest(installRequest *grpc_installer_go.Install
 		}
 		authFound = true
 	}
-	if ! authFound {
+	if !authFound {
 		return derrors.NewInvalidArgumentError("expecting KubeConfigRaw or Username, PrivateKey and Nodes")
 	}
 
 	return nil
 }
 
-func (h * Handler) ValidInstallID(installID *grpc_installer_go.InstallId) derrors.Error {
+func (h *Handler) ValidInstallID(installID *grpc_installer_go.InstallId) derrors.Error {
 	if installID.InstallId == "" {
 		return derrors.NewInvalidArgumentError("expecting InstallId")
 	}
 	return nil
 }
 
-func (h * Handler) ValidRemoveInstallRequest(removeRequest *grpc_installer_go.RemoveInstallRequest) derrors.Error {
+func (h *Handler) ValidRemoveInstallRequest(removeRequest *grpc_installer_go.RemoveInstallRequest) derrors.Error {
 	if removeRequest.InstallId == "" {
 		return derrors.NewInvalidArgumentError("expecting InstallId")
 	}
@@ -117,6 +130,3 @@ func (h *Handler) RemoveInstall(ctx context.Context, removeRequest *grpc_install
 	}
 	return &grpc_common_go.Success{}, nil
 }
-
-
-

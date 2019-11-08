@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 // Launch a simple test to deploy some components in Kubernetes
@@ -9,8 +22,7 @@
 /*
 RUN_INTEGRATION_TEST=true
 IT_K8S_KUBECONFIG=/Users/daniel/.kube/config
- */
-
+*/
 
 package k8s
 
@@ -59,11 +71,11 @@ func createDeployment(basePath string, namespace string, index int) {
 	log.Debug().Str("file", outputPath).Msg("deployment has been created")
 }
 
-var _ = ginkgo.Describe("A launch command", func(){
+var _ = ginkgo.Describe("A launch command", func() {
 
 	const numDeployments = 2
 
-	if ! utils.RunIntegrationTests() {
+	if !utils.RunIntegrationTests() {
 		log.Warn().Msg("Integration tests are skipped")
 		return
 	}
@@ -74,22 +86,22 @@ var _ = ginkgo.Describe("A launch command", func(){
 
 	var componentsDir string
 
-	ginkgo.BeforeSuite(func(){
+	ginkgo.BeforeSuite(func() {
 		cd, err := ioutil.TempDir("", "launchIT")
 		gomega.Expect(err).To(gomega.Succeed())
 		componentsDir = cd
 
-		for i:= 0; i< numDeployments; i++{
+		for i := 0; i < numDeployments; i++ {
 			createDeployment(componentsDir, itAuxNamespace, i)
 		}
 	})
 
-	ginkgo.It("should create the deployments on kubernetes", func(){
-	    lc := NewLaunchComponents(itKubeConfigFile, []string{itAuxNamespace}, componentsDir, "MINIKUBE")
-	    result, err := lc.Run("testLaunchComponents")
-	    gomega.Expect(err).To(gomega.Succeed())
-	    gomega.Expect(result).ShouldNot(gomega.BeNil())
-	    gomega.Expect(result.Success).Should(gomega.BeTrue())
+	ginkgo.It("should create the deployments on kubernetes", func() {
+		lc := NewLaunchComponents(itKubeConfigFile, []string{itAuxNamespace}, componentsDir, "MINIKUBE")
+		result, err := lc.Run("testLaunchComponents")
+		gomega.Expect(err).To(gomega.Succeed())
+		gomega.Expect(result).ShouldNot(gomega.BeNil())
+		gomega.Expect(result.Success).Should(gomega.BeTrue())
 	})
 
 })

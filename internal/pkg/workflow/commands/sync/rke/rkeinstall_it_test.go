@@ -1,20 +1,33 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
- // RKE Install test
- // Prerequirements:
- // 1. Download a target VM
- //    $ vagrant init debian/stretch64
- //	1.1. Modify the Vagrantfile adding
- // config.vm.network "private_network", type: "dhcp"
- // 2. Launch the machine and obtain the private key
- //    $ vagrant up
- //    $ vagrant ssh-config
- // 3. Setup required software
- //    $ sudo apt-get install curl
- //    $ curl https://releases.rancher.com/install-docker/17.03.sh | sh
- //    $ sudo usermod -aG docker vagrant
+// RKE Install test
+// Prerequirements:
+// 1. Download a target VM
+//    $ vagrant init debian/stretch64
+//	1.1. Modify the Vagrantfile adding
+// config.vm.network "private_network", type: "dhcp"
+// 2. Launch the machine and obtain the private key
+//    $ vagrant up
+//    $ vagrant ssh-config
+// 3. Setup required software
+//    $ sudo apt-get install curl
+//    $ curl https://releases.rancher.com/install-docker/17.03.sh | sh
+//    $ sudo usermod -aG docker vagrant
 
 /*
 RUN_INTEGRATION_TEST=true
@@ -55,23 +68,23 @@ func (hh *HandlerHelper) logCallback(id string, logEntry string) {
 	log.Debug().Str("id", id).Str("logEntry", logEntry).Msg("logCallback()")
 }
 
-var _ = ginkgo.Describe("RKE Install", func(){
+var _ = ginkgo.Describe("RKE Install", func() {
 	if !utils.RunIntegrationTests() {
 		return
 	}
 
 	var (
 		privateKeyPath = os.Getenv("IT_RKE_PRIVATE_KEY")
-		rkeBinaryPath = os.Getenv("IT_RKE_BINARY")
-		targetNodes = os.Getenv("IT_RKE_TARGET_NODES")
+		rkeBinaryPath  = os.Getenv("IT_RKE_BINARY")
+		targetNodes    = os.Getenv("IT_RKE_TARGET_NODES")
 	)
 
 	if privateKeyPath == "" || rkeBinaryPath == "" || targetNodes == "" {
 		ginkgo.Fail("missing environment variables")
 	}
 
-	ginkgo.It("should be able to install a Kubernetes cluster", func(){
-	    nodes := strings.Split(targetNodes, ",")
+	ginkgo.It("should be able to install a Kubernetes cluster", func() {
+		nodes := strings.Split(targetNodes, ",")
 		cmd := NewRKEInstall(
 			rkeBinaryPath,
 			*NewClusterConfig(

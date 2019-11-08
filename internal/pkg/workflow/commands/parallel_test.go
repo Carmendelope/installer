@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 // Parallel command tests
@@ -14,8 +27,8 @@ import (
 	"github.com/onsi/gomega"
 )
 
-var _ = ginkgo.Describe("Parallel command", func(){
-	ginkgo.It("With 3 sync commands", func(){
+var _ = ginkgo.Describe("Parallel command", func() {
+	ginkgo.It("With 3 sync commands", func() {
 		cmd1 := sync.NewLogger("cmd1")
 		cmd2 := sync.NewSleep("3")
 		cmd3 := sync.NewLogger("cmd2")
@@ -27,7 +40,7 @@ var _ = ginkgo.Describe("Parallel command", func(){
 		gomega.Expect(result.Success).To(gomega.BeTrue())
 	})
 
-	ginkgo.It("Must be buildable from JSON", func(){
+	ginkgo.It("Must be buildable from JSON", func() {
 		fromJSON := `
 {"type":"sync", "name": "parallel", "maxParallelism":3, "commands": [
 {"type":"sync", "name": "logger", "msg": "This is a logging message"},
@@ -46,7 +59,7 @@ var _ = ginkgo.Describe("Parallel command", func(){
 		gomega.Expect((*received).(*Parallel).MaxParallelism).To(gomega.Equal(0))
 	})
 
-	ginkgo.It("Should stop on failure", func(){
+	ginkgo.It("Should stop on failure", func() {
 		cmd1 := sync.NewFail()
 		cmd2 := sync.NewSleep("10")
 		cmd3 := sync.NewSleep("10")
@@ -58,7 +71,7 @@ var _ = ginkgo.Describe("Parallel command", func(){
 		gomega.Expect(result.Success).To(gomega.BeFalse())
 	})
 
-	ginkgo.It("Must support a max level", func(){
+	ginkgo.It("Must support a max level", func() {
 		cmd1 := sync.NewLogger("cmd1")
 		cmd2 := sync.NewLogger("cmd2")
 		cmd3 := sync.NewLogger("cmd3")
@@ -77,7 +90,7 @@ var _ = ginkgo.Describe("Parallel command", func(){
 		gomega.Expect(result.Success).To(gomega.BeTrue())
 	})
 
-	ginkgo.It("must support higher max levels - DP-1164", func(){
+	ginkgo.It("must support higher max levels - DP-1164", func() {
 		cmd1 := sync.NewLogger("cmd1")
 		cmd2 := sync.NewLogger("cmd2")
 

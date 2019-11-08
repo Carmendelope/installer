@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 // Launch a simple test to deploy some components in Kubernetes
@@ -10,7 +23,7 @@
 RUN_INTEGRATION_TEST=true
 IT_K8S_KUBECONFIG=/Users/daniel/.kube/config
 IT_RKE_BINARY=/Users/daniel/development/rke/rke
- */
+*/
 
 package installer
 
@@ -71,19 +84,18 @@ func createDeployment(basePath string, namespace string, index int) {
 	log.Debug().Str("file", outputPath).Msg("deployment has been created")
 }
 
-
-var _ = ginkgo.Describe("Installer", func(){
+var _ = ginkgo.Describe("Installer", func() {
 
 	const numDeployments = 2
 	const targetNamespace = "test-it-install"
 
-	if ! utils.RunIntegrationTests() {
+	if !utils.RunIntegrationTests() {
 		log.Warn().Msg("Integration tests are skipped")
 		return
 	}
 	var (
 		kubeConfigFile = os.Getenv("IT_K8S_KUBECONFIG")
-		rkeBinary = os.Getenv("IT_RKE_BINARY")
+		rkeBinary      = os.Getenv("IT_RKE_BINARY")
 	)
 
 	if kubeConfigFile == "" || rkeBinary == "" {
@@ -96,13 +108,13 @@ var _ = ginkgo.Describe("Installer", func(){
 	var kubeConfigRaw string
 
 	// gRPC server
-	var server * grpc.Server
+	var server *grpc.Server
 	// grpc test listener
-	var listener * bufconn.Listener
+	var listener *bufconn.Listener
 	// client
 	var client grpc_installer_go.InstallerClient
 
-	ginkgo.BeforeSuite(func(){
+	ginkgo.BeforeSuite(func() {
 
 		// Load data and ENV variables.
 		kubeConfigContent, lErr := utils.GetKubeConfigContent(kubeConfigFile)
@@ -119,7 +131,7 @@ var _ = ginkgo.Describe("Installer", func(){
 
 		binaryDir = filepath.Dir(rkeBinary)
 
-		for i:= 0; i< numDeployments; i++{
+		for i := 0; i < numDeployments; i++ {
 			createDeployment(componentsDir, targetNamespace, i)
 		}
 
@@ -150,7 +162,7 @@ var _ = ginkgo.Describe("Installer", func(){
 
 	})
 
-	ginkgo.AfterSuite(func(){
+	ginkgo.AfterSuite(func() {
 		server.Stop()
 		listener.Close()
 		os.RemoveAll(componentsDir)
@@ -159,21 +171,21 @@ var _ = ginkgo.Describe("Installer", func(){
 	})
 
 	ginkgo.PContext("On a base system", func() {
-		ginkgo.PIt("should be able to install an application cluster from scratch", func(){
+		ginkgo.PIt("should be able to install an application cluster from scratch", func() {
 
 		})
 	})
 
 	ginkgo.Context("On a kubernetes cluster", func() {
-		ginkgo.It("should be able to install an application cluster", func(){
+		ginkgo.It("should be able to install an application cluster", func() {
 			ginkgo.By("installing the cluster")
-		    installRequest := &grpc_installer_go.InstallRequest{
-				InstallId:            "test-install-id",
-				OrganizationId:       "test-org-id",
-				ClusterId:            "test-cluster-id",
-				ClusterType:          grpc_infrastructure_go.ClusterType_KUBERNETES,
-				InstallBaseSystem:    false,
-				KubeConfigRaw:        kubeConfigRaw,
+			installRequest := &grpc_installer_go.InstallRequest{
+				InstallId:         "test-install-id",
+				OrganizationId:    "test-org-id",
+				ClusterId:         "test-cluster-id",
+				ClusterType:       grpc_infrastructure_go.ClusterType_KUBERNETES,
+				InstallBaseSystem: false,
+				KubeConfigRaw:     kubeConfigRaw,
 			}
 			response, err := client.InstallCluster(context.Background(), installRequest)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -185,7 +197,7 @@ var _ = ginkgo.Describe("Installer", func(){
 			finished := false
 
 			installID := &grpc_installer_go.InstallId{
-				InstallId:            installRequest.InstallId,
+				InstallId: installRequest.InstallId,
 			}
 			ginkgo.By("checking the install progress")
 			log.Info().Msg("Checking progress")
@@ -205,7 +217,7 @@ var _ = ginkgo.Describe("Installer", func(){
 			ginkgo.By("removing the install")
 			log.Info().Msg("removing the install")
 			removeRequest := &grpc_installer_go.RemoveInstallRequest{
-				InstallId:            installRequest.InstallId,
+				InstallId: installRequest.InstallId,
 			}
 			client.RemoveInstall(context.Background(), removeRequest)
 			log.Info().Msg("Finished!!!!!!")

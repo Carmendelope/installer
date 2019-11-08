@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2019 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package ingress
@@ -19,21 +32,21 @@ import (
 // Deprecated: InstallZtPlanetLB should not be used as the platform will remove ZT support.
 type InstallZtPlanetLB struct {
 	k8s.Kubernetes
-	PlatformType    string `json:"platform_type"`
+	PlatformType string `json:"platform_type"`
 }
 
 // Deprecated: NewInstallZtPlanetLB should not be used as the platform will remove ZT support.
-func NewInstallZtPlanetLB (kubeConfigPath string, platformType string) *InstallZtPlanetLB {
+func NewInstallZtPlanetLB(kubeConfigPath string, platformType string) *InstallZtPlanetLB {
 	return &InstallZtPlanetLB{
 		Kubernetes: k8s.Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallZtPlanetLB),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		PlatformType:    platformType,
+		PlatformType: platformType,
 	}
 }
 
-func NewInstallZtPlanetLBFromJSON (raw []byte) (*entities.Command, derrors.Error) {
+func NewInstallZtPlanetLBFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	ccc := &InstallZtPlanetLB{}
 	if err := json.Unmarshal(raw, &ccc); err != nil {
 		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
@@ -43,7 +56,7 @@ func NewInstallZtPlanetLBFromJSON (raw []byte) (*entities.Command, derrors.Error
 	return &r, nil
 }
 
-func (imd *InstallZtPlanetLB) Run (workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallZtPlanetLB) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 	connectErr := imd.Connect()
 	if connectErr != nil {
 		return nil, connectErr
@@ -63,7 +76,7 @@ func (imd *InstallZtPlanetLB) Run (workflowID string) (*entities.CommandResult, 
 		false, "unsupported platform type", nil), nil
 }
 
-func (imd *InstallZtPlanetLB) InstallLoadBalancer (workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallZtPlanetLB) InstallLoadBalancer(workflowID string) (*entities.CommandResult, derrors.Error) {
 	azureService := AzureZTPlanetService
 	err := imd.Create(&azureService)
 	if err != nil {
@@ -75,7 +88,7 @@ func (imd *InstallZtPlanetLB) InstallLoadBalancer (workflowID string) (*entities
 	return entities.NewSuccessCommand([]byte(msg)), nil
 }
 
-func (imd *InstallZtPlanetLB) InstallMinikube (workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallZtPlanetLB) InstallMinikube(workflowID string) (*entities.CommandResult, derrors.Error) {
 	err := imd.Create(&MinikubeZTPlanetService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating  ZT Planet LB service")
@@ -85,14 +98,14 @@ func (imd *InstallZtPlanetLB) InstallMinikube (workflowID string) (*entities.Com
 	return entities.NewSuccessCommand([]byte("ZT planet installed on Minikube")), nil
 }
 
-func (imd *InstallZtPlanetLB) String () string {
+func (imd *InstallZtPlanetLB) String() string {
 	return fmt.Sprintf("SYNC InstallZTPlanetLB on %s", imd.PlatformType)
 }
 
-func (imd *InstallZtPlanetLB) PrettyPrint (indentation int) string {
+func (imd *InstallZtPlanetLB) PrettyPrint(indentation int) string {
 	return strings.Repeat(" ", indentation) + imd.String()
 }
 
-func (imd *InstallZtPlanetLB) UserString () string {
+func (imd *InstallZtPlanetLB) UserString() string {
 	return fmt.Sprintf("Installing ZT planet loadbalancer")
 }

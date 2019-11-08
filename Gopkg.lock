@@ -137,12 +137,12 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:b4e5da75c2b97eca42007c3be5edf9b0a6d1bc60c791dd57317fd37f293cf26d"
+  digest = "1:a12ca43cb47c3f7512757a41ec84c63e449e0df198a34199f8eb368992da7113"
   name = "github.com/nalej/derrors"
   packages = ["."]
   pruneopts = "UT"
-  revision = "7a6df7f0bb1c7cddfec82c91119f193f6fcbc9d5"
-  version = "v2.0.0"
+  revision = "bfc722761e86fbac74fae4f43db51901a538b72a"
+  version = "v2.1.0"
 
 [[projects]]
   digest = "1:edfcecb82ce3a0c34e90c63b1191390436e17bd1968cbcb687a8ffa848ec1363"
@@ -249,15 +249,15 @@
   version = "v0.0.28"
 
 [[projects]]
-  digest = "1:bf28e4cd60be75438d6afaee7f1ef95fce32fd4a23ad83c1933e31a39b41d641"
+  digest = "1:b8af9f5eca6a9247765db9757fdd0ae2f03fe9ee0b58242bcd0baa7f1794a5d7"
   name = "github.com/nalej/grpc-utils"
   packages = [
     "pkg/conversions",
     "pkg/test",
   ]
   pruneopts = "UT"
-  revision = "926e5152669ee71c0e6904055ebe6cfb5492b599"
-  version = "v1.4.0"
+  revision = "f47f46a9b4002710e515fe04b3287585e1736a3f"
+  version = "v1.5.0"
 
 [[projects]]
   digest = "1:51766ddcba65b7f0eece2906249d7603970959ba0f1011b72037485044339ece"
@@ -362,7 +362,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:494765a2000cd2bf92e2777b7ffeebde0ed8bc71a54ba54ea64aaf60900a6de3"
+  digest = "1:d26460400e145f2a2c3a886ad3c189d3a5778d0154eea15e82516051c81029f0"
   name = "golang.org/x/crypto"
   packages = [
     "curve25519",
@@ -375,11 +375,11 @@
     "ssh/terminal",
   ]
   pruneopts = "UT"
-  revision = "8986dd9e96cf0a6f74da406c005ba3df38527c04"
+  revision = "f4817d981bb690635456c5c1c6aa0585e5d45891"
 
 [[projects]]
   branch = "master"
-  digest = "1:0ad331b88213a00d3e474b2681ac5d0769e84586fd290f1392b0726ce898174a"
+  digest = "1:5659113b1602e3b2969e3d8f2ccf19532e0ee954c4adf9f15b0215292b0df83d"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -395,7 +395,7 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "fe3aa8a4527195a6057b3fad46619d7d090e99b5"
+  revision = "7e6e90b9ea8824b29cbeee76d03ef838c9187418"
 
 [[projects]]
   branch = "master"
@@ -410,7 +410,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d5e7a8fb63a2fb2a878b04c1f58ce095ede573c01878c93a1d72f6f5ff23e818"
+  digest = "1:92c957c2713e817f2c5e25735152837312e3e0458e784a5e168d725474ac8995"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -418,7 +418,7 @@
     "windows",
   ]
   pruneopts = "UT"
-  revision = "f43be2a4598cf3a47be9f94f0c28197ed9eae611"
+  revision = "c1f44814a5cd81a6d1cb589ef1e528bc5d305e07"
 
 [[projects]]
   digest = "1:28deae5fe892797ff37a317b5bcda96d11d1c90dadd89f1337651df3bc4c586e"
@@ -493,10 +493,11 @@
   revision = "919d9bdd9fe6f1a5dd95ce5d5e4cdb8fd3c516d0"
 
 [[projects]]
-  digest = "1:a4e73cd87b442704e4c7efd83cb200e63dd04d3048e0104a965d908987199ae0"
+  digest = "1:a96ca6d5f2afd4af34284d4e172625224b12d6bc81f78a198b4c6d211c5b8ef1"
   name = "google.golang.org/grpc"
   packages = [
     ".",
+    "backoff",
     "balancer",
     "balancer/base",
     "balancer/roundrobin",
@@ -512,10 +513,13 @@
     "internal/backoff",
     "internal/balancerload",
     "internal/binarylog",
+    "internal/buffer",
     "internal/channelz",
     "internal/envconfig",
     "internal/grpcrand",
     "internal/grpcsync",
+    "internal/resolver/dns",
+    "internal/resolver/passthrough",
     "internal/syscall",
     "internal/transport",
     "keepalive",
@@ -525,8 +529,6 @@
     "reflection",
     "reflection/grpc_reflection_v1alpha",
     "resolver",
-    "resolver/dns",
-    "resolver/passthrough",
     "serviceconfig",
     "stats",
     "status",
@@ -534,8 +536,8 @@
     "test/bufconn",
   ]
   pruneopts = "UT"
-  revision = "f6d0f9ee430895e87ef1ceb5ac8f39725bafceef"
-  version = "v1.24.0"
+  revision = "9d331e2b02dd47daeecae02790f61cc88dc75a64"
+  version = "v1.25.0"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -563,12 +565,12 @@
   revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
-  digest = "1:59f10c1537d2199d9115d946927fe31165959a95190849c82ff11e05803528b0"
+  digest = "1:f26a5d382387e03a40d1471dddfba85dfff9bf05352d7e42d37612677c4d3c5c"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
-  version = "v2.2.4"
+  revision = "f90ceb4f409096b60e2e9076b38b304b8246e5fa"
+  version = "v2.2.5"
 
 [[projects]]
   digest = "1:910ec974550174f4ca48b9f4a3caec16b693e584c3762dc726dc0dcf28f8e318"

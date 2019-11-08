@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package k8s
@@ -20,9 +33,9 @@ type CheckRequirements struct {
 	MinVersion string `json:"minVersion"`
 }
 
-func NewCheckRequirements(minVersion string, kubeConfigPath string) * CheckRequirements {
+func NewCheckRequirements(minVersion string, kubeConfigPath string) *CheckRequirements {
 	return &CheckRequirements{
-		Kubernetes:    Kubernetes{
+		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CheckRequirements),
 			KubeConfigPath:     kubeConfigPath,
 		},
@@ -41,7 +54,7 @@ func NewCheckRequirementsFromJSON(raw []byte) (*entities.Command, derrors.Error)
 	return &r, nil
 }
 
-func (cr * CheckRequirements) CheckVersion(major string, minor string) bool {
+func (cr *CheckRequirements) CheckVersion(major string, minor string) bool {
 	if cr.MinVersion == "" {
 		return false
 	}
@@ -66,7 +79,7 @@ func (cr * CheckRequirements) CheckVersion(major string, minor string) bool {
 	return (majorServer >= majorRequired) && (minorServer >= minorRequired)
 }
 
-func (cr *CheckRequirements) Run(workflowID string) (*entities.CommandResult, derrors.Error){
+func (cr *CheckRequirements) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 
 	connectErr := cr.Connect()
 	if connectErr != nil {
@@ -99,6 +112,3 @@ func (cr *CheckRequirements) PrettyPrint(indentation int) string {
 func (cr *CheckRequirements) UserString() string {
 	return fmt.Sprintf("Checking Kubernetes requirements")
 }
-
-
-

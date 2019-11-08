@@ -2,89 +2,67 @@
 
 This repository contains the installer component in charge of installing new clusters with the Nalej components.
 
-## Installing the Nalej platform
+## Getting Started
 
-```
-$ ./bin/installer-cli install management --debug --consoleLogging
-```
+The installer component is based on the definition of an installation template describing the steps and order in
+which a set of commands must be executed. Depending on the request parameters, the template is compiled and the commands
+parametrized and executed accordingly.
 
-## Creating the config map with the YAMLs for the application cluster
+Notice that the component is expected to receive multiple request and perform those asynchronously. The calling
+component is responsible of the overall lifecycle of the request (sending, checking, retrieving result).
 
-Assuming all YAML files are in `./assets/appcluster` use:
+### Prerequisites
+
+Detail any component that has to be installed to run this component.
+
+* The components to be deployed are expected to be a set of single-entity Kubernetes YAML files. Those will be
+installed as part of the template, and should be available on the components path.
+
+When deploying the component inside Kubernetes, a config file with all the YAMLs is expected to be found in order
+to preload the components path. To create such configmap use the following command assuming all YAML files are
+ in `./assets/appcluster` 
 
 ```
 kubectl create configmap installer-configmap --from-file=assets/appcluster/ -nnalej -o yaml --dry-run > ./assets/mngtcluster/installer.configmap.yaml
 ```
+### Build and compile
 
-## Installing the platform (local development environment)
-
-Prerequirements:
-1. Minikube
-2. Signup component
-3. Rke downloaded
-4. Kubectl
-5. Public api cli
-
-
-Steps:
-
-1. Compile all repositories manually.
-2. Copy the yaml files to the assets directory
+In order to build and compile this repository use the provided Makefile:
 
 ```
-$ mkdir -p installer/assets/mngtcluster
-$ mkdir -p installer/assets/appcluster
-$ cp */bin/yaml/mngtcluster/* installer/assets/mngtcluster/.
-$ kubectl create configmap installer-config --from-file=installer/assets/appcluster/ -nnalej -o yaml --dry-run > installer/bin/yaml/mngtcluster/installer.configmap.yaml
+make all
 ```
 
-3. Load the images in the local minikube environment
+This operation generates the binaries for this repo, download dependencies,
+run existing tests and generate ready-to-deploy Kubernetes files.
+
+### Run tests
+
+Tests are executed using Ginkgo. To run all the available tests:
 
 ```
-./scripts/loadImagesInMinikube.sh
+make test
 ```
 
-4. Launch the installer
+### Update dependencies
+
+Dependencies are managed using Godep. For an automatic dependencies download use:
 
 ```
-$ cd installer
-$ ./bin/installer-cli install management --debug --consoleLogging --binaryPath ~/development/rke/ --managementClusterPublicHost=192.168.99.100
+make dep
 ```
 
-5. Create a test organization
+In order to have all dependencies up-to-date run:
 
 ```
-$ ../signup/bin/signup-cli signup --debug --signupAddress=192.168.99.100:32180 --orgName=nalej --ownerEmail=admin1@nalej.com --ownerName=Admin --ownerPassword=password
+dep ensure -update -v
 ```
 
-6. Setup the options (Optional step)
+### Integration tests
 
-Notice: You may need to open nodeports for the login and public api components.
-
-```
-$ cd public-api
-$ ./bin/public-api-cli options set --key=organizationID --value=<your_organization>
-$ ./bin/public-api-cli options set --key=nalejAddress --value=192.168.99.100
-$ ./bin/public-api-cli options set --key=port --value=31405
-```
-
-7. Login
-
-```
-$ ./bin/public-api-cli login --debug --consoleLogging --nalejAddress=192.168.99.100 --loginPort=30211 --email=admin1@nalej.com --password=password
-```
-
-8. Test
-
-```
-./bin/public-api-cli org info
-```
-
-## Installing an application cluster
-
-# Integration tests
-
-The following table contains the variables that activate the integration tests
+The following table contains the variables that activate the integration tests. Integration tests are to be
+considered unstable as also contain PoC for specific situations. Executing all of them can cause issues/misconfigurations
+on the target clusters and may affect all existing namespaces. Execute the tests at your own risk :)
 
 | Variable  | Example Value | Description |
 | ------------- | ------------- |------------- |
@@ -97,3 +75,43 @@ The following table contains the variables that activate the integration tests
 | IT_K8S_KUBECONFIG | /Users/daniel/.kube/config| KubeConfig for the minikube credentials |
 | IT_REGISTRY_USERNAME | <k8s_service_account_login.user_id> | Username to access the nalej repository. Use terraform output to obtain the value |
 | IT_REGISTRY_PASSWORD | <k8s_service_account_login.password> | Password to access the nalej repository. Use terraform output to obtain the value |
+
+
+## User client interface
+
+A command line interface named `installer-cli` is offered to install the management cluster.
+
+```
+$ ./bin/installer-cli install management --consoleLogging
+ --binaryPath <binary_path_with_the_rke_executable>
+ --componentsPath <components_path_with_the_yaml_files>
+ --managementClusterPublicHost=<management_domain> --dnsClusterPublicHost=dns.<management_domain>
+ --targetPlatform=AZURE
+ --useStaticIPAddresses --ipAddressIngress=<ingress_ip_address> --ipAddressDNS=<dns_ip_address>
+ --ipAddressCoreDNS=<app_dns_ip_address> --ipAddressVPNServer=<vpn_server_ip_address>
+ --kubeConfigPath=<kubeconfig_file> --targetEnvironment=<environment_type>
+```
+
+## Known Issues
+
+* Integration tests will be refactored so they can be properly executed without collateral damage.
+* A component YAML file can only contain a single Kubernetes entity
+* While partial support for minikube installations is provided, this code path has not been tested in this release.
+* The install expects a set of environment variables related to docker registry secrets that are preloaded in
+order to install the proper credentials in kubernetes to access private images.
+
+## Contributing
+
+Please read [contributing.md](contributing.md) for details on our code of conduct, and the process for submitting pull requests to us.
+
+
+## Versioning
+
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/nalej/installer/tags). 
+
+## Authors
+
+See also the list of [contributors](https://github.com/nalej/installer/contributors) who participated in this project.
+
+## License
+This project is licensed under the Apache 2.0 License - see the [LICENSE-2.0.txt](LICENSE-2.0.txt) file for details.
