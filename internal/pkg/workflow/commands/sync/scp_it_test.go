@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 // SCP Integration tests
@@ -15,7 +28,7 @@
 RUN_INTEGRATION_TEST=true
 IT_SSH_HOST=localhost
 IT_SSH_PORT=2222
- */
+*/
 
 package sync
 
@@ -44,25 +57,24 @@ func getUserPrivateKey() string {
 	return string(privateKey)
 }
 
-
-var _ = ginkgo.Describe("An SCP command", func(){
-	if ! utils.RunIntegrationTests() {
+var _ = ginkgo.Describe("An SCP command", func() {
+	if !utils.RunIntegrationTests() {
 		log.Warn().Msg("Integration tests are skipped")
 		return
 	}
 	var (
 		testUsername = "root"
 		testPassword = "root"
-		targetHost = os.Getenv("IT_SSH_HOST")
-		targetPort = os.Getenv("IT_SSH_PORT")
-		targetPath = "/tmp/"
+		targetHost   = os.Getenv("IT_SSH_HOST")
+		targetPort   = os.Getenv("IT_SSH_PORT")
+		targetPath   = "/tmp/"
 	)
 
 	if targetHost == "" || targetPort == "" {
 		ginkgo.Fail("missing environment variables")
 	}
 
-	ginkgo.It("must be able to copy a file", func(){
+	ginkgo.It("must be able to copy a file", func() {
 		content := []byte("this is a testing file")
 		tmpfile, err := ioutil.TempFile("", "example")
 		gomega.Expect(err).To(gomega.BeNil())
@@ -74,7 +86,6 @@ var _ = ginkgo.Describe("An SCP command", func(){
 		gomega.Expect(err).To(gomega.BeNil())
 		log.Debug().Str("file", tmpfile.Name()).Int("size", size).Msg("file is written")
 
-
 		credentials := entities.NewCredentials(testUsername, testPassword)
 		cmd := NewSCP(targetHost, targetPort, *credentials, tmpfile.Name(), targetPath)
 		result, err := cmd.Run("w1")
@@ -82,7 +93,7 @@ var _ = ginkgo.Describe("An SCP command", func(){
 		log.Debug().Bool("result", (*result).Success).Str("output", (*result).Output).Msg("scp has been executed")
 	})
 
-	ginkgo.It("must be able to copy using PKI", func(){
+	ginkgo.It("must be able to copy using PKI", func() {
 		privateKey := getUserPrivateKey()
 		content := []byte("this is a testing file to be copied with scp over PKI")
 		tmpfile, err := ioutil.TempFile("", "example")
@@ -95,7 +106,6 @@ var _ = ginkgo.Describe("An SCP command", func(){
 		gomega.Expect(err).To(gomega.BeNil())
 		log.Debug().Str("file", tmpfile.Name()).Int("size", size).Msg("file is written")
 
-
 		credentials := entities.NewPKICredentials(testUsername, string(privateKey))
 		cmd := NewSCP(targetHost, targetPort, *credentials, tmpfile.Name(), targetPath)
 		result, err := cmd.Run("w1")
@@ -103,6 +113,4 @@ var _ = ginkgo.Describe("An SCP command", func(){
 		log.Debug().Bool("result", (*result).Success).Str("output", (*result).Output).Msg("scp has been executed")
 	})
 
-
 })
-

@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package k8s
@@ -46,9 +59,9 @@ type UpdateCoreDNS struct {
 	DNSPublicPort string `json:"dns_public_port"`
 }
 
-func NewUpdateCoreDNS(kubeConfigPath string, dnsPublicHost string) * UpdateCoreDNS {
+func NewUpdateCoreDNS(kubeConfigPath string, dnsPublicHost string) *UpdateCoreDNS {
 	return &UpdateCoreDNS{
-		Kubernetes:    Kubernetes{
+		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.UpdateCoreDNS),
 			KubeConfigPath:     kubeConfigPath,
 		},
@@ -66,39 +79,39 @@ func NewUpdateCoreDNSFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	return &r, nil
 }
 
-func (uc * UpdateCoreDNS) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
+func (uc *UpdateCoreDNS) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 	connectErr := uc.Connect()
 	if connectErr != nil {
 		return nil, connectErr
 	}
 	existing, err := uc.getExistingConfig()
-	if err != nil{
+	if err != nil {
 		return entities.NewCommandResult(false, "cannot update core dns", err), nil
 	}
 	err = uc.updateConfig(existing)
-	if err != nil{
+	if err != nil {
 		return entities.NewCommandResult(false, "cannot update core dns", err), nil
 	}
 	return entities.NewSuccessCommand([]byte("Core DNS config has been updated")), nil
 }
 
-func (uc * UpdateCoreDNS) getExistingConfig() (*v1.ConfigMap, derrors.Error){
+func (uc *UpdateCoreDNS) getExistingConfig() (*v1.ConfigMap, derrors.Error) {
 	client := uc.Client.CoreV1().ConfigMaps(CoreDNSNamespace)
 	opts := metaV1.GetOptions{}
 	cm, err := client.Get(CoreDNSConfigName, opts)
-	if err != nil{
+	if err != nil {
 		return nil, derrors.NewNotFoundError("cannot obtain coredns config map", err)
 	}
 	return cm, nil
 }
 
-func (uc * UpdateCoreDNS) updateConfig(cfg *v1.ConfigMap) derrors.Error {
+func (uc *UpdateCoreDNS) updateConfig(cfg *v1.ConfigMap) derrors.Error {
 	log.Debug().Interface("data", cfg.Data[CoreDNSSection]).Msg("current data")
 	mgntIPs, rErr := uc.ResolveIP(uc.DNSPublicHost)
-	if rErr != nil{
+	if rErr != nil {
 		return rErr
 	}
-	for _, ip := range mgntIPs{
+	for _, ip := range mgntIPs {
 		ip = fmt.Sprintf("%s:%s", ip, uc.DNSPublicPort)
 	}
 
@@ -106,21 +119,21 @@ func (uc * UpdateCoreDNS) updateConfig(cfg *v1.ConfigMap) derrors.Error {
 	cfg.Data[CoreDNSSection] = toUpdate
 	client := uc.Client.CoreV1().ConfigMaps(CoreDNSNamespace)
 	updated, err := client.Update(cfg)
-	if err != nil{
+	if err != nil {
 		return derrors.NewInternalError("cannot update config map", err)
 	}
 	log.Debug().Interface("updated", updated).Msg("CoreDNS configmap has been updated")
 	return nil
 }
 
-func (uc * UpdateCoreDNS) String() string {
+func (uc *UpdateCoreDNS) String() string {
 	return fmt.Sprintf("SYNC UpdateCoreDNS to %s", uc.DNSPublicHost)
 }
 
-func (uc * UpdateCoreDNS) PrettyPrint(indentation int) string {
+func (uc *UpdateCoreDNS) PrettyPrint(indentation int) string {
 	return strings.Repeat(" ", indentation) + uc.String()
 }
 
-func (uc * UpdateCoreDNS) UserString() string {
+func (uc *UpdateCoreDNS) UserString() string {
 	return fmt.Sprintf("Update cluster CoreDNS config to %s", uc.DNSPublicHost)
 }

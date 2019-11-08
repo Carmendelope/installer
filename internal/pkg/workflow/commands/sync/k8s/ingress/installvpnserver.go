@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2019 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package ingress
@@ -29,7 +42,7 @@ func NewInstallVpnServerLB(kubeConfigPath string, platformType string) *InstallV
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallVpnServerLB),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		PlatformType:    platformType,
+		PlatformType: platformType,
 	}
 }
 
@@ -43,7 +56,7 @@ func NewInstallVpnServerLBFromJSON(raw []byte) (*entities.Command, derrors.Error
 	return &r, nil
 }
 
-func (imd *InstallVpnServerLB) Run (workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallVpnServerLB) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 	connectErr := imd.Connect()
 	if connectErr != nil {
 		return nil, connectErr
@@ -63,7 +76,7 @@ func (imd *InstallVpnServerLB) Run (workflowID string) (*entities.CommandResult,
 		false, "unsupported platform type", nil), nil
 }
 
-func (imd *InstallVpnServerLB) InstallLoadBalancer (workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallVpnServerLB) InstallLoadBalancer(workflowID string) (*entities.CommandResult, derrors.Error) {
 	azureService := AzureVPNServerService
 	if imd.UseStaticIp {
 		azureService.Spec.LoadBalancerIP = imd.StaticIpAddress
@@ -78,7 +91,7 @@ func (imd *InstallVpnServerLB) InstallLoadBalancer (workflowID string) (*entitie
 	return entities.NewSuccessCommand([]byte(msg)), nil
 }
 
-func (imd *InstallVpnServerLB) InstallMinikube (workflowID string) (*entities.CommandResult, derrors.Error) {
+func (imd *InstallVpnServerLB) InstallMinikube(workflowID string) (*entities.CommandResult, derrors.Error) {
 	err := imd.Create(&MinikubeVPNServerService)
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating  VPN Server LB service")
@@ -88,14 +101,14 @@ func (imd *InstallVpnServerLB) InstallMinikube (workflowID string) (*entities.Co
 	return entities.NewSuccessCommand([]byte("VPN Server installed on Minikube")), nil
 }
 
-func (imd *InstallVpnServerLB) String () string {
+func (imd *InstallVpnServerLB) String() string {
 	return fmt.Sprintf("SYNC InstallVpnServerLB on %s", imd.PlatformType)
 }
 
-func (imd *InstallVpnServerLB) PrettyPrint (indentation int) string {
+func (imd *InstallVpnServerLB) PrettyPrint(indentation int) string {
 	return strings.Repeat(" ", indentation) + imd.String()
 }
 
-func (imd *InstallVpnServerLB) UserString () string {
+func (imd *InstallVpnServerLB) UserString() string {
 	return fmt.Sprintf("Installing VPN Server loadbalancer")
 }

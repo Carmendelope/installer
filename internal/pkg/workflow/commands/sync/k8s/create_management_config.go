@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package k8s
@@ -21,12 +34,12 @@ const TargetNamespace = "nalej"
 
 type CreateManagementConfig struct {
 	Kubernetes
-	PublicHost     string `json:"public_host"`
-	PublicPort     string `json:"public_port"`
-	DNSHost     string `json:"dns_host"`
-	DNSPort     string `json:"dns_port"`
+	PublicHost   string `json:"public_host"`
+	PublicPort   string `json:"public_port"`
+	DNSHost      string `json:"dns_host"`
+	DNSPort      string `json:"dns_port"`
 	PlatformType string `json:"platform_type"`
-	Environment string `json:"environment"`
+	Environment  string `json:"environment"`
 }
 
 func NewCreateManagementConfig(
@@ -38,10 +51,10 @@ func NewCreateManagementConfig(
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateManagementConfig),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		PublicHost:     publicHost,
-		PublicPort:     publicPort,
+		PublicHost:   publicHost,
+		PublicPort:   publicPort,
 		PlatformType: platformType,
-		Environment: environment,
+		Environment:  environment,
 	}
 }
 
@@ -67,12 +80,12 @@ func (cmc *CreateManagementConfig) createConfigMap() derrors.Error {
 			Labels:    map[string]string{"cluster": "management"},
 		},
 		Data: map[string]string{
-			"public_host": cmc.PublicHost,
-			"public_port": cmc.PublicPort,
-			"dns_host": cmc.DNSHost,
-			"dns_port": cmc.DNSPort,
+			"public_host":   cmc.PublicHost,
+			"public_port":   cmc.PublicPort,
+			"dns_host":      cmc.DNSHost,
+			"dns_port":      cmc.DNSPort,
 			"platform_type": cmc.PlatformType,
-			"environment": cmc.Environment,
+			"environment":   cmc.Environment,
 		},
 	}
 
@@ -138,8 +151,8 @@ func (cmc *CreateManagementConfig) String() string {
 }
 
 func (cmc *CreateManagementConfig) PrettyPrint(indentation int) string {
-	simpleIden := strings.Repeat(" ", indentation) +  "  "
-	entrySep := simpleIden +  "  "
+	simpleIden := strings.Repeat(" ", indentation) + "  "
+	entrySep := simpleIden + "  "
 	msg := fmt.Sprintf("\n%sConfig:\n%sPublicHost: %s:%s\n%sDNSHost: %s:%s\n%sPlatform Type:%s\n%sEnvironment:%s",
 		simpleIden,
 		entrySep, cmc.PublicHost, cmc.PublicPort,

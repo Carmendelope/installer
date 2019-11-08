@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package k8s
@@ -17,19 +30,19 @@ import (
 const KubeSystemNamespace = "kube-system"
 
 type TestCleaner struct {
-	Namespaces []string `json:"namespace"`
-	KubeConfigPath string `json:"kubeConfig"`
-	Client * kubernetes.Clientset `json:"-"`
+	Namespaces     []string              `json:"namespace"`
+	KubeConfigPath string                `json:"kubeConfig"`
+	Client         *kubernetes.Clientset `json:"-"`
 }
 
-func NewTestCleaner(kubeConfigPath string, namespaces ...string) * TestCleaner {
+func NewTestCleaner(kubeConfigPath string, namespaces ...string) *TestCleaner {
 	return &TestCleaner{
-		Namespaces: namespaces,
+		Namespaces:     namespaces,
 		KubeConfigPath: kubeConfigPath,
 	}
 }
 
-func (tc * TestCleaner) Connect() derrors.Error {
+func (tc *TestCleaner) Connect() derrors.Error {
 
 	config, err := clientcmd.BuildConfigFromFlags("", tc.KubeConfigPath)
 	if err != nil {
@@ -41,14 +54,14 @@ func (tc * TestCleaner) Connect() derrors.Error {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Error().Err(err).Msg("error using configuration to build k8s clientset")
-		return derrors.AsError(err,"error using configuration to build k8s clientset")
+		return derrors.AsError(err, "error using configuration to build k8s clientset")
 	}
 
 	tc.Client = clientset
 	return nil
 }
 
-func (tc * TestCleaner) DeleteAll() derrors.Error {
+func (tc *TestCleaner) DeleteAll() derrors.Error {
 	err := tc.DeleteDeployments()
 	if err != nil {
 		return err
@@ -62,23 +75,23 @@ func (tc * TestCleaner) DeleteAll() derrors.Error {
 		return err
 	}
 	err = tc.DeleteClusterRoles()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	err = tc.DeleteRoles()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	err = tc.DeleteRoleBindings()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	err = tc.DeleteClusterRoleBindings()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	err = tc.DeleteConfigMaps()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	err = tc.DeleteNamespaces()
@@ -88,10 +101,10 @@ func (tc * TestCleaner) DeleteAll() derrors.Error {
 	return nil
 }
 
-func (tc * TestCleaner) DeleteDeployments() derrors.Error {
+func (tc *TestCleaner) DeleteDeployments() derrors.Error {
 	if tc.Client == nil {
 		err := tc.Connect()
-		if err != nil{
+		if err != nil {
 			return err
 		}
 	}
@@ -137,11 +150,11 @@ func (tc * TestCleaner) DeleteDeployments() derrors.Error {
 	return nil
 }
 
-func (tc * TestCleaner) existNamespace(name string) (bool, derrors.Error) {
+func (tc *TestCleaner) existNamespace(name string) (bool, derrors.Error) {
 	namespaceClient := tc.Client.CoreV1().Namespaces()
 	opts := metaV1.ListOptions{}
 	list, err := namespaceClient.List(opts)
-	if err != nil{
+	if err != nil {
 		return false, derrors.AsError(err, "cannot obtain the namespace list")
 	}
 	found := false
@@ -154,18 +167,18 @@ func (tc * TestCleaner) existNamespace(name string) (bool, derrors.Error) {
 	return found, nil
 }
 
-func (tc * TestCleaner) DeleteNamespaces() derrors.Error {
+func (tc *TestCleaner) DeleteNamespaces() derrors.Error {
 	dOpts := metaV1.DeleteOptions{}
 	namespaceClient := tc.Client.CoreV1().Namespaces()
 	for _, ns := range tc.Namespaces {
 
 		found, fErr := tc.existNamespace(ns)
-		if fErr != nil{
+		if fErr != nil {
 			return fErr
 		}
 		if found {
 			err := namespaceClient.Delete(ns, &dOpts)
-			if err != nil{
+			if err != nil {
 				return derrors.AsError(err, "cannot delete namespace")
 			}
 			log.Debug().Str("namespace", ns).Msg("deleted")
@@ -175,8 +188,7 @@ func (tc * TestCleaner) DeleteNamespaces() derrors.Error {
 	return nil
 }
 
-
-func (tc * TestCleaner) DeleteServices() derrors.Error {
+func (tc *TestCleaner) DeleteServices() derrors.Error {
 	numDeleted := 0
 	for _, ns := range tc.Namespaces {
 		serviceClient := tc.Client.CoreV1().Services(ns)
@@ -218,7 +230,7 @@ func (tc * TestCleaner) DeleteServices() derrors.Error {
 	return nil
 }
 
-func (tc * TestCleaner) DeleteServiceAccounts() derrors.Error {
+func (tc *TestCleaner) DeleteServiceAccounts() derrors.Error {
 	numDeleted := 0
 	for _, ns := range tc.Namespaces {
 		client := tc.Client.CoreV1().ServiceAccounts(ns)
@@ -228,7 +240,7 @@ func (tc * TestCleaner) DeleteServiceAccounts() derrors.Error {
 			return derrors.AsError(err, "cannot list services")
 		}
 		dOpts := metaV1.DeleteOptions{}
-		for _, acc := range accounts.Items{
+		for _, acc := range accounts.Items {
 			log.Debug().Str("name", acc.Name).Msg("deleting service account")
 			err := client.Delete(acc.Name, &dOpts)
 			if err != nil {
@@ -261,7 +273,7 @@ func (tc * TestCleaner) DeleteServiceAccounts() derrors.Error {
 	return nil
 }
 
-func (tc * TestCleaner) DeleteClusterRoles() derrors.Error {
+func (tc *TestCleaner) DeleteClusterRoles() derrors.Error {
 	numDeleted := 0
 
 	client := tc.Client.RbacV1().ClusterRoles()
@@ -272,25 +284,23 @@ func (tc * TestCleaner) DeleteClusterRoles() derrors.Error {
 	}
 	dOpts := metaV1.DeleteOptions{}
 
-		for _, cr := range roles.Items{
-			_, exists := cr.Labels["cluster"]
-			if exists {
-				log.Debug().Str("name", cr.Name).Msg("deleting cluster role")
-				err := client.Delete(cr.Name, &dOpts)
-				if err != nil {
-					return derrors.AsError(err, "cannot delete cluster role")
-				}
-				numDeleted++
+	for _, cr := range roles.Items {
+		_, exists := cr.Labels["cluster"]
+		if exists {
+			log.Debug().Str("name", cr.Name).Msg("deleting cluster role")
+			err := client.Delete(cr.Name, &dOpts)
+			if err != nil {
+				return derrors.AsError(err, "cannot delete cluster role")
 			}
+			numDeleted++
 		}
-
-
+	}
 
 	log.Debug().Int("deleted", numDeleted).Msg("service cluster roles deleted")
 	return nil
 }
 
-func (tc * TestCleaner) DeleteRoles() derrors.Error {
+func (tc *TestCleaner) DeleteRoles() derrors.Error {
 	numDeleted := 0
 	for _, ns := range tc.Namespaces {
 		client := tc.Client.RbacV1().Roles(ns)
@@ -300,7 +310,7 @@ func (tc * TestCleaner) DeleteRoles() derrors.Error {
 			return derrors.AsError(err, "cannot list roles")
 		}
 		dOpts := metaV1.DeleteOptions{}
-		for _, rol := range roles.Items{
+		for _, rol := range roles.Items {
 			log.Debug().Str("name", rol.Name).Msg("deleting role")
 			err := client.Delete(rol.Name, &dOpts)
 			if err != nil {
@@ -333,7 +343,7 @@ func (tc * TestCleaner) DeleteRoles() derrors.Error {
 	return nil
 }
 
-func (tc * TestCleaner) DeleteClusterRoleBindings() derrors.Error {
+func (tc *TestCleaner) DeleteClusterRoleBindings() derrors.Error {
 	numDeleted := 0
 
 	client := tc.Client.RbacV1().ClusterRoleBindings()
@@ -344,7 +354,7 @@ func (tc * TestCleaner) DeleteClusterRoleBindings() derrors.Error {
 	}
 	dOpts := metaV1.DeleteOptions{}
 
-	for _, cr := range roles.Items{
+	for _, cr := range roles.Items {
 		_, exists := cr.Labels["cluster"]
 		if exists {
 			log.Debug().Str("name", cr.Name).Msg("deleting cluster role binding")
@@ -360,7 +370,7 @@ func (tc * TestCleaner) DeleteClusterRoleBindings() derrors.Error {
 	return nil
 }
 
-func (tc * TestCleaner) DeleteRoleBindings() derrors.Error {
+func (tc *TestCleaner) DeleteRoleBindings() derrors.Error {
 	numDeleted := 0
 	for _, ns := range tc.Namespaces {
 		client := tc.Client.RbacV1().RoleBindings(ns)
@@ -370,7 +380,7 @@ func (tc * TestCleaner) DeleteRoleBindings() derrors.Error {
 			return derrors.AsError(err, "cannot list roles")
 		}
 		dOpts := metaV1.DeleteOptions{}
-		for _, rol := range roles.Items{
+		for _, rol := range roles.Items {
 			log.Debug().Str("name", rol.Name).Msg("deleting role")
 			err := client.Delete(rol.Name, &dOpts)
 			if err != nil {
@@ -403,7 +413,7 @@ func (tc * TestCleaner) DeleteRoleBindings() derrors.Error {
 	return nil
 }
 
-func (tc * TestCleaner) DeleteConfigMaps() derrors.Error {
+func (tc *TestCleaner) DeleteConfigMaps() derrors.Error {
 	numDeleted := 0
 	opts := metaV1.ListOptions{}
 	dOpts := metaV1.DeleteOptions{}
@@ -413,7 +423,7 @@ func (tc * TestCleaner) DeleteConfigMaps() derrors.Error {
 		if err != nil {
 			return derrors.AsError(err, "cannot list config maps")
 		}
-		for _, cm := range cms.Items{
+		for _, cm := range cms.Items {
 			log.Debug().Str("name", cm.Name).Msg("deleting config map")
 			err := client.Delete(cm.Name, &dOpts)
 			if err != nil {
@@ -444,19 +454,18 @@ func (tc * TestCleaner) DeleteConfigMaps() derrors.Error {
 	return nil
 }
 
-
 type TestK8sUtils struct {
 	KubeConfigPath string
-	Client * kubernetes.Clientset
+	Client         *kubernetes.Clientset
 }
 
-func NewTestK8sUtils(kubeConfigPath string) * TestK8sUtils {
+func NewTestK8sUtils(kubeConfigPath string) *TestK8sUtils {
 	return &TestK8sUtils{
 		KubeConfigPath: kubeConfigPath,
 	}
 }
 
-func (tu * TestK8sUtils) Connect() derrors.Error {
+func (tu *TestK8sUtils) Connect() derrors.Error {
 
 	config, err := clientcmd.BuildConfigFromFlags("", tu.KubeConfigPath)
 	if err != nil {
@@ -468,19 +477,18 @@ func (tu * TestK8sUtils) Connect() derrors.Error {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Error().Err(err).Msg("error using configuration to build k8s clientset")
-		return derrors.AsError(err,"error using configuration to build k8s clientset")
+		return derrors.AsError(err, "error using configuration to build k8s clientset")
 	}
 
 	tu.Client = clientset
 	return nil
 }
 
-
-func (tu * TestK8sUtils) CreateNamespace(name string) derrors.Error {
+func (tu *TestK8sUtils) CreateNamespace(name string) derrors.Error {
 	namespaceClient := tu.Client.CoreV1().Namespaces()
 	opts := metaV1.ListOptions{}
 	list, err := namespaceClient.List(opts)
-	if err != nil{
+	if err != nil {
 		return derrors.AsError(err, "cannot obtain the namespace list")
 	}
 	found := false
@@ -495,32 +503,32 @@ func (tu * TestK8sUtils) CreateNamespace(name string) derrors.Error {
 	if !found {
 		toCreate := v1.Namespace{
 			ObjectMeta: metaV1.ObjectMeta{
-				Name:                       name,
+				Name: name,
 			},
 		}
 		created, err := namespaceClient.Create(&toCreate)
 		if err != nil {
-			return derrors.AsError(err,"cannot create namespace")
+			return derrors.AsError(err, "cannot create namespace")
 		}
 		log.Debug().Interface("created", created).Msg("namespaces has been created")
-	}else{
+	} else {
 		log.Debug().Str("namespace", name).Msg("namespace already exists")
 	}
 	return nil
 }
 
 type TestChecker struct {
-	KubeConfigPath string `json:"kubeConfig"`
-	Client * kubernetes.Clientset `json:"-"`
+	KubeConfigPath string                `json:"kubeConfig"`
+	Client         *kubernetes.Clientset `json:"-"`
 }
 
-func NewTestChecker(kubeConfigPath string) * TestChecker {
+func NewTestChecker(kubeConfigPath string) *TestChecker {
 	return &TestChecker{
 		KubeConfigPath: kubeConfigPath,
 	}
 }
 
-func (tc * TestChecker) Connect() derrors.Error {
+func (tc *TestChecker) Connect() derrors.Error {
 
 	config, err := clientcmd.BuildConfigFromFlags("", tc.KubeConfigPath)
 	if err != nil {
@@ -532,18 +540,17 @@ func (tc * TestChecker) Connect() derrors.Error {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Error().Err(err).Msg("error using configuration to build k8s clientset")
-		return derrors.AsError(err,"error using configuration to build k8s clientset")
+		return derrors.AsError(err, "error using configuration to build k8s clientset")
 	}
 
 	tc.Client = clientset
 	return nil
 }
 
-func (tc * TestChecker) GetSecret(secretName string, namespace string) *v1.Secret {
+func (tc *TestChecker) GetSecret(secretName string, namespace string) *v1.Secret {
 	sc := tc.Client.CoreV1().Secrets(namespace)
 	opts := metaV1.GetOptions{}
 	found, err := sc.Get(secretName, opts)
 	gomega.Expect(err).To(gomega.Succeed())
 	return found
 }
-

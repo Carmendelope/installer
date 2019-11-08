@@ -1,19 +1,32 @@
 /*
- * Copyright (C) 2019 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package ingress
 
 import (
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var AzureVPNServerPort = v1.ServicePort{
-	Name:       "vpn-port",
-	Protocol:   v1.ProtocolTCP,
-	Port:       5555,
+	Name:     "vpn-port",
+	Protocol: v1.ProtocolTCP,
+	Port:     5555,
 	TargetPort: intstr.IntOrString{
 		Type:   intstr.Int,
 		IntVal: 5555,
@@ -21,9 +34,9 @@ var AzureVPNServerPort = v1.ServicePort{
 }
 
 var MinikubeVPNServerPort = v1.ServicePort{
-	Name:       "vpn-port",
-	Protocol:   v1.ProtocolTCP,
-	Port:       5555,
+	Name:     "vpn-port",
+	Protocol: v1.ProtocolTCP,
+	Port:     5555,
 	TargetPort: intstr.IntOrString{
 		Type:   intstr.Int,
 		IntVal: 5555,
@@ -40,17 +53,17 @@ var AzureVPNServerService = v1.Service{
 		Name:      "vpn-server",
 		Namespace: "nalej",
 		Labels: map[string]string{
-			"cluster":                   "management",
+			"cluster":   "management",
 			"component": "vpn-server",
 		},
 	},
 	Spec: v1.ServiceSpec{
 		Ports: []v1.ServicePort{AzureVPNServerPort},
 		Selector: map[string]string{
-			"cluster":  "management",
-			"component":	"vpn-server",
+			"cluster":   "management",
+			"component": "vpn-server",
 		},
-		Type: v1.ServiceTypeLoadBalancer,
+		Type:                  v1.ServiceTypeLoadBalancer,
 		ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeLocal,
 	},
 }
@@ -64,15 +77,15 @@ var MinikubeVPNServerService = v1.Service{
 		Name:      "vpn-server",
 		Namespace: "nalej",
 		Labels: map[string]string{
-			"cluster":	"management",
+			"cluster":   "management",
 			"component": "vpn-server",
 		},
 	},
 	Spec: v1.ServiceSpec{
 		Ports: []v1.ServicePort{MinikubeVPNServerPort},
 		Selector: map[string]string{
-			"cluster":  "management",
-			"component":	"vpn-server",
+			"cluster":   "management",
+			"component": "vpn-server",
 		},
 		Type: v1.ServiceTypeNodePort,
 	},

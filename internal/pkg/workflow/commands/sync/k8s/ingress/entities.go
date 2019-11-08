@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2019 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package ingress
@@ -13,7 +26,6 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
-
 
 // tlsCertificate contains the name of the client secret.
 // This secret is used to create the ssl tunnel,
@@ -396,12 +408,12 @@ var ClusterAPIIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class":                  "nginx",
-			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
-			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+			"kubernetes.io/ingress.class":                        "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect":           "true",
+			"nginx.ingress.kubernetes.io/backend-protocol":       "GRPC",
 			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
-			"nginx.ingress.kubernetes.io/auth-tls-secret": "nalej/ca-certificate",
-			"nginx.ingress.kubernetes.io/auth-tls-verify-depth": "1",
+			"nginx.ingress.kubernetes.io/auth-tls-secret":        "nalej/ca-certificate",
+			"nginx.ingress.kubernetes.io/auth-tls-verify-depth":  "1",
 		},
 	},
 	Spec: v1beta1.IngressSpec{
@@ -488,7 +500,7 @@ var EICAPIIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class": "nginx",
+			"kubernetes.io/ingress.class":                  "nginx",
 			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		},
@@ -578,12 +590,12 @@ var AppClusterAPIIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class":                  "nginx",
-			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
-			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
+			"kubernetes.io/ingress.class":                        "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect":           "true",
+			"nginx.ingress.kubernetes.io/backend-protocol":       "GRPC",
 			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
-			"nginx.ingress.kubernetes.io/auth-tls-secret": "nalej/ca-certificate",
-			"nginx.ingress.kubernetes.io/auth-tls-verify-depth": "1",
+			"nginx.ingress.kubernetes.io/auth-tls-secret":        "nalej/ca-certificate",
+			"nginx.ingress.kubernetes.io/auth-tls-verify-depth":  "1",
 		},
 	},
 	Spec: v1beta1.IngressSpec{
@@ -626,8 +638,8 @@ var DeviceControllerIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class":                  "nginx",
-			"nginx.ingress.kubernetes.io/ssl-redirect":     "true",
+			"kubernetes.io/ingress.class":              "nginx",
+			"nginx.ingress.kubernetes.io/ssl-redirect": "true",
 		},
 	},
 	Spec: v1beta1.IngressSpec{
@@ -656,7 +668,6 @@ var DeviceControllerIngressRules = v1beta1.Ingress{
 		},
 	},
 }
-
 
 // Adapt num replicas to num nodes.
 var IngressNumReplicas int32 = 1
@@ -873,7 +884,7 @@ var IngressClusterRole = rbacv1.ClusterRole{
 		APIVersion: "rbac.authorization.k8s.io/v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "system:nginx-ingress",
+		Name: "system:nginx-ingress",
 		Labels: map[string]string{
 			"cluster":                         "management",
 			"kubernetes.io/bootstrapping":     "rbac-defaults",
@@ -986,7 +997,7 @@ var IngressClusterRoleBinding = rbacv1.ClusterRoleBinding{
 		APIVersion: "rbac.authorization.k8s.io/v1",
 	},
 	ObjectMeta: metaV1.ObjectMeta{
-		Name:      "system:nginx-ingress",
+		Name: "system:nginx-ingress",
 		Labels: map[string]string{
 			"cluster":                         "management",
 			"kubernetes.io/bootstrapping":     "rbac-defaults",

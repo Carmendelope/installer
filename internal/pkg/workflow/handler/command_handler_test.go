@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package handler
@@ -12,13 +25,13 @@ import (
 	"time"
 )
 
-var _ = ginkgo.Describe("Handler", func(){
+var _ = ginkgo.Describe("Handler", func() {
 
-	ginkgo.Context("with a basic workflow", func(){
+	ginkgo.Context("with a basic workflow", func() {
 		handler := NewCommandHandler().(*commandHandler)
 		lines := 0
 		finalized := false
-		ginkgo.It("must support adding a command", func(){
+		ginkgo.It("must support adding a command", func() {
 			gomega.Expect(len(handler.resultCallbacks), gomega.Equal(0))
 			gomega.Expect(len(handler.logCallbacks), gomega.Equal(0))
 			err := handler.AddCommand("id1",
@@ -37,7 +50,7 @@ var _ = ginkgo.Describe("Handler", func(){
 		handler.AddLogEntry("id1", "hello world!")
 		handler.FinishCommand("id1", entities.NewSuccessCommand([]byte("OK")), nil)
 		time.Sleep(time.Second)
-		ginkgo.It("must receive the callbacks", func(){
+		ginkgo.It("must receive the callbacks", func() {
 			gomega.Expect(lines, gomega.Equal(1))
 			gomega.Expect(finalized, gomega.BeTrue())
 			gomega.Expect(len(handler.resultCallbacks), gomega.Equal(0))
@@ -45,7 +58,7 @@ var _ = ginkgo.Describe("Handler", func(){
 		})
 	})
 
-	ginkgo.Context("when adding a duplicated command", func(){
+	ginkgo.Context("when adding a duplicated command", func() {
 		handler := NewCommandHandler().(*commandHandler)
 		err1 := handler.AddCommand("id1",
 			func(id string, result *entities.CommandResult, error derrors.Error) {
@@ -63,13 +76,13 @@ var _ = ginkgo.Describe("Handler", func(){
 
 			},
 		)
-		ginkgo.It("must fail on the second command", func(){
+		ginkgo.It("must fail on the second command", func() {
 			gomega.Expect(err1, gomega.BeNil())
 			gomega.Expect(err2, gomega.Not(gomega.BeNil()))
 		})
 	})
 
-	ginkgo.Context("with two commands", func(){
+	ginkgo.Context("with two commands", func() {
 		handler := NewCommandHandler().(*commandHandler)
 		lines1 := 0
 		finalized1 := false
@@ -92,7 +105,7 @@ var _ = ginkgo.Describe("Handler", func(){
 			},
 		)
 
-		ginkgo.It("must support adding two commands", func(){
+		ginkgo.It("must support adding two commands", func() {
 			gomega.Expect(err1, gomega.BeNil())
 			gomega.Expect(err2, gomega.BeNil())
 			gomega.Expect(len(handler.resultCallbacks), gomega.Equal(2))
@@ -101,7 +114,7 @@ var _ = ginkgo.Describe("Handler", func(){
 		handler.AddLogEntry("id1", "hello world!")
 		handler.FinishCommand("id1", entities.NewSuccessCommand([]byte("OK")), nil)
 		time.Sleep(time.Second)
-		ginkgo.Specify("cmd 1 must receive the callbacks", func(){
+		ginkgo.Specify("cmd 1 must receive the callbacks", func() {
 			gomega.Expect(lines1, gomega.Equal(1))
 			gomega.Expect(finalized1, gomega.BeTrue())
 			gomega.Expect(lines2, gomega.Equal(0))
@@ -111,21 +124,20 @@ var _ = ginkgo.Describe("Handler", func(){
 		})
 	})
 
-	ginkgo.Context("receiving a finish callback on a non registered cmd", func(){
+	ginkgo.Context("receiving a finish callback on a non registered cmd", func() {
 		handler := NewCommandHandler().(*commandHandler)
 		err := handler.FinishCommand("id1", entities.NewSuccessCommand([]byte("OK")), nil)
-		ginkgo.It("must fail", func(){
+		ginkgo.It("must fail", func() {
 			gomega.Expect(err, gomega.Not(gomega.BeNil()))
 		})
 	})
 
-	ginkgo.Context("receiving an add log callback on a non registered cmd", func(){
+	ginkgo.Context("receiving an add log callback on a non registered cmd", func() {
 		handler := NewCommandHandler().(*commandHandler)
 		err := handler.AddLogEntry("id1", "hello world!")
-		ginkgo.It("must fail", func(){
+		ginkgo.It("must fail", func() {
 			gomega.Expect(err, gomega.Not(gomega.BeNil()))
 		})
 	})
-
 
 })

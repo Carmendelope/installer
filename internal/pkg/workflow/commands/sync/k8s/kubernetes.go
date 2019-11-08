@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package k8s
@@ -29,8 +42,8 @@ import (
 
 type Kubernetes struct {
 	entities.GenericSyncCommand
-	KubeConfigPath string		`json:"kubeConfigPath"`
-	Client	 *kubernetes.Clientset `json:"-"`
+	KubeConfigPath string                `json:"kubeConfigPath"`
+	Client         *kubernetes.Clientset `json:"-"`
 
 	// Discovery client for REST mapper to use, so we can figure out
 	// the right endpoints for reserves
@@ -73,7 +86,7 @@ func (k *Kubernetes) Connect() derrors.Error {
 	return nil
 }
 
-func (k *Kubernetes) ResolveIP(address string) ([]string, derrors.Error){
+func (k *Kubernetes) ResolveIP(address string) ([]string, derrors.Error) {
 	result := make([]string, 0)
 	ips, err := net.LookupIP(address)
 	if err != nil {
@@ -141,7 +154,6 @@ func (k *Kubernetes) CreateNamespaceIfNotExists(name string) derrors.Error {
 	return nil
 }
 
-
 func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 	// Create unstructured object
 	unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
@@ -164,7 +176,7 @@ func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 		if err != nil {
 			return derrors.NewInternalError("cannot create unstructured list", err)
 		}
-		err = list.EachListItem(func (obj runtime.Object) error { return k.Create(obj) })
+		err = list.EachListItem(func(obj runtime.Object) error { return k.Create(obj) })
 		if err != nil {
 			derr, ok := err.(derrors.Error)
 			if ok {
@@ -226,7 +238,7 @@ func getKind(obj runtime.Object) (schema.GroupVersionKind, derrors.Error) {
 	// at least warn
 	if len(kinds) > 1 {
 		kindLog := log.Warn()
-		for _, k := range(kinds) {
+		for _, k := range kinds {
 			kindLog = kindLog.Str("candidate", k.String())
 		}
 		kindLog.Msg("received ambiguous object, picking first candidate")

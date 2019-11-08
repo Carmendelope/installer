@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package workflow
@@ -48,9 +61,9 @@ const basicTemplateIteration = `
 var _ = ginkgo.Describe("Parser", func() {
 	var parser = NewParser()
 
-	ginkgo.Context("parses a workflow not requiring the template", func(){
+	ginkgo.Context("parses a workflow not requiring the template", func() {
 		workflow, err := parser.ParseWorkflow("test", basicDefinitionNoTemplate, "TestParseWorkflow_Basic", EmptyParameters)
-		ginkgo.It("must contain cmd1", func(){
+		ginkgo.It("must contain cmd1", func() {
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(workflow).ToNot(gomega.BeNil())
 			gomega.Expect(len((*workflow).Commands), gomega.Equal(2))
@@ -59,14 +72,14 @@ var _ = ginkgo.Describe("Parser", func() {
 		})
 	})
 
-	ginkgo.Context("parses a workflow iterating through the nodes", func(){
+	ginkgo.Context("parses a workflow iterating through the nodes", func() {
 		numNodes := 10
 		params := GetTestParameters(numNodes, true)
 		workflow, err := parser.ParseWorkflow("test", basicTemplateIteration, "TestParseWorkflow_SimpleTemplate", *params)
-		ginkgo.It("must have iterated through the nodes", func(){
+		ginkgo.It("must have iterated through the nodes", func() {
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(workflow, gomega.Not(gomega.BeNil()))
-			gomega.Expect(len(workflow.Commands), gomega.Equal(numNodes + 1))
+			gomega.Expect(len(workflow.Commands), gomega.Equal(numNodes+1))
 			firstCmd := (*workflow).Commands[0]
 			gomega.Expect(firstCmd.(*sync.Exec).Args[0]).To(gomega.Equal(params.InstallRequest.InstallId))
 			gomega.Expect(firstCmd.(*sync.Exec).Args[1]).To(gomega.Equal(params.InstallRequest.ClusterId))
@@ -79,9 +92,9 @@ var _ = ginkgo.Describe("Parser", func() {
 
 	})
 
-	ginkgo.Context("parses a simple workflow with two different commands", func(){
+	ginkgo.Context("parses a simple workflow with two different commands", func() {
 		workflow, err := parser.ParseWorkflow("test", basicDefinitionTwoCommands, "TestParseWorkflow_TwoCommands", EmptyParameters)
-		ginkgo.It("must be returned and contain the Exec and SCP commands", func(){
+		ginkgo.It("must be returned and contain the Exec and SCP commands", func() {
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(workflow, gomega.Not(gomega.BeNil()))
 			cmd1 := (*workflow).Commands[0]

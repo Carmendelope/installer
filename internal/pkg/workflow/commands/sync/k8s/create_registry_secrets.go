@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2019 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package k8s
@@ -22,11 +35,11 @@ import (
 // application cluster.
 type CreateRegistrySecrets struct {
 	Kubernetes
-	OnManagementCluster  bool   `json:"on_management_cluster"`
-	CredentialsName string `json:"credentials_name"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	URL string `json:"url"`
+	OnManagementCluster bool   `json:"on_management_cluster"`
+	CredentialsName     string `json:"credentials_name"`
+	Username            string `json:"username"`
+	Password            string `json:"password"`
+	URL                 string `json:"url"`
 }
 
 func NewCreateRegistrySecrets(
@@ -39,7 +52,7 @@ func NewCreateRegistrySecrets(
 			KubeConfigPath:     kubeConfigPath,
 		},
 		OnManagementCluster: onManagementCluster,
-		CredentialsName:                credentialsName,
+		CredentialsName:     credentialsName,
 		Username:            username,
 		Password:            password,
 		URL:                 url,
@@ -58,7 +71,7 @@ func NewCreateRegistrySecretsFromJSON(raw []byte) (*entities.Command, derrors.Er
 
 // createEnvironmentSecret creates the secret that will be mounted by the installer to be able to trigger
 // the install of application clusters.
-func (cmd* CreateRegistrySecrets) createEnvironmentSecret() derrors.Error{
+func (cmd *CreateRegistrySecrets) createEnvironmentSecret() derrors.Error {
 	envSecret := &v1.Secret{
 		TypeMeta: v12.TypeMeta{
 			Kind:       "Secret",
@@ -70,10 +83,10 @@ func (cmd* CreateRegistrySecrets) createEnvironmentSecret() derrors.Error{
 			Labels:    map[string]string{"cluster": "management"},
 		},
 		Data: map[string][]byte{
-			"credentials_name":[]byte(cmd.CredentialsName),
-			"username": []byte(cmd.Username),
-			"password": []byte(cmd.Password),
-			"url": []byte(cmd.URL),
+			"credentials_name": []byte(cmd.CredentialsName),
+			"username":         []byte(cmd.Username),
+			"password":         []byte(cmd.Password),
+			"url":              []byte(cmd.URL),
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -84,17 +97,17 @@ func (cmd* CreateRegistrySecrets) createEnvironmentSecret() derrors.Error{
 	return nil
 }
 
-func (cmd * CreateRegistrySecrets) createDockerSecrets(workflowID string) derrors.Error{
+func (cmd *CreateRegistrySecrets) createDockerSecrets(workflowID string) derrors.Error {
 	// Reuse the existing create docker secret commands
 
 	// Create the production secret
 	secret := NewCreateDockerSecret(cmd.KubeConfigPath, cmd.CredentialsName,
 		cmd.Username, cmd.Password, cmd.URL)
 	result, err := secret.Run(workflowID)
-	if err != nil{
+	if err != nil {
 		return err
 	}
-	if !result.Success{
+	if !result.Success {
 		return result.Error
 	}
 
@@ -114,12 +127,12 @@ func (cmd *CreateRegistrySecrets) Run(workflowID string) (*entities.CommandResul
 	// For the public registry we must create the opaque secret on the application clusters.
 	if cmd.OnManagementCluster || cmd.CredentialsName == "nalej-public-registry" {
 		sErr := cmd.createEnvironmentSecret()
-		if sErr != nil{
+		if sErr != nil {
 			return entities.NewCommandResult(false, "cannot create environment secret", sErr), nil
 		}
 	}
 	sErr := cmd.createDockerSecrets(workflowID)
-	if sErr != nil{
+	if sErr != nil {
 		return entities.NewCommandResult(false, "cannot create docker registry secret", sErr), nil
 	}
 	// Create Docker secrets

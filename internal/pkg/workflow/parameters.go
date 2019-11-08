@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package workflow
@@ -58,7 +71,7 @@ type NetworkConfig struct {
 }
 
 // Deprecated: This will be removed as ZT will be removed.
-func NewNetworkConfig (ztPlanetSecretPath string) *NetworkConfig {
+func NewNetworkConfig(ztPlanetSecretPath string) *NetworkConfig {
 	return &NetworkConfig{
 		ZTPlanetSecretPath: ztPlanetSecretPath,
 	}
@@ -102,24 +115,24 @@ type RegistryCredentials struct {
 
 func NewRegistryCredentials(name string, username string, password string, url string) *RegistryCredentials {
 	return &RegistryCredentials{
-		Name: name,
+		Name:     name,
 		Username: username,
 		Password: password,
-		URL: url,
+		URL:      url,
 	}
 }
 
-func NewRegistryCredentialsFromEnvironment(env entities.Environment) []RegistryCredentials{
+func NewRegistryCredentialsFromEnvironment(env entities.Environment) []RegistryCredentials {
 	result := make([]RegistryCredentials, 0)
 	prod := NewRegistryCredentials(entities.ProdRegistryName,
 		env.ProdRegistryUsername, env.ProdRegistryPassword, env.ProdRegistryURL)
 	result = append(result, *prod)
-	if env.Target == entities.Staging || env.Target == entities.Development{
+	if env.Target == entities.Staging || env.Target == entities.Development {
 		staging := NewRegistryCredentials(entities.StagingRegistryName,
 			env.StagingRegistryUsername, env.StagingRegistryPassword, env.StagingRegistryURL)
 		result = append(result, *staging)
 	}
-	if env.Target == entities.Development{
+	if env.Target == entities.Development {
 		development := NewRegistryCredentials(entities.DevRegistryName,
 			env.DevRegistryUsername, env.DevRegistryPassword, env.DevRegistryURL)
 		result = append(result, *development)
@@ -160,7 +173,7 @@ func NewParameters(
 	networkConfig NetworkConfig,
 	authxSecret string,
 	caCertPath string,
-	) *Parameters {
+) *Parameters {
 	return &Parameters{
 		request,
 		InstallCredentials{},
@@ -201,7 +214,7 @@ func (p *Parameters) Validate() derrors.Error {
 		return derrors.NewInternalError(errors.InvalidNumMaster)
 	}
 
-	if len(p.Registries) == 0{
+	if len(p.Registries) == 0 {
 		return derrors.NewInvalidArgumentError("at least one registry must be specified")
 	}
 

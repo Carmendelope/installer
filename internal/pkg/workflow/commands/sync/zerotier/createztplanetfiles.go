@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package zerotier
@@ -28,12 +41,12 @@ type CreateZTPlanetFiles struct {
 	MgmtClusterFQDN    string `json:"management_public_host"`
 	IdentitySecretPath string `json:"identitySecretPath"`
 	IdentityPublicPath string `json:"identityPublicPath"`
-	PlanetJsonPath string `json:"planetJsonPath"`
-	PlanetPath string `json:"planetPath"`
+	PlanetJsonPath     string `json:"planetJsonPath"`
+	PlanetPath         string `json:"planetPath"`
 }
 
 // Deprecated: NewCreateZTPlanetFiles should not be used as the platform will remove ZT support.
-func NewCreateZTPlanetFiles (
+func NewCreateZTPlanetFiles(
 	kubeConfigPath string,
 	ztIdToolBinaryPath string,
 	mgmtClusterFqdn string,
@@ -44,31 +57,31 @@ func NewCreateZTPlanetFiles (
 	return &CreateZTPlanetFiles{
 		Kubernetes: k8s.Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CreateZTPlanetFiles),
-			KubeConfigPath: kubeConfigPath,
+			KubeConfigPath:     kubeConfigPath,
 		},
 		ZtIdToolBinaryPath: ztIdToolBinaryPath,
-		MgmtClusterFQDN: mgmtClusterFqdn,
+		MgmtClusterFQDN:    mgmtClusterFqdn,
 		IdentitySecretPath: identitySecretPath,
 		IdentityPublicPath: identityPublicPath,
-		PlanetJsonPath: planetJsonPath,
-		PlanetPath: planetPath,
+		PlanetJsonPath:     planetJsonPath,
+		PlanetPath:         planetPath,
 	}
 }
 
 type ZTPlanetJson struct {
-	Id string `json:"id"`
+	Id      string `json:"id"`
 	ObjType string `json:"objtype"`
-	Roots [] struct {
-		Identity string `json:"identity"`
+	Roots   []struct {
+		Identity        string   `json:"identity"`
 		StableEndpoints []string `json:"stableEndpoints"`
 	} `json:"roots"`
-	SigningKey string `json:"signingKey"`
-	SigningKeySecret string `json:"signingKey_SECRET"`
+	SigningKey            string `json:"signingKey"`
+	SigningKeySecret      string `json:"signingKey_SECRET"`
 	UpdatesMustBeSignedBy string `json:"updatesMustBeSignedBy"`
-	WorldType string `json:"worldType"`
+	WorldType             string `json:"worldType"`
 }
 
-func NewCreateZTPlanetFilesFromJSON (raw []byte) (*entities.Command, derrors.Error) {
+func NewCreateZTPlanetFilesFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 	f := &CreateZTPlanetFiles{}
 	if err := json.Unmarshal(raw, &f); err != nil {
 		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
@@ -78,7 +91,7 @@ func NewCreateZTPlanetFilesFromJSON (raw []byte) (*entities.Command, derrors.Err
 	return &r, nil
 }
 
-func (cmd * CreateZTPlanetFiles) generateZTIdentityFiles() derrors.Error{
+func (cmd *CreateZTPlanetFiles) generateZTIdentityFiles() derrors.Error {
 	// Generate ZT Planet IDs
 	generateIds := exec.Command(cmd.ZtIdToolBinaryPath, "generate", cmd.IdentitySecretPath, cmd.IdentityPublicPath)
 	_, pipeErr := generateIds.StderrPipe()
@@ -94,11 +107,11 @@ func (cmd * CreateZTPlanetFiles) generateZTIdentityFiles() derrors.Error{
 	return nil
 }
 
-func (cmd * CreateZTPlanetFiles) initMoon() derrors.Error{
+func (cmd *CreateZTPlanetFiles) initMoon() derrors.Error {
 	// Init Moon
-	log.Debug().Msg(cmd.ZtIdToolBinaryPath+" initmoon "+"$(cat "+cmd.IdentityPublicPath+")")
+	log.Debug().Msg(cmd.ZtIdToolBinaryPath + " initmoon " + "$(cat " + cmd.IdentityPublicPath + ")")
 	identityPublicRaw, err := ioutil.ReadFile(cmd.IdentityPublicPath)
-	if err != nil{
+	if err != nil {
 		return derrors.NewGenericError("cannot read identity public", err)
 	}
 	initMoon := exec.Command(cmd.ZtIdToolBinaryPath, "initmoon", string(identityPublicRaw))
@@ -116,7 +129,7 @@ func (cmd * CreateZTPlanetFiles) initMoon() derrors.Error{
 	}
 
 	planetRaw, err := ioutil.ReadAll(initMoonOut)
-	if err != nil{
+	if err != nil {
 		return derrors.NewInternalError("cannot read planet from pipe", err)
 	}
 
@@ -125,7 +138,7 @@ func (cmd * CreateZTPlanetFiles) initMoon() derrors.Error{
 		return derrors.NewGenericError("Error waiting for Planet JSON parse", err)
 	}
 
-	planet := &ZTPlanetJson {}
+	planet := &ZTPlanetJson{}
 	if err := json.Unmarshal(planetRaw, planet); err != nil {
 		log.Error().Msg("Error parsing Planet JSON")
 		return derrors.NewGenericError("Error parsing Planet JSON", err)
@@ -138,7 +151,7 @@ func (cmd * CreateZTPlanetFiles) initMoon() derrors.Error{
 		return derrors.NewGenericError("Unexpected roots found in zerotier planet file")
 	}
 
-	planet.Roots[0].StableEndpoints = []string{fmt.Sprintf("zt-planet.%s",cmd.MgmtClusterFQDN)}
+	planet.Roots[0].StableEndpoints = []string{fmt.Sprintf("zt-planet.%s", cmd.MgmtClusterFQDN)}
 	planet.WorldType = "planet"
 
 	log.Debug().Interface("zeroTierPlanet", planet).Msg("Final ZT planet")
@@ -156,7 +169,7 @@ func (cmd * CreateZTPlanetFiles) initMoon() derrors.Error{
 	return nil
 }
 
-func (cmd * CreateZTPlanetFiles) generatePlanet() derrors.Error{
+func (cmd *CreateZTPlanetFiles) generatePlanet() derrors.Error {
 	// Generate Planet file
 	generateMoon := exec.Command(cmd.ZtIdToolBinaryPath, "genmoon", cmd.PlanetJsonPath)
 	generateMoon.Dir = filepath.Dir(cmd.PlanetPath)
@@ -171,8 +184,8 @@ func (cmd * CreateZTPlanetFiles) generatePlanet() derrors.Error{
 		log.Error().Msg("Error while executing genmoon command")
 		return derrors.NewGenericError("Error while executing genmoon command", err)
 	}
-	generateMoonOutStr := strings.Fields(string (generateMoonOut))
-	moonName := generateMoonOutStr [1]
+	generateMoonOutStr := strings.Fields(string(generateMoonOut))
+	moonName := generateMoonOutStr[1]
 	log.Debug().Str("moonName", moonName).Msg("Moon")
 
 	// Move moon file to planet file
@@ -185,7 +198,7 @@ func (cmd * CreateZTPlanetFiles) generatePlanet() derrors.Error{
 	return nil
 }
 
-func (cmd * CreateZTPlanetFiles) createKubernetesSecrets() derrors.Error{
+func (cmd *CreateZTPlanetFiles) createKubernetesSecrets() derrors.Error {
 	// Planet Secret
 	planetData, err := ioutil.ReadFile(cmd.PlanetPath)
 	if err != nil {
@@ -276,11 +289,11 @@ func (cmd * CreateZTPlanetFiles) createKubernetesSecrets() derrors.Error{
 }
 
 // Run triggers the execution of the command.
-func (cmd *CreateZTPlanetFiles) Run (workflowID string) (*entities.CommandResult, derrors.Error) {
+func (cmd *CreateZTPlanetFiles) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
 	log.Debug().Str("path", cmd.ZtIdToolBinaryPath).Msg("ZT ID Tool binary")
 
 	dErr := cmd.generateZTIdentityFiles()
-	if dErr != nil{
+	if dErr != nil {
 		return nil, dErr
 	}
 
@@ -290,26 +303,26 @@ func (cmd *CreateZTPlanetFiles) Run (workflowID string) (*entities.CommandResult
 	}
 
 	dErr = cmd.generatePlanet()
-	if dErr != nil{
+	if dErr != nil {
 		return nil, dErr
 	}
 
 	dErr = cmd.createKubernetesSecrets()
-	if dErr != nil{
+	if dErr != nil {
 		return nil, dErr
 	}
 
 	return entities.NewSuccessCommand([]byte("ZT Planet files and secrets successfully created.")), nil
 }
 
-func (cmd *CreateZTPlanetFiles) String () string {
+func (cmd *CreateZTPlanetFiles) String() string {
 	return fmt.Sprintf("SYNC CreateZTPlanetFiles on %s", cmd.KubeConfigPath)
 }
 
-func (cmd *CreateZTPlanetFiles) PrettyPrint (indentation int) string {
+func (cmd *CreateZTPlanetFiles) PrettyPrint(indentation int) string {
 	return strings.Repeat(" ", indentation) + cmd.String()
 }
 
-func (cmd *CreateZTPlanetFiles) UserString () string {
+func (cmd *CreateZTPlanetFiles) UserString() string {
 	return fmt.Sprintf("Creating ZT Planet files")
 }

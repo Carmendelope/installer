@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2019 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package entities
@@ -42,39 +55,39 @@ const (
 	Development
 )
 
-var TargetEnvironmentFromString = map[string]TargetEnvironment {
-	"production":Production,
-	"PRODUCTION":Production,
-	"staging":Staging,
-	"STAGING":Staging,
-	"development":Development,
-	"DEVELOPMENT":Development,
+var TargetEnvironmentFromString = map[string]TargetEnvironment{
+	"production":  Production,
+	"PRODUCTION":  Production,
+	"staging":     Staging,
+	"STAGING":     Staging,
+	"development": Development,
+	"DEVELOPMENT": Development,
 }
 
 var TargetEnvironmentToString = map[TargetEnvironment]string{
-	Production:"PRODUCTION",
-	Staging:"STAGING",
-	Development:"DEVELOPMENT",
+	Production:  "PRODUCTION",
+	Staging:     "STAGING",
+	Development: "DEVELOPMENT",
 }
 
-type Environment struct{
-	Target TargetEnvironment
-	TargetEnvironment string `json:"target_environment"`
-	ProdRegistryUsername string `json:"prod_registry_username"`
-	ProdRegistryPassword string `json:"prod_registry_password"`
-	ProdRegistryURL string `json:"prod_registry_url"`
+type Environment struct {
+	Target                  TargetEnvironment
+	TargetEnvironment       string `json:"target_environment"`
+	ProdRegistryUsername    string `json:"prod_registry_username"`
+	ProdRegistryPassword    string `json:"prod_registry_password"`
+	ProdRegistryURL         string `json:"prod_registry_url"`
 	StagingRegistryUsername string `json:"staging_registry_username"`
 	StagingRegistryPassword string `json:"staging_registry_password"`
-	StagingRegistryURL string `json:"staging_registry_url"`
-	DevRegistryUsername string `json:"dev_registry_username"`
-	DevRegistryPassword string `json:"dev_registry_password"`
-	DevRegistryURL string `json:"dev_registry_url"`
-	PublicRegistryUsername string `json:"public_registry_username"`
-	PublicRegistryPassword string `json:"public_registry_password"`
-	PublicRegistryURL string `json:"public_registry_url"`
+	StagingRegistryURL      string `json:"staging_registry_url"`
+	DevRegistryUsername     string `json:"dev_registry_username"`
+	DevRegistryPassword     string `json:"dev_registry_password"`
+	DevRegistryURL          string `json:"dev_registry_url"`
+	PublicRegistryUsername  string `json:"public_registry_username"`
+	PublicRegistryPassword  string `json:"public_registry_password"`
+	PublicRegistryURL       string `json:"public_registry_url"`
 }
 
-func NewEnvironment() *Environment{
+func NewEnvironment() *Environment {
 	return &Environment{}
 }
 
@@ -106,7 +119,7 @@ func (e *Environment) ValidatePublic() derrors.Error {
 	return nil
 }
 
-func (e*Environment) envOrElse(envName string, paramValue string) string{
+func (e *Environment) envOrElse(envName string, paramValue string) string {
 	if paramValue != "" {
 		return paramValue
 	}
@@ -118,7 +131,7 @@ func (e*Environment) envOrElse(envName string, paramValue string) string{
 }
 
 // Resolve applies the environment variables
-func (e*Environment) Resolve() {
+func (e *Environment) Resolve() {
 	// Production
 	e.ProdRegistryUsername = e.envOrElse(EnvProdRegistryUsername, e.ProdRegistryUsername)
 	e.ProdRegistryPassword = e.envOrElse(EnvProdRegistryPassword, e.ProdRegistryPassword)
@@ -146,40 +159,40 @@ func (e *Environment) Validate() derrors.Error {
 	e.Target = env
 
 	vErr := e.ValidateProduction()
-	if vErr != nil{
+	if vErr != nil {
 		return vErr
 	}
 	vErr = e.ValidatePublic()
-	if vErr != nil{
+	if vErr != nil {
 		return vErr
 	}
 	if e.Target == Staging || e.Target == Development {
 		vErr = e.ValidateStaging()
-		if vErr != nil{
+		if vErr != nil {
 			return vErr
 		}
 	}
 	if e.Target == Development {
 		vErr = e.ValidateDevelopment()
-		if vErr != nil{
+		if vErr != nil {
 			return vErr
 		}
 	}
 	return nil
 }
 
-func (e*Environment) Print() {
+func (e *Environment) Print() {
 	log.Info().
 		Str("username", e.ProdRegistryUsername).
 		Str("password", strings.Repeat("*", len(e.ProdRegistryPassword))).
 		Str("URL", e.ProdRegistryURL).Msg("Production registry")
-	if e.Target == Staging || e.Target == Development{
+	if e.Target == Staging || e.Target == Development {
 		log.Info().
 			Str("username", e.StagingRegistryUsername).
 			Str("password", strings.Repeat("*", len(e.StagingRegistryPassword))).
 			Str("URL", e.StagingRegistryURL).Msg("Staging registry")
 	}
-	if e.Target == Development{
+	if e.Target == Development {
 		log.Info().
 			Str("username", e.DevRegistryUsername).
 			Str("password", strings.Repeat("*", len(e.DevRegistryPassword))).

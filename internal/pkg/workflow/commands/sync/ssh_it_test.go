@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 // SSH Integration tests
@@ -15,7 +28,7 @@
 RUN_INTEGRATION_TEST=true
 IT_SSH_HOST=localhost
 IT_SSH_PORT=2222
- */
+*/
 
 package sync
 
@@ -30,22 +43,22 @@ import (
 )
 
 var _ = ginkgo.Describe("An SCP command", func() {
-	if ! utils.RunIntegrationTests() {
+	if !utils.RunIntegrationTests() {
 		log.Warn().Msg("Integration tests are skipped")
 		return
 	}
 	var (
-		testUsername= "root"
-		testPassword= "root"
-		targetHost= os.Getenv("IT_SSH_HOST")
-		targetPort= os.Getenv("IT_SSH_PORT")
+		testUsername = "root"
+		testPassword = "root"
+		targetHost   = os.Getenv("IT_SSH_HOST")
+		targetPort   = os.Getenv("IT_SSH_PORT")
 	)
 
 	if targetHost == "" || targetPort == "" {
 		ginkgo.Fail("missing environment variables")
 	}
 
-	ginkgo.It("must be able to execute a simple command", func(){
+	ginkgo.It("must be able to execute a simple command", func() {
 		credentials := entities.NewCredentials(testUsername, testPassword)
 		args := make([]string, 2)
 		args[0] = "-lash"
@@ -57,7 +70,7 @@ var _ = ginkgo.Describe("An SCP command", func() {
 		gomega.Expect(strings.Contains(output, "local")).To(gomega.BeTrue())
 	})
 
-	ginkgo.It("must be able to execute a command using PKI", func(){
+	ginkgo.It("must be able to execute a command using PKI", func() {
 		privateKey := getUserPrivateKey()
 		credentials := entities.NewPKICredentials(testUsername, string(privateKey))
 		args := make([]string, 2)
