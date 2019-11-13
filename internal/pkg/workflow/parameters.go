@@ -52,8 +52,6 @@ type Parameters struct {
 	TargetEnvironment string `json:"target_environment"`
 	//AppClusterInstall indicates if an application cluster is being installed.
 	AppClusterInstall bool `json:"app_cluster_install"`
-	//Registries contains the credentials to access the available docker registries to deploy internal images.
-	Registries []RegistryCredentials `json:"registries"`
 	// NetworkConfig contains the configuration of the networking of the cluster.
 	NetworkConfig NetworkConfig `json:"network_config"`
 	// AuthSecret contains the secret required to validate JWT tokens.
@@ -102,48 +100,6 @@ func NewPaths(componentsPath string, binaryPath string, tempPath string) *Paths 
 	return &Paths{componentsPath, binaryPath, tempPath}
 }
 
-type RegistryCredentials struct {
-	// Name of the registry
-	Name string `json:"name"`
-	//Username to access the docker registry
-	Username string `json:"username"`
-	//Password to access the docker registry
-	Password string `json:"password"`
-	// URL of the registry
-	URL string `json:"url"`
-}
-
-func NewRegistryCredentials(name string, username string, password string, url string) *RegistryCredentials {
-	return &RegistryCredentials{
-		Name:     name,
-		Username: username,
-		Password: password,
-		URL:      url,
-	}
-}
-
-func NewRegistryCredentialsFromEnvironment(env entities.Environment) []RegistryCredentials {
-	result := make([]RegistryCredentials, 0)
-	prod := NewRegistryCredentials(entities.ProdRegistryName,
-		env.ProdRegistryUsername, env.ProdRegistryPassword, env.ProdRegistryURL)
-	result = append(result, *prod)
-	if env.Target == entities.Staging || env.Target == entities.Development {
-		staging := NewRegistryCredentials(entities.StagingRegistryName,
-			env.StagingRegistryUsername, env.StagingRegistryPassword, env.StagingRegistryURL)
-		result = append(result, *staging)
-	}
-	if env.Target == entities.Development {
-		development := NewRegistryCredentials(entities.DevRegistryName,
-			env.DevRegistryUsername, env.DevRegistryPassword, env.DevRegistryURL)
-		result = append(result, *development)
-	}
-
-	public := NewRegistryCredentials(entities.PublicRegistryName,
-		env.PublicRegistryUsername, env.PublicRegistryPassword, env.PublicRegistryURL)
-	result = append(result, *public)
-	return result
-}
-
 type InstallCredentials struct {
 	// Username for the SSH credentials.
 	Username string `json:"username"`
@@ -169,7 +125,6 @@ func NewParameters(
 	dnsClusterPort string,
 	targetEnvironment entities.TargetEnvironment,
 	appClusterInstall bool,
-	registryCredentials []RegistryCredentials,
 	networkConfig NetworkConfig,
 	authxSecret string,
 	caCertPath string,
@@ -183,7 +138,6 @@ func NewParameters(
 		dnsClusterHost, dnsClusterPort,
 		entities.TargetEnvironmentToString[targetEnvironment],
 		appClusterInstall,
-		registryCredentials,
 		networkConfig,
 		authxSecret,
 		caCertPath,
@@ -212,10 +166,6 @@ func (p *Parameters) Validate() derrors.Error {
 
 	if p.Credentials.KubeConfigPath == "" && len(p.InstallRequest.Nodes) == 0 {
 		return derrors.NewInternalError(errors.InvalidNumMaster)
-	}
-
-	if len(p.Registries) == 0 {
-		return derrors.NewInvalidArgumentError("at least one registry must be specified")
 	}
 
 	return nil

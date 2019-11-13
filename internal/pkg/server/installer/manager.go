@@ -93,15 +93,13 @@ func (m *Manager) launchInstall(installID string) {
 		return
 	}
 
-	registryCredentials := workflow.NewRegistryCredentialsFromEnvironment(m.Config.Environment)
-
 	// Create Parameters
 	params := workflow.NewParameters(
 		request, workflow.Assets{}, m.Paths,
 		m.Config.ManagementClusterHost, m.Config.ManagementClusterPort,
 		m.Config.DNSClusterHost, m.Config.DNSClusterPort,
 		m.Config.Environment.Target,
-		true, registryCredentials,
+		true,
 		*workflow.EmptyNetworkConfig, m.Config.AuthSecret, m.Config.ClusterCertIssuerCACertPath)
 
 	status.Params = params
