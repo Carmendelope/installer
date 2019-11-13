@@ -90,14 +90,11 @@ func NewInstallerFromCLI(
 		StaticIpAddresses: &staticIPAddresses,
 	}
 
-	registryCredentials := workflow.NewRegistryCredentialsFromEnvironment(environment)
-
 	params := workflow.NewParameters(request, workflow.Assets{},
 		paths, managementClusterHost, workflow.DefaultManagementPort,
 		dnsClusterHost, dnsClusterPort,
 		environment.Target,
 		appClusterInstall,
-		registryCredentials,
 		*workflow.EmptyNetworkConfig, "", "")
 	return NewInstaller(*params), nil
 }

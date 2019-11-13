@@ -71,7 +71,6 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 	paths := NewPaths("assestPath", "binPath", "confPath")
 
 	networkParameters := NewNetworkConfig("ztPlanetSecret")
-	registryCredentials := NewRegistryCredentials("Production", "dockerUsername", "dockerPassword", "registryURL")
 
 	return NewParameters(
 		request,
@@ -81,7 +80,6 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		"dns_host", "53",
 		entities.Production,
 		appClusterInstall,
-		[]RegistryCredentials{*registryCredentials},
 		*networkParameters,
 		"authxSecret", "caCertPath",
 	)

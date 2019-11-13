@@ -121,34 +121,6 @@ func init() {
 // Add parameters related to the usage of registries.
 func addRegistryOptions(cliCmd *cobra.Command) {
 	cliCmd.PersistentFlags().StringVar(&environment.TargetEnvironment, "targetEnvironment", "PRODUCTION", "Target environment to be installed: PRODUCTION, STAGING, or DEVELOPMENT")
-	// Production
-	cliCmd.PersistentFlags().StringVar(&environment.ProdRegistryUsername, "prodRegistryUsername", "",
-		"Username to download internal images from the production docker registry. Alternatively you may use PROD_REGISTRY_USERNAME")
-	cliCmd.PersistentFlags().StringVar(&environment.ProdRegistryPassword, "prodRegistryPassword", "",
-		"Password to download internal images from the production docker registry. Alternatively you may use PROD_REGISTRY_PASSWORD")
-	cliCmd.PersistentFlags().StringVar(&environment.ProdRegistryURL, "prodRegistryURL", "",
-		"URL of the production docker registry. Alternatively you may use PROD_REGISTRY_URL")
-	// Staging
-	cliCmd.PersistentFlags().StringVar(&environment.StagingRegistryUsername, "stagingRegistryUsername", "",
-		"Username to download internal images from the staging docker registry. Alternatively you may use STAGING_REGISTRY_USERNAME")
-	cliCmd.PersistentFlags().StringVar(&environment.StagingRegistryPassword, "stagingRegistryPassword", "",
-		"Password to download internal images from the staging docker registry. Alternatively you may use STAGING_REGISTRY_PASSWORD")
-	cliCmd.PersistentFlags().StringVar(&environment.StagingRegistryURL, "stagingRegistryURL", "",
-		"URL of the staging docker registry. Alternatively you may use STAGING_REGISTRY_URL")
-	// Development
-	cliCmd.PersistentFlags().StringVar(&environment.DevRegistryUsername, "devRegistryUsername", "",
-		"Username to download internal images from the development docker registry. Alternatively you may use DEV_REGISTRY_USERNAME")
-	cliCmd.PersistentFlags().StringVar(&environment.DevRegistryPassword, "devRegistryPassword", "",
-		"Password to download internal images from the development docker registry. Alternatively you may use DEV_REGISTRY_PASSWORD")
-	cliCmd.PersistentFlags().StringVar(&environment.DevRegistryURL, "devRegistryURL", "",
-		"URL of the development docker registry. Alternatively you may use DEV_REGISTRY_URL")
-	// Public
-	cliCmd.PersistentFlags().StringVar(&environment.PublicRegistryUsername, "publicRegistryUsername", "",
-		"Username to download internal images from the public docker registry. Alternatively you may use PUBLIC_REGISTRY_USERNAME")
-	cliCmd.PersistentFlags().StringVar(&environment.PublicRegistryPassword, "publicRegistryPassword", "",
-		"Password to download internal images from the public docker registry. Alternatively you may use PUBLIC_REGISTRY_PASSWORD")
-	cliCmd.PersistentFlags().StringVar(&environment.PublicRegistryURL, "publicRegistryURL", "",
-		"URL of the public docker registry. Alternatively you may use PUBLIC_REGISTRY_URL")
 }
 
 func CheckExists(path string) bool {

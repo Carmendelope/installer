@@ -52,7 +52,6 @@ func LaunchManagementInstall() {
 		log.Panic().Str("error", err.DebugReport()).Msg("cannot obtain paths")
 	}
 
-	environment.Resolve()
 	vErr := environment.Validate()
 	if vErr != nil {
 		log.Fatal().Str("trace", vErr.DebugReport()).Msg("Invalid environment")

@@ -33,7 +33,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 
 	"k8s.io/client-go/kubernetes/scheme"
@@ -44,22 +43,6 @@ import (
 )
 
 const AzureStorageClass = "managed-premium"
-
-var ProductionImagePullSecret = &v1.LocalObjectReference{
-	Name: entities2.ProdRegistryName,
-}
-
-var StagingImagePullSecret = &v1.LocalObjectReference{
-	Name: entities2.StagingRegistryName,
-}
-
-var DevImagePullSecret = &v1.LocalObjectReference{
-	Name: entities2.DevRegistryName,
-}
-
-var ProductionImagePullSecrets = []v1.LocalObjectReference{*ProductionImagePullSecret}
-var StagingImagePullSecrets = []v1.LocalObjectReference{*ProductionImagePullSecret, *StagingImagePullSecret}
-var DevImagePullSecrets = []v1.LocalObjectReference{*ProductionImagePullSecret, *StagingImagePullSecret, *DevImagePullSecret}
 
 // LaunchComponents is a command that reads a directory for YAML files and triggers the creation
 // of those entities in Kubernetes.
@@ -197,8 +180,6 @@ func (lc *LaunchComponents) launchComponent(componentPath string, targetEnvironm
 	// obj -> typed -> o -> obj
 	// We can do this switch even if typed might be nil.
 	switch o := typed.(type) {
-	case *appsv1.Deployment:
-		obj = runtime.Object(lc.patchDeployment(o, targetEnvironment))
 	case *v1.PersistentVolume:
 		obj = runtime.Object(lc.patchPersistentVolume(o))
 	case *v1.PersistentVolumeClaim:
@@ -206,20 +187,6 @@ func (lc *LaunchComponents) launchComponent(componentPath string, targetEnvironm
 	}
 
 	return lc.Create(obj)
-}
-
-// patchDeployment modifies the deployment to include image pull secrets depending on the type of environment.
-func (lc *LaunchComponents) patchDeployment(deployment *appsv1.Deployment, targetEnvironment entities2.TargetEnvironment) *appsv1.Deployment {
-	aux := deployment
-	switch targetEnvironment {
-	case entities2.Production:
-		aux.Spec.Template.Spec.ImagePullSecrets = ProductionImagePullSecrets
-	case entities2.Staging:
-		aux.Spec.Template.Spec.ImagePullSecrets = StagingImagePullSecrets
-	case entities2.Development:
-		aux.Spec.Template.Spec.ImagePullSecrets = DevImagePullSecrets
-	}
-	return aux
 }
 
 // patchPersistenceVolume modifies the storage class

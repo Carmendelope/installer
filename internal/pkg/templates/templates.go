@@ -110,17 +110,6 @@ const InstallManagementCluster = `
 			},
 		{{end}}
 
-		{{ range $index, $registry := $.Registries }}
-			{"type":"sync", "name":"createRegistrySecrets",
-				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-				"on_management_cluster":{{ not $.AppClusterInstall}},
-				"credentials_name":"{{$registry.Name}}",
-				"username":"{{$registry.Username}}",
-				"password":"{{$registry.Password}}",
-				"url":"{{$registry.URL}}"
-			},
-		{{end}}
-
 		{"type":"sync", "name": "launchComponents",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespaces":["nalej", "ingress-nginx"],
