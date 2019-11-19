@@ -577,6 +577,8 @@ var DeviceAPIIngressRules = v1beta1.Ingress{
 	},
 }
 
+// AppClusterAPIIngressRules redirects incoming traffic to the app-cluster-api. The service checks the client
+// certificate so it is required to pass the certificate information to the upstream service.
 var AppClusterAPIIngressRules = v1beta1.Ingress{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Ingress",
@@ -590,12 +592,14 @@ var AppClusterAPIIngressRules = v1beta1.Ingress{
 			"component": "ingress-nginx",
 		},
 		Annotations: map[string]string{
-			"kubernetes.io/ingress.class":                        "nginx",
-			"nginx.ingress.kubernetes.io/ssl-redirect":           "true",
-			"nginx.ingress.kubernetes.io/backend-protocol":       "GRPC",
-			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
-			"nginx.ingress.kubernetes.io/auth-tls-secret":        "nalej/ca-certificate",
-			"nginx.ingress.kubernetes.io/auth-tls-verify-depth":  "1",
+			"kubernetes.io/ingress.class":                                       "nginx",
+			"nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream": "true",
+			"nginx.ingress.kubernetes.io/ssl-redirect":                          "true",
+			"nginx.ingress.kubernetes.io/grpc-backend":                          "true",
+			"nginx.ingress.kubernetes.io/backend-protocol":                      "GRPC",
+			"nginx.ingress.kubernetes.io/auth-tls-verify-client":                "on",
+			"nginx.ingress.kubernetes.io/auth-tls-secret":                       "nalej/ca-certificate",
+			"nginx.ingress.kubernetes.io/auth-tls-verify-depth":                 "1",
 		},
 	},
 	Spec: v1beta1.IngressSpec{
