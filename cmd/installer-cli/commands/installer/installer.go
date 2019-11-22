@@ -140,7 +140,7 @@ func (i *Installer) Run() {
 	for !wr.Called {
 		time.Sleep(time.Second * 15)
 		if checks%4 == 0 {
-			if i.Params.AppClusterInstall {
+			if i.Params.AppCluster {
 				fmt.Println("AppCluster installation", string(exec.State), "-", time.Since(start).String())
 			} else {
 				fmt.Println("Management cluster installation", string(exec.State), "-", time.Since(start).String())

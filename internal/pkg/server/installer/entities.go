@@ -19,6 +19,7 @@ package installer
 
 import (
 	"github.com/nalej/derrors"
+	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/installer/internal/pkg/workflow"
 	"sync"
@@ -27,13 +28,14 @@ import (
 
 type InstallStatus struct {
 	sync.Mutex
-	InstallID     string
-	state         grpc_installer_go.InstallProgress
-	Started       int64
-	Params        *workflow.Parameters
-	Workflow      *workflow.Workflow
-	error         derrors.Error
-	workflowState workflow.WorkflowState
+	OrganizationID string
+	InstallID      string
+	state          grpc_installer_go.InstallProgress
+	Started        int64
+	Params         *workflow.Parameters
+	Workflow       *workflow.Workflow
+	error          derrors.Error
+	workflowState  workflow.WorkflowState
 }
 
 func NewInstallStatus(installID string) *InstallStatus {
@@ -97,5 +99,40 @@ func (is *InstallStatus) ToGRPCInstallResponse() *grpc_installer_go.InstallRespo
 		State:       rState,
 		ElapsedTime: elapsed,
 		Error:       e,
+	}
+}
+
+// TODO Remove this map and refactor installer.
+var toOpResponseStatus = map[grpc_installer_go.InstallProgress]grpc_common_go.OpStatus{
+	// INIT represents the initial state of the workflow.
+	grpc_installer_go.InstallProgress_INIT: grpc_common_go.OpStatus_SCHEDULED,
+	// REGISTERED represents a install request that is on the queue.
+	grpc_installer_go.InstallProgress_REGISTERED: grpc_common_go.OpStatus_SCHEDULED,
+	// IN_PROGRESS represents a install that is being processed.
+	grpc_installer_go.InstallProgress_IN_PROGRESS: grpc_common_go.OpStatus_INPROGRESS,
+	// ERROR represents a install that failed.
+	grpc_installer_go.InstallProgress_ERROR: grpc_common_go.OpStatus_FAIL,
+	// FINISHED represents a sucessful install.
+	grpc_installer_go.InstallProgress_FINISHED: grpc_common_go.OpStatus_SUCCESS,
+}
+
+func (is *InstallStatus) toGRPCOpResponse() *grpc_common_go.OpResponse {
+	is.Lock()
+	rState := is.state
+	elapsed := time.Now().Unix() - is.Started
+	var e string
+	if is.error != nil {
+		e = is.error.Error()
+	}
+	is.Unlock()
+
+	return &grpc_common_go.OpResponse{
+		OrganizationId: is.OrganizationID,
+		RequestId:      is.InstallID,
+		ElapsedTime:    elapsed,
+		Timestamp:      time.Now().Unix(),
+		Status:         toOpResponseStatus[rState],
+		Info:           "",
+		Error:          e,
 	}
 }

@@ -36,6 +36,11 @@ var _ = ginkgo.Describe("A create cluster config command", func() {
 		return
 	}
 
+	if !utils.RunIntegrationTest("create_cluster_config_it") {
+		log.Warn().Msg("Integration test is skipped")
+		return
+	}
+
 	if itKubeConfigFile == "" {
 		ginkgo.Fail("missing environment variables")
 	}

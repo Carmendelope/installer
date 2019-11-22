@@ -31,6 +31,11 @@ var _ = ginkgo.Describe("A Create TLS Secret command", func() {
 		return
 	}
 
+	if !utils.RunIntegrationTest("create_tls_secret_it") {
+		log.Warn().Msg("Integration test is skipped")
+		return
+	}
+
 	if itKubeConfigFile == "" {
 		ginkgo.Fail("missing environment variables")
 	}

@@ -31,6 +31,11 @@ var _ = ginkgo.Describe("A create credentials command", func() {
 		return
 	}
 
+	if !utils.RunIntegrationTest("createcredentials_it") {
+		log.Warn().Msg("Integration test is skipped")
+		return
+	}
+
 	if itKubeConfigFile == "" || itRegistryUsername == "" || itRegistryPassword == "" {
 		ginkgo.Fail("missing environment variables")
 	}

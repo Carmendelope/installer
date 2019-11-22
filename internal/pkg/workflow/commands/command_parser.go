@@ -128,6 +128,28 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return k8s.NewCreateCACertFromJSON(raw)
 	case entities.CreateTLSSecret:
 		return k8s.NewCreateTLSSecretFromJSON(raw)
+	case entities.DeleteNamespace:
+		return k8s.NewDeleteNamespaceFromJSON(raw)
+	case entities.DeleteNalejNamespace:
+		return k8s.NewDeleteNalejNamespaceFromJSON(raw)
+	case entities.DeleteServiceAccount:
+		return k8s.NewDeleteServiceAccountFromJSON(raw)
+	case entities.DeleteClusterRoleBinding:
+		return k8s.NewDeleteClusterRoleBindingFromJSON(raw)
+	case entities.DeleteClusterRole:
+		return k8s.NewDeleteClusterRoleFromJSON(raw)
+	case entities.DeleteRole:
+		return k8s.NewDeleteRoleFromJSON(raw)
+	case entities.DeleteRoleBinding:
+		return k8s.NewDeleteRoleBindingFromJSON(raw)
+	case entities.DeleteConfigMap:
+		return k8s.NewDeleteConfigMapFromJSON(raw)
+	case entities.DeleteService:
+		return k8s.NewDeleteServiceFromJSON(raw)
+	case entities.DeleteDeployment:
+		return k8s.NewDeleteDeploymentFromJSON(raw)
+	case entities.DeletePodSecurityPolicy:
+		return k8s.NewDeletePodSecurityPolicyFromJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}

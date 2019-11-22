@@ -206,3 +206,7 @@ func (m *Manager) RemoveInstall(installID string) derrors.Error {
 
 	return nil
 }
+
+func (m *Manager) UninstallCluster(request *grpc_installer_go.UninstallClusterRequest) (*InstallStatus, derrors.Error) {
+	return nil, derrors.NewUnimplementedError("uninstall not implemented")
+}

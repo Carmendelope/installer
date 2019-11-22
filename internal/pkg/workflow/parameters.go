@@ -50,8 +50,8 @@ type Parameters struct {
 	DNSClusterPort string `json:"dns_cluster_port"`
 	// TargetEnvironment defines the type of environment being installed: PRODUCTION, STAGING, DEVELOPMENT
 	TargetEnvironment string `json:"target_environment"`
-	//AppClusterInstall indicates if an application cluster is being installed.
-	AppClusterInstall bool `json:"app_cluster_install"`
+	//AppCluster indicates if an application cluster is being installed.
+	AppCluster bool `json:"app_cluster_install"`
 	// NetworkConfig contains the configuration of the networking of the cluster.
 	NetworkConfig NetworkConfig `json:"network_config"`
 	// AuthSecret contains the secret required to validate JWT tokens.
@@ -116,7 +116,7 @@ var EmptyParameters = Parameters{}
 
 // NewParameters creates a Parameters structure.
 func NewParameters(
-	request grpc_installer_go.InstallRequest,
+	installRequest grpc_installer_go.InstallRequest,
 	assets Assets,
 	paths Paths,
 	managementClusterHost string,
@@ -124,20 +124,20 @@ func NewParameters(
 	dnsClusterHost string,
 	dnsClusterPort string,
 	targetEnvironment entities.TargetEnvironment,
-	appClusterInstall bool,
+	appCluster bool,
 	networkConfig NetworkConfig,
 	authxSecret string,
 	caCertPath string,
 ) *Parameters {
 	return &Parameters{
-		request,
+		installRequest,
 		InstallCredentials{},
 		assets,
 		paths,
 		managementClusterHost, managementClusterPort,
 		dnsClusterHost, dnsClusterPort,
 		entities.TargetEnvironmentToString[targetEnvironment],
-		appClusterInstall,
+		appCluster,
 		networkConfig,
 		authxSecret,
 		caCertPath,

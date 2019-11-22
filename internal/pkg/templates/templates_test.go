@@ -69,4 +69,19 @@ var _ = ginkgo.Describe("Templates", func() {
 		})
 
 	})
+
+	ginkgo.Context("Uninstall template", func() {
+		ginkgo.It("should uninstall a managment cluster", func() {
+			params := workflow.GetTestParameters(numNodes, false)
+			workflow, err := parser.ParseWorkflow("test", UninstallCluster, "UninstallManagement", *params)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(workflow).ShouldNot(gomega.BeNil())
+		})
+		ginkgo.It("should uninstall an application cluster", func() {
+			params := workflow.GetTestParameters(numNodes, true)
+			workflow, err := parser.ParseWorkflow("test", UninstallCluster, "UninstallManagement", *params)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(workflow).ShouldNot(gomega.BeNil())
+		})
+	})
 })

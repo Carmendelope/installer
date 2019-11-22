@@ -51,7 +51,7 @@ func (wr *WorkflowResult) Callback(workflowID string, error derrors.Error,
 	wr.State = state
 }
 
-func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
+func GetTestParameters(numNodes int, appCluster bool) *Parameters {
 	nodes := make([]string, 0)
 	for i := 0; i < numNodes; i++ {
 		toAdd := fmt.Sprintf("10.1.1.%d", i)
@@ -79,7 +79,7 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 		"mngtcluster_host", "80",
 		"dns_host", "53",
 		entities.Production,
-		appClusterInstall,
+		appCluster,
 		*networkParameters,
 		"authxSecret", "caCertPath",
 	)

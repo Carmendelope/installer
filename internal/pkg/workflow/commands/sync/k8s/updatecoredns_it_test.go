@@ -36,6 +36,11 @@ var _ = ginkgo.Describe("An update CoreDNS config command", func() {
 		return
 	}
 
+	if !utils.RunIntegrationTest("updatecoredns_it_test") {
+		log.Warn().Msg("Integration test is skipped")
+		return
+	}
+
 	if itKubeConfigFile == "" {
 		ginkgo.Fail("missing environment variables")
 	}

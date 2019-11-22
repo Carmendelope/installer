@@ -20,7 +20,6 @@ package k8s
 import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
-	"github.com/rs/zerolog/log"
 	"os"
 	"testing"
 )
@@ -33,12 +32,14 @@ var itKubeConfigFile = os.Getenv("IT_K8S_KUBECONFIG")
 var itTargetNamespaces = []string{itAuxNamespace, itNalejNamespace}
 var itRegistryUsername = os.Getenv("IT_REGISTRY_USERNAME")
 var itRegistryPassword = os.Getenv("IT_REGISTRY_PASSWORD")
+var itTestTargetNamespace = os.Getenv("IT_TARGET_NAMESPACE")
 
 func TestK8sPackage(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
 	ginkgo.RunSpecs(t, "K8s package suite")
 }
 
+/*
 var _ = ginkgo.AfterSuite(func() {
 	log.Info().Msg("Cleaning test environment")
 	if itComponentsDir != "" {
@@ -53,3 +54,5 @@ var _ = ginkgo.AfterSuite(func() {
 		log.Warn().Msg("TestCleaner skipped")
 	}
 })
+
+*/

@@ -24,3 +24,8 @@ func RunIntegrationTests() bool {
 	var runIntegration = os.Getenv("RUN_INTEGRATION_TEST")
 	return runIntegration == "true"
 }
+
+func RunIntegrationTest(name string) bool {
+	var target = os.Getenv("TARGET_IT_TEST")
+	return target == name
+}

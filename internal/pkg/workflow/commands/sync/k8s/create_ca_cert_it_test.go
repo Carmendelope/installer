@@ -36,6 +36,11 @@ var _ = ginkgo.Describe("A create CA certificate command", func() {
 		return
 	}
 
+	if !utils.RunIntegrationTest("create_ca_cert_it") {
+		log.Warn().Msg("Integration test is skipped")
+		return
+	}
+
 	if itKubeConfigFile == "" {
 		ginkgo.Fail("missing environment variables")
 	}

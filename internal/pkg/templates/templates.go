@@ -34,7 +34,7 @@ const InstallManagementCluster = `
 			"minVersion":"1.11"
 		},
 		{"type":"sync", "name": "logger", "msg": "Installing components"},
-		{{if $.AppClusterInstall }}
+		{{if $.AppCluster }}
 			{"type":"sync", "name":"createClusterConfig",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"organization_id":"{{$.InstallRequest.OrganizationId}}",
@@ -91,11 +91,11 @@ const InstallManagementCluster = `
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"platform_type":"{{$.InstallRequest.TargetPlatform}}",
 				"management_public_host":"{{$.InstallRequest.Hostname}}",
-				"on_management_cluster":{{ not $.AppClusterInstall}},
+				"on_management_cluster":{{ not $.AppCluster}},
 				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
 				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}"
 		},
-		{{if not $.AppClusterInstall }}
+		{{if not $.AppCluster }}
 			{"type":"sync", "name":"installExtDNS",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 				"platform_type":"{{$.InstallRequest.TargetPlatform}}",
@@ -116,6 +116,161 @@ const InstallManagementCluster = `
 			"componentsDir":"{{$.Paths.ComponentsPath}}",
 			"platform_type":"{{$.InstallRequest.TargetPlatform}}",
 			"environment":"{{$.TargetEnvironment}}"
+		}
+	]
+}
+`
+
+// UninstallCluster template with the commands required to uninstall the Nalej platform
+const UninstallCluster = `
+{
+	"description": "Uninstall management cluster",
+	"commands": [
+		{"type":"sync", "name": "logger", "msg": "Checking requirements"},
+		{"type":"sync", "name": "checkRequirements",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"minVersion":"1.11"
+		},
+		{"type":"sync", "name": "logger", "msg": "Uninstalling components"},
+		{"type":"sync", "name":"deleteServiceAccount",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"service_account":"nginx-ingress",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteNamespace",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"ingress-nginx",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteNalejNamespace",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteClusterRoleBinding",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"role_binding_name":"system:nginx-ingress",
+			"fail_if_not_exists":false
+		},
+
+		{{if not $.AppCluster }}
+			{"type":"sync", "name":"deleteClusterRoleBinding",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"role_binding_name":"deployment-manager",
+				"fail_if_not_exists":false
+			},
+			{"type":"sync", "name":"deleteClusterRoleBinding",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"role_binding_name":"kube-state-metrics",
+				"fail_if_not_exists":false
+			},
+			{"type":"sync", "name":"deleteClusterRoleBinding",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"role_binding_name":"node-exporter",
+				"fail_if_not_exists":false
+			},
+			{"type":"sync", "name":"deleteClusterRoleBinding",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"role_binding_name":"prometheus",
+				"fail_if_not_exists":false
+			},
+			{"type":"sync", "name":"deleteClusterRoleBinding",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"role_binding_name":"filebeat",
+				"fail_if_not_exists":false
+			},
+		{{end}}
+		{"type":"sync", "name":"deleteClusterRole",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"role_name":"system:nginx-ingress",
+			"fail_if_not_exists":false
+		},
+		{{if not $.AppCluster }}
+			{"type":"sync", "name":"deleteClusterRole",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"role_name":"kube-state-metrics",
+				"fail_if_not_exists":false
+			},
+			{"type":"sync", "name":"deleteClusterRole",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"role_name":"node-exporter",
+				"fail_if_not_exists":false
+			},
+			{"type":"sync", "name":"deleteClusterRole",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"role_name":"prometheus",
+				"fail_if_not_exists":false
+			},
+			{"type":"sync", "name":"deleteClusterRole",
+				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+				"role_name":"filebeat",
+				"fail_if_not_exists":false
+			},
+		{{end}}
+		{"type":"sync", "name":"deleteRole",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"role_name":"system::nginx-ingress-role",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteRoleBinding",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"role_name":"system::nginx-ingress-role-binding",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteConfigMap",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"config_map_name":"ingress-controller-leader-nginx",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteConfigMap",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"config_map_name":"nginx-load-balancer-conf",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteConfigMap",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"config_map_name":"tcp-services",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteConfigMap",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"config_map_name":"udp-services",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteService",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"service_name":"default-http-backend",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteService",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"service_name":"nginx-ingress-controller",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteDeployment",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"deployment_name":"default-http-backend",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deleteDeployment",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"namespace":"kube-system",
+			"deployment_name":"nginx-ingress-controller",
+			"fail_if_not_exists":false
+		},
+		{"type":"sync", "name":"deletePodSecurityPolicy",
+			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+			"policy_name":"node-exporter",
+			"fail_if_not_exists":false
 		}
 	]
 }
