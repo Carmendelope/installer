@@ -82,6 +82,7 @@ func ValidRemoveInstallRequest(removeRequest *grpc_installer_go.RemoveInstallReq
 	return nil
 }
 
+// ValidUninstallClusterRequest checks that the request contains the required fields.
 func ValidUninstallClusterRequest(request *grpc_installer_go.UninstallClusterRequest) derrors.Error {
 	if request.RequestId == "" {
 		return derrors.NewInvalidArgumentError("expecting request_id")

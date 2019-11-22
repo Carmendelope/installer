@@ -169,12 +169,12 @@
   version = "v0.0.8"
 
 [[projects]]
-  digest = "1:b793a50fd44619577e16c28e583b8c52673f7773c33a30fa1f50489cd6141a00"
+  digest = "1:e3f800fa401ff9d1a2bd47df2e8c080fe006df96006fa2a46b645a2e0d5deaab"
   name = "github.com/nalej/grpc-common-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d02eb70448043301ca2f70a17abd4c306d0194e9"
-  version = "v0.0.36"
+  revision = "ce5e80be8a78b9ae0bf02c5d78b68757e4889134"
+  version = "v0.0.37"
 
 [[projects]]
   digest = "1:2e5ebf343c8192a63875be693a2a910158dd85bd49f4d4f1bafe263bc01dab3c"
@@ -193,12 +193,12 @@
   version = "v0.0.39"
 
 [[projects]]
-  digest = "1:e97ff7e119449d0420156ca473600e72eacca02f0f87d3618a14a651ad9a04b1"
+  digest = "1:8a0b7494a015eb451cf7254574dfde31f4ab00f17e8bdda6c16c58622b80820b"
   name = "github.com/nalej/grpc-infrastructure-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f531d00353efc5e3ca00391c7f404e454e3b42cd"
-  version = "v0.0.48"
+  revision = "843be831319ae6b69bd461da970fae32b79e03f9"
+  version = "v0.0.49"
 
 [[projects]]
   digest = "1:f0fe5afc2d7c04261a541ef9f8a4db8958a763b59a1cd032232f3d32a8f120bb"
@@ -410,7 +410,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2ef5703c35424195af5131f185e2d73931c21f2726bc6572c5b01c36d82f2b68"
+  digest = "1:87f7dc29b0f36aa4651ee98363f8653bd85369ab62cbd81e998495d589692b2c"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -418,7 +418,7 @@
     "windows",
   ]
   pruneopts = "UT"
-  revision = "f068ffe820e46336f56dfca7777430582d6e507b"
+  revision = "bd437916bb0eb726b873ee8e9b2dcf212d32e2fd"
 
 [[projects]]
   digest = "1:28deae5fe892797ff37a317b5bcda96d11d1c90dadd89f1337651df3bc4c586e"

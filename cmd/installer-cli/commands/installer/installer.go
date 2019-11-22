@@ -75,7 +75,7 @@ func NewInstallerFromCLI(
 		VpnServer:   ipAddressVPNServer,
 	}
 
-	request := grpc_installer_go.InstallRequest{
+	request := &grpc_installer_go.InstallRequest{
 		InstallId:         installId,
 		OrganizationId:    "nalej",
 		ClusterId:         "nalej-management-cluster",
@@ -90,7 +90,7 @@ func NewInstallerFromCLI(
 		StaticIpAddresses: &staticIPAddresses,
 	}
 
-	params := workflow.NewParameters(request, workflow.Assets{},
+	params := workflow.NewInstallParameters(request, workflow.Assets{},
 		paths, managementClusterHost, workflow.DefaultManagementPort,
 		dnsClusterHost, dnsClusterPort,
 		environment.Target,

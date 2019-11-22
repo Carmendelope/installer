@@ -26,32 +26,35 @@ import (
 	"time"
 )
 
-type InstallStatus struct {
+// Operation structure representing an managed operation with its workflow and associated status.
+type Operation struct {
 	sync.Mutex
 	OrganizationID string
-	InstallID      string
-	state          grpc_installer_go.InstallProgress
-	Started        int64
+	RequestID      string
+	status         grpc_common_go.OpStatus
+	Created        int64
 	Params         *workflow.Parameters
 	Workflow       *workflow.Workflow
 	error          derrors.Error
 	workflowState  workflow.WorkflowState
 }
 
-func NewInstallStatus(installID string) *InstallStatus {
-	return &InstallStatus{
-		InstallID:     installID,
-		state:         grpc_installer_go.InstallProgress_REGISTERED,
-		Started:       time.Now().Unix(),
-		workflowState: workflow.InitState,
+// NewOperation creates a new Operation
+func NewOperation(organizationID string, requestID string) *Operation {
+	return &Operation{
+		OrganizationID: organizationID,
+		RequestID:      requestID,
+		status:         grpc_common_go.OpStatus_INIT,
+		Created:        time.Now().Unix(),
+		workflowState:  workflow.InitState,
 	}
 }
 
-func (is *InstallStatus) Clone() *InstallStatus {
-	return &InstallStatus{
-		InstallID:     is.InstallID,
-		state:         is.state,
-		Started:       is.Started,
+func (is *Operation) Clone() *Operation {
+	return &Operation{
+		RequestID:     is.RequestID,
+		status:        is.status,
+		Created:       is.Created,
 		Params:        is.Params,
 		Workflow:      is.Workflow,
 		error:         is.error,
@@ -59,35 +62,35 @@ func (is *InstallStatus) Clone() *InstallStatus {
 	}
 }
 
-func (is *InstallStatus) UpdateState(installProgress grpc_installer_go.InstallProgress) {
+func (is *Operation) UpdateStatus(newStatus grpc_common_go.OpStatus) {
 	is.Lock()
-	is.state = installProgress
+	is.status = newStatus
 	is.Unlock()
 }
 
-func (is *InstallStatus) GetState() *grpc_installer_go.InstallProgress {
+func (is *Operation) GetState() *grpc_common_go.OpStatus {
 	is.Lock()
 	defer is.Unlock()
-	aux := is.state
+	aux := is.status
 	return &aux
 }
 
-func (is *InstallStatus) UpdateError(error derrors.Error) {
+func (is *Operation) UpdateError(error derrors.Error) {
 	is.Lock()
 	is.error = error
 	is.Unlock()
 }
 
-func (is *InstallStatus) UpdateWorkflowState(state workflow.WorkflowState) {
+func (is *Operation) UpdateWorkflowState(state workflow.WorkflowState) {
 	is.Lock()
 	is.workflowState = state
 	is.Unlock()
 }
 
-func (is *InstallStatus) ToGRPCInstallResponse() *grpc_installer_go.InstallResponse {
+func (is *Operation) ToGRPCInstallResponse() *grpc_installer_go.InstallResponse {
 	is.Lock()
-	rState := is.state
-	elapsed := time.Now().Unix() - is.Started
+	rStatus := is.status
+	elapsed := time.Now().Unix() - is.Created
 	var e string
 	if is.error != nil {
 		e = is.error.Error()
@@ -95,31 +98,31 @@ func (is *InstallStatus) ToGRPCInstallResponse() *grpc_installer_go.InstallRespo
 	is.Unlock()
 
 	return &grpc_installer_go.InstallResponse{
-		InstallId:   is.InstallID,
-		State:       rState,
+		InstallId:   is.RequestID,
+		State:       toInstallProgress[rStatus],
 		ElapsedTime: elapsed,
 		Error:       e,
 	}
 }
 
 // TODO Remove this map and refactor installer.
-var toOpResponseStatus = map[grpc_installer_go.InstallProgress]grpc_common_go.OpStatus{
+var toInstallProgress = map[grpc_common_go.OpStatus]grpc_installer_go.InstallProgress{
 	// INIT represents the initial state of the workflow.
-	grpc_installer_go.InstallProgress_INIT: grpc_common_go.OpStatus_SCHEDULED,
+	grpc_common_go.OpStatus_INIT: grpc_installer_go.InstallProgress_INIT,
 	// REGISTERED represents a install request that is on the queue.
-	grpc_installer_go.InstallProgress_REGISTERED: grpc_common_go.OpStatus_SCHEDULED,
+	grpc_common_go.OpStatus_SCHEDULED: grpc_installer_go.InstallProgress_REGISTERED,
 	// IN_PROGRESS represents a install that is being processed.
-	grpc_installer_go.InstallProgress_IN_PROGRESS: grpc_common_go.OpStatus_INPROGRESS,
+	grpc_common_go.OpStatus_INPROGRESS: grpc_installer_go.InstallProgress_IN_PROGRESS,
 	// ERROR represents a install that failed.
-	grpc_installer_go.InstallProgress_ERROR: grpc_common_go.OpStatus_FAIL,
-	// FINISHED represents a sucessful install.
-	grpc_installer_go.InstallProgress_FINISHED: grpc_common_go.OpStatus_SUCCESS,
+	grpc_common_go.OpStatus_FAILED: grpc_installer_go.InstallProgress_ERROR,
+	// FINISHED represents a sucessfull install.
+	grpc_common_go.OpStatus_SUCCESS: grpc_installer_go.InstallProgress_FINISHED,
 }
 
-func (is *InstallStatus) toGRPCOpResponse() *grpc_common_go.OpResponse {
+func (is *Operation) toGRPCOpResponse() *grpc_common_go.OpResponse {
 	is.Lock()
-	rState := is.state
-	elapsed := time.Now().Unix() - is.Started
+	rStatus := is.status
+	elapsed := time.Now().Unix() - is.Created
 	var e string
 	if is.error != nil {
 		e = is.error.Error()
@@ -128,10 +131,10 @@ func (is *InstallStatus) toGRPCOpResponse() *grpc_common_go.OpResponse {
 
 	return &grpc_common_go.OpResponse{
 		OrganizationId: is.OrganizationID,
-		RequestId:      is.InstallID,
+		RequestId:      is.RequestID,
 		ElapsedTime:    elapsed,
 		Timestamp:      time.Now().Unix(),
-		Status:         toOpResponseStatus[rState],
+		Status:         rStatus,
 		Info:           "",
 		Error:          e,
 	}

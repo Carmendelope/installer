@@ -16,7 +16,7 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-common-go"
-    version="v0.0.36"
+    version="v0.0.37"
 
 [[constraint]]
     name="github.com/rs/zerolog"

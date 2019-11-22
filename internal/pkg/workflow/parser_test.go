@@ -74,7 +74,7 @@ var _ = ginkgo.Describe("Parser", func() {
 
 	ginkgo.Context("parses a workflow iterating through the nodes", func() {
 		numNodes := 10
-		params := GetTestParameters(numNodes, true)
+		params := GetTestInstallParameters(numNodes, true)
 		workflow, err := parser.ParseWorkflow("test", basicTemplateIteration, "TestParseWorkflow_SimpleTemplate", *params)
 		ginkgo.It("must have iterated through the nodes", func() {
 			gomega.Expect(err).To(gomega.BeNil())
