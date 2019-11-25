@@ -60,7 +60,7 @@ var environment entities.Environment
 var cliCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install the Nalej platform",
-	Long:  `Install the Nalej platform`,
+	Long:  `Install the components of the Nalej platform into an existing cluster`,
 	Run: func(cmd *cobra.Command, args []string) {
 		SetupLogging()
 		cmd.Help()

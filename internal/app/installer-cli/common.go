@@ -129,7 +129,7 @@ func (c *CLI) PrepareUninstallCommand(
 }
 
 // Load all the credentials and associated workflow into the installer.
-func (c *CLI) loadCredentials() {
+func (c *CLI) LoadCredentials() {
 	c.exitOnError(c.Params.LoadCredentials())
 	c.exitOnError(c.Params.Validate())
 	p := workflow.NewParser()
@@ -161,7 +161,7 @@ func (c *CLI) logListener(msg string) {
 
 // Execute the install/uninstall process.
 func (c *CLI) Execute() {
-	c.loadCredentials()
+	c.LoadCredentials()
 	wr := &workflow.WorkflowResult{}
 	execHandler := workflow.GetExecutorHandler()
 	exec, err := execHandler.Add(c.Workflow, wr.Callback)

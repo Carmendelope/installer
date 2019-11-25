@@ -224,7 +224,7 @@ func (p *Parameters) LoadCredentials() derrors.Error {
 
 	// Load its contents in credentials if required as some cases in the install process do not require it.
 	if kubeConfigRaw != "" {
-		f, err := p.writeTempFile(p.InstallRequest.KubeConfigRaw, "kc")
+		f, err := p.writeTempFile(kubeConfigRaw, "kc")
 		if err != nil {
 			return err
 		}

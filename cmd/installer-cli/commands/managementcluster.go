@@ -19,10 +19,10 @@ package commands
 
 import (
 	"fmt"
+	"github.com/nalej/installer/internal/app/installer-cli"
 	"strconv"
 	"strings"
 
-	"github.com/nalej/installer/cmd/installer-cli/commands/installer"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -58,9 +58,14 @@ func LaunchManagementInstall() {
 	}
 	environment.Print()
 
-	inst, err := installer.NewInstallerFromCLI("cli-install",
+	inst, err := installer_cli.NewCLI(kubeConfigPath)
+	if err != nil {
+		log.Panic().Str("error", err.DebugReport()).Msg("cannot create CLI installer")
+	}
+	// Prepare the parameters.
+	inst.PrepareInstallCommand(
+		"cli-install",
 		installKubernetes,
-		kubeConfigPath,
 		username,
 		privateKeyPath,
 		strings.Split(nodes, ","),
@@ -77,16 +82,10 @@ func LaunchManagementInstall() {
 		false,
 		environment)
 
-	if err != nil {
-		log.Panic().Str("error", err.DebugReport()).Msg("cannot generate installer")
-	}
-
-	inst.Load()
-
 	if explainPlan {
+		inst.LoadCredentials()
 		fmt.Println(inst.Workflow.PrettyPrint())
 	} else {
-		inst.Run()
+		inst.Execute()
 	}
-
 }
