@@ -35,8 +35,8 @@ func NewHandler(manager Manager) *Handler {
 }
 
 // InstallCluster triggers the installation of a new application cluster.
-func (h *Handler) InstallCluster(ctx context.Context, installRequest *grpc_installer_go.InstallRequest) (*grpc_installer_go.InstallResponse, error) {
-	log.Debug().Str("organizationID", installRequest.OrganizationId).Str("installID", installRequest.InstallId).Msg("install cluster")
+func (h *Handler) InstallCluster(ctx context.Context, installRequest *grpc_installer_go.InstallRequest) (*grpc_common_go.OpResponse, error) {
+	log.Debug().Str("organizationID", installRequest.OrganizationId).Str("installID", installRequest.RequestId).Msg("install cluster")
 	err := entities.ValidInstallRequest(installRequest)
 	if err != nil {
 		log.Warn().Str("trace", err.DebugReport()).Msg(err.Error())
@@ -47,8 +47,8 @@ func (h *Handler) InstallCluster(ctx context.Context, installRequest *grpc_insta
 		log.Warn().Str("trace", err.DebugReport()).Msg(err.Error())
 		return nil, conversions.ToGRPCError(err)
 	}
-	log.Debug().Str("organizationID", installRequest.OrganizationId).Str("installID", installRequest.InstallId).Msg("install launched")
-	return status.ToGRPCInstallResponse(), nil
+	log.Debug().Str("organizationID", installRequest.OrganizationId).Str("requestID", installRequest.RequestId).Msg("install launched")
+	return status.ToGRPCOpResponse(), nil
 }
 
 // UninstallCluster proceeds to remove all Nalej created elements in that cluster.
@@ -59,35 +59,35 @@ func (h *Handler) UninstallCluster(ctx context.Context, request *grpc_installer_
 		log.Warn().Str("trace", err.DebugReport()).Msg(err.Error())
 		return nil, conversions.ToGRPCError(err)
 	}
-	response, err := h.Manager.UninstallCluster(request)
+	response, err := h.Manager.UninstallCluster(*request)
 	if err != nil {
 		log.Warn().Str("trace", err.DebugReport()).Msg(err.Error())
 		return nil, conversions.ToGRPCError(err)
 	}
 	log.Debug().Str("organizationID", request.OrganizationId).Str("requestID", request.RequestId).Msg("uninstall launched")
-	return response.toGRPCOpResponse(), nil
+	return response.ToGRPCOpResponse(), nil
 }
 
 // CheckProgress gets an updated state of an install request.
-func (h *Handler) CheckProgress(ctx context.Context, installID *grpc_installer_go.InstallId) (*grpc_installer_go.InstallResponse, error) {
-	err := entities.ValidInstallID(installID)
+func (h *Handler) CheckProgress(ctx context.Context, requestID *grpc_common_go.RequestId) (*grpc_common_go.OpResponse, error) {
+	err := entities.ValidRequestID(requestID)
 	if err != nil {
 		return nil, conversions.ToGRPCError(err)
 	}
-	status, err := h.Manager.GetProgress(installID.InstallId)
+	status, err := h.Manager.GetProgress(requestID.RequestId)
 	if err != nil {
 		return nil, conversions.ToGRPCError(err)
 	}
-	return status.ToGRPCInstallResponse(), nil
+	return status.ToGRPCOpResponse(), nil
 }
 
 // RemoveInstall cancels and ongoing install or removes the information of an already processed install.
-func (h *Handler) RemoveInstall(ctx context.Context, removeRequest *grpc_installer_go.RemoveInstallRequest) (*grpc_common_go.Success, error) {
-	err := entities.ValidRemoveInstallRequest(removeRequest)
+func (h *Handler) RemoveInstall(ctx context.Context, requestID *grpc_common_go.RequestId) (*grpc_common_go.Success, error) {
+	err := entities.ValidRequestID(requestID)
 	if err != nil {
 		return nil, conversions.ToGRPCError(err)
 	}
-	err = h.Manager.RemoveInstall(removeRequest.InstallId)
+	err = h.Manager.RemoveInstall(requestID.RequestId)
 	if err != nil {
 		return nil, conversions.ToGRPCError(err)
 	}

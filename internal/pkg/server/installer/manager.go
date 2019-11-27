@@ -41,8 +41,10 @@ type Manager struct {
 	ExecHandler workflow.ExecutorHandler
 	// Parser to parametrize templates for execution.
 	Parser *workflow.Parser
-	// Requests managed
-	Requests map[string]grpc_installer_go.InstallRequest
+	// InstallRequest by request identifier
+	InstallRequests map[string]grpc_installer_go.InstallRequest
+	// UninstallRequest by request identifier
+	UninstallRequests map[string]grpc_installer_go.UninstallClusterRequest
 	// Operations with the list of ongoing operations.
 	Operations map[string]*Operation
 }
@@ -50,56 +52,62 @@ type Manager struct {
 // NewManager creates a new installer manager.
 func NewManager(config config.Config) Manager {
 	return Manager{
-		Config:      config,
-		Paths:       *workflow.NewPaths(config.ComponentsPath, config.BinaryPath, config.TempPath),
-		ExecHandler: workflow.GetExecutorHandler(),
-		Parser:      workflow.NewParser(),
-		Requests:    make(map[string]grpc_installer_go.InstallRequest, 0),
-		Operations:  make(map[string]*Operation, 0),
+		Config:            config,
+		Paths:             *workflow.NewPaths(config.ComponentsPath, config.BinaryPath, config.TempPath),
+		ExecHandler:       workflow.GetExecutorHandler(),
+		Parser:            workflow.NewParser(),
+		InstallRequests:   make(map[string]grpc_installer_go.InstallRequest, 0),
+		UninstallRequests: make(map[string]grpc_installer_go.UninstallClusterRequest, 0),
+		Operations:        make(map[string]*Operation, 0),
 	}
 }
 
-func (m *Manager) unsafeExist(installID string) bool {
-	_, exists := m.Operations[installID]
+func (m *Manager) unsafeExist(requestID string) bool {
+	_, exists := m.Operations[requestID]
 	return exists
 }
 
-func (m *Manager) unsafeRegister(installRequest grpc_installer_go.InstallRequest) {
-	m.Requests[installRequest.InstallId] = installRequest
-	m.Operations[installRequest.InstallId] = NewOperation(installRequest.OrganizationId, installRequest.InstallId)
+func (m *Manager) unsafeInstallRegister(installRequest grpc_installer_go.InstallRequest) {
+	m.InstallRequests[installRequest.RequestId] = installRequest
+	m.Operations[installRequest.RequestId] = NewOperation(installRequest.OrganizationId, installRequest.RequestId, InstallOperation)
+}
+
+func (m *Manager) unsafeUninstallRegister(request grpc_installer_go.UninstallClusterRequest) {
+	m.UninstallRequests[request.RequestId] = request
+	m.Operations[request.RequestId] = NewOperation(request.OrganizationId, request.RequestId, UninstallOperation)
 }
 
 func (m *Manager) InstallCluster(installRequest grpc_installer_go.InstallRequest) (*Operation, derrors.Error) {
 	var result *Operation
 	m.Lock()
-	if m.unsafeExist(installRequest.InstallId) {
+	if m.unsafeExist(installRequest.RequestId) {
 		m.Unlock()
-		return nil, derrors.NewAlreadyExistsError("installID").WithParams(installRequest.InstallId)
+		return nil, derrors.NewAlreadyExistsError("requestID").WithParams(installRequest.RequestId)
 	}
-	m.unsafeRegister(installRequest)
-	status, _ := m.Operations[installRequest.InstallId]
+	m.unsafeInstallRegister(installRequest)
+	status, _ := m.Operations[installRequest.RequestId]
 	result = status.Clone()
 	m.Unlock()
-	go m.launchInstall(installRequest.InstallId)
+	go m.launchInstall(installRequest.RequestId)
 	return result, nil
 }
 
-func (m *Manager) markInstallAsFailed(installID string, error derrors.Error) {
+func (m *Manager) markOperationAsFailed(requestID string, error derrors.Error) {
 	m.Lock()
-	status, _ := m.Operations[installID]
+	status, _ := m.Operations[requestID]
 	status.UpdateError(error)
 	status.UpdateStatus(grpc_common_go.OpStatus_FAILED)
 	m.Unlock()
 }
 
-func (m *Manager) launchInstall(installID string) {
+func (m *Manager) launchInstall(requestID string) {
 	m.Lock()
-	request, exitsRequest := m.Requests[installID]
-	status, existStatus := m.Operations[installID]
+	request, exitsRequest := m.InstallRequests[requestID]
+	status, existStatus := m.Operations[requestID]
 	m.Unlock()
 
 	if !exitsRequest || !existStatus {
-		log.Error().Str("installID", installID).Msg("cannot launch the install process")
+		log.Error().Str("requestID", requestID).Msg("cannot launch the install process")
 		return
 	}
 
@@ -116,19 +124,19 @@ func (m *Manager) launchInstall(installID string) {
 	err := status.Params.LoadCredentials()
 	if err != nil {
 		log.Error().Str("err", err.DebugReport()).Msg("cannot load credentials")
-		m.markInstallAsFailed(installID, err)
+		m.markOperationAsFailed(requestID, err)
 	}
 	err = status.Params.Validate()
 	if err != nil {
 		log.Error().Str("err", err.DebugReport()).Msg("invalid parameters")
-		m.markInstallAsFailed(installID, err)
+		m.markOperationAsFailed(requestID, err)
 	}
 
 	// Create Workflow
-	workflow, err := m.Parser.ParseWorkflow(installID, templates.InstallManagementCluster, installID, *status.Params)
+	workflow, err := m.Parser.ParseWorkflow(requestID, templates.InstallManagementCluster, requestID, *status.Params)
 	if err != nil {
 		log.Error().Str("err", err.DebugReport()).Msg("cannot parse workflow")
-		m.markInstallAsFailed(installID, err)
+		m.markOperationAsFailed(requestID, err)
 	}
 	status.Workflow = workflow
 
@@ -136,7 +144,7 @@ func (m *Manager) launchInstall(installID string) {
 	exec, err := m.ExecHandler.Add(status.Workflow, m.WorkflowCallback)
 	if err != nil {
 		log.Error().Str("err", err.DebugReport()).Msg("cannot parse workflow")
-		m.markInstallAsFailed(installID, err)
+		m.markOperationAsFailed(requestID, err)
 	}
 	exec.SetLogListener(m.logListener)
 	exec.Exec()
@@ -146,7 +154,7 @@ func (m *Manager) GetProgress(requestID string) (*Operation, derrors.Error) {
 	m.Lock()
 	defer m.Unlock()
 	if !m.unsafeExist(requestID) {
-		return nil, derrors.NewNotFoundError("installID").WithParams(requestID)
+		return nil, derrors.NewNotFoundError("requestID").WithParams(requestID)
 	}
 	status, _ := m.Operations[requestID]
 	log.Debug().Interface("status", status).Msg("GetProgress()")
@@ -194,29 +202,83 @@ func (m *Manager) logListener(msg string) {
 	log.Info().Msg(msg)
 }
 
-func (m *Manager) RemoveInstall(installID string) derrors.Error {
+func (m *Manager) RemoveInstall(requestID string) derrors.Error {
 	m.Lock()
-	_, exitsRequest := m.Requests[installID]
+	_, exitsRequest := m.InstallRequests[requestID]
 	if exitsRequest {
-		log.Debug().Str("installID", installID).Msg("Removing request")
-		delete(m.Requests, installID)
+		log.Debug().Str("requestID", requestID).Msg("Removing request")
+		delete(m.InstallRequests, requestID)
 	}
-	_, existStatus := m.Operations[installID]
+	_, existStatus := m.Operations[requestID]
 	m.Unlock()
 
 	if existStatus {
-		err := m.ExecHandler.Stop(installID)
+		err := m.ExecHandler.Stop(requestID)
 		if err != nil {
 			return err
 		}
 		m.Lock()
-		delete(m.Operations, installID)
+		delete(m.Operations, requestID)
 		m.Unlock()
 	}
 
 	return nil
 }
 
-func (m *Manager) UninstallCluster(request *grpc_installer_go.UninstallClusterRequest) (*Operation, derrors.Error) {
-	return nil, derrors.NewUnimplementedError("uninstall not implemented")
+func (m *Manager) UninstallCluster(request grpc_installer_go.UninstallClusterRequest) (*Operation, derrors.Error) {
+	var result *Operation
+	m.Lock()
+	if m.unsafeExist(request.RequestId) {
+		m.Unlock()
+		return nil, derrors.NewAlreadyExistsError("requestID").WithParams(request.RequestId)
+	}
+	m.unsafeUninstallRegister(request)
+	status, _ := m.Operations[request.RequestId]
+	result = status.Clone()
+	m.Unlock()
+	go m.launchUninstall(request.RequestId)
+	return result, nil
+}
+
+func (m *Manager) launchUninstall(requestID string) {
+	m.Lock()
+	request, exitsRequest := m.UninstallRequests[requestID]
+	status, existStatus := m.Operations[requestID]
+	m.Unlock()
+
+	if !exitsRequest || !existStatus {
+		log.Error().Str("requestID", requestID).Msg("cannot launch the uninstall process")
+		return
+	}
+
+	params := workflow.NewUninstallParameters(&request, true)
+
+	status.Params = params
+	err := status.Params.LoadCredentials()
+	if err != nil {
+		log.Error().Str("err", err.DebugReport()).Msg("cannot load credentials")
+		m.markOperationAsFailed(requestID, err)
+	}
+	err = status.Params.Validate()
+	if err != nil {
+		log.Error().Str("err", err.DebugReport()).Msg("invalid parameters")
+		m.markOperationAsFailed(requestID, err)
+	}
+
+	// Create Workflow
+	workflow, err := m.Parser.ParseWorkflow(requestID, templates.UninstallCluster, requestID, *status.Params)
+	if err != nil {
+		log.Error().Str("err", err.DebugReport()).Msg("cannot parse workflow")
+		m.markOperationAsFailed(requestID, err)
+	}
+	status.Workflow = workflow
+
+	// Launch install process
+	exec, err := m.ExecHandler.Add(status.Workflow, m.WorkflowCallback)
+	if err != nil {
+		log.Error().Str("err", err.DebugReport()).Msg("cannot parse workflow")
+		m.markOperationAsFailed(requestID, err)
+	}
+	exec.SetLogListener(m.logListener)
+	exec.Exec()
 }

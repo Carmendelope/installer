@@ -20,17 +20,20 @@ package installer
 import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-common-go"
-	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/installer/internal/pkg/workflow"
 	"sync"
 	"time"
 )
+
+const InstallOperation = "Install cluster"
+const UninstallOperation = "Uninstall cluster"
 
 // Operation structure representing an managed operation with its workflow and associated status.
 type Operation struct {
 	sync.Mutex
 	OrganizationID string
 	RequestID      string
+	OperationName  string
 	status         grpc_common_go.OpStatus
 	Created        int64
 	Params         *workflow.Parameters
@@ -40,7 +43,7 @@ type Operation struct {
 }
 
 // NewOperation creates a new Operation
-func NewOperation(organizationID string, requestID string) *Operation {
+func NewOperation(organizationID string, requestID string, operationName string) *Operation {
 	return &Operation{
 		OrganizationID: organizationID,
 		RequestID:      requestID,
@@ -87,39 +90,8 @@ func (is *Operation) UpdateWorkflowState(state workflow.WorkflowState) {
 	is.Unlock()
 }
 
-func (is *Operation) ToGRPCInstallResponse() *grpc_installer_go.InstallResponse {
-	is.Lock()
-	rStatus := is.status
-	elapsed := time.Now().Unix() - is.Created
-	var e string
-	if is.error != nil {
-		e = is.error.Error()
-	}
-	is.Unlock()
-
-	return &grpc_installer_go.InstallResponse{
-		InstallId:   is.RequestID,
-		State:       toInstallProgress[rStatus],
-		ElapsedTime: elapsed,
-		Error:       e,
-	}
-}
-
-// TODO Remove this map and refactor installer.
-var toInstallProgress = map[grpc_common_go.OpStatus]grpc_installer_go.InstallProgress{
-	// INIT represents the initial state of the workflow.
-	grpc_common_go.OpStatus_INIT: grpc_installer_go.InstallProgress_INIT,
-	// REGISTERED represents a install request that is on the queue.
-	grpc_common_go.OpStatus_SCHEDULED: grpc_installer_go.InstallProgress_REGISTERED,
-	// IN_PROGRESS represents a install that is being processed.
-	grpc_common_go.OpStatus_INPROGRESS: grpc_installer_go.InstallProgress_IN_PROGRESS,
-	// ERROR represents a install that failed.
-	grpc_common_go.OpStatus_FAILED: grpc_installer_go.InstallProgress_ERROR,
-	// FINISHED represents a sucessfull install.
-	grpc_common_go.OpStatus_SUCCESS: grpc_installer_go.InstallProgress_FINISHED,
-}
-
-func (is *Operation) toGRPCOpResponse() *grpc_common_go.OpResponse {
+// ToGRPCOpResponse transforms the information of an install operation in common OpResponse.
+func (is *Operation) ToGRPCOpResponse() *grpc_common_go.OpResponse {
 	is.Lock()
 	rStatus := is.status
 	elapsed := time.Now().Unix() - is.Created
@@ -132,6 +104,7 @@ func (is *Operation) toGRPCOpResponse() *grpc_common_go.OpResponse {
 	return &grpc_common_go.OpResponse{
 		OrganizationId: is.OrganizationID,
 		RequestId:      is.RequestID,
+		OperationName:  is.OperationName,
 		ElapsedTime:    elapsed,
 		Timestamp:      time.Now().Unix(),
 		Status:         rStatus,

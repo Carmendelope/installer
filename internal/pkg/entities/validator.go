@@ -19,13 +19,14 @@ package entities
 
 import (
 	"github.com/nalej/derrors"
+	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-installer-go"
 )
 
 // ValidInstallRequest validates that an install request contains the required fields.
 func ValidInstallRequest(installRequest *grpc_installer_go.InstallRequest) derrors.Error {
-	if installRequest.InstallId == "" {
-		return derrors.NewInvalidArgumentError("expecting install_id")
+	if installRequest.RequestId == "" {
+		return derrors.NewInvalidArgumentError("expecting request_id")
 	}
 	if installRequest.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError("expecting organization_id")
@@ -66,18 +67,10 @@ func ValidInstallRequest(installRequest *grpc_installer_go.InstallRequest) derro
 	return nil
 }
 
-// ValidInstallID checks that the request contains the required fields.
-func ValidInstallID(installID *grpc_installer_go.InstallId) derrors.Error {
-	if installID.InstallId == "" {
-		return derrors.NewInvalidArgumentError("expecting install_id")
-	}
-	return nil
-}
-
-// ValidRemoveInstallRequest checks that the request contains the required fields.
-func ValidRemoveInstallRequest(removeRequest *grpc_installer_go.RemoveInstallRequest) derrors.Error {
-	if removeRequest.InstallId == "" {
-		return derrors.NewInvalidArgumentError("expecting install_id")
+// ValidRequestID checks that the request contains the required fields.
+func ValidRequestID(requestID *grpc_common_go.RequestId) derrors.Error {
+	if requestID.RequestId == "" {
+		return derrors.NewInvalidArgumentError("expecting request_id")
 	}
 	return nil
 }

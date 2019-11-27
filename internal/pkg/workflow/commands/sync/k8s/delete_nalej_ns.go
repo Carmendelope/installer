@@ -32,6 +32,14 @@ const NalejNamespace = "nalej"
 // ExcludedSecrets contains the name of the secrets that will not be deleted.
 var ExcludedSecrets = []string{"tls-client-certificate"}
 
+// ExcludedCRDs contains the list of CRD that should not be deleted. This list matches all certmanager related CRDs.
+var ExcludedCRDs = []string{"certificaterequests.certmanager.k8s.io",
+	"certificates.certmanager.k8s.io",
+	"challenges.certmanager.k8s.io",
+	"clusterissuers.certmanager.k8s.io",
+	"issuers.certmanager.k8s.io",
+	"orders.certmanager.k8s.io"}
+
 // DeleteNalejNamespace structure with the attributes required to delete the contents of the Nalej namespace.
 type DeleteNalejNamespace struct {
 	// Kubernetes embedded object
@@ -76,6 +84,10 @@ func (dnn *DeleteNalejNamespace) Run(workflowID string) (*entities.CommandResult
 		return entities.NewCommandResult(false, "target namespace does not exist", toReturn), nil
 	}
 	if exists {
+		// Delete ingresses
+		if err = dnn.DeleteAllEntities(NalejNamespace, "extensions", "v1beta1", "ingresses"); err != nil {
+			return entities.NewErrCommand("cannot delete Nalej ingresses", err), nil
+		}
 		// Delete deployments
 		if err = dnn.DeleteAllEntities(NalejNamespace, "apps", "v1", "deployments"); err != nil {
 			return entities.NewErrCommand("cannot delete Nalej deployments", err), nil
@@ -104,8 +116,57 @@ func (dnn *DeleteNalejNamespace) Run(workflowID string) (*entities.CommandResult
 		if err = dnn.DeleteAllEntities(NalejNamespace, "apps", "v1", "statefulsets"); err != nil {
 			return entities.NewErrCommand("cannot delete Nalej stateful sets", err), nil
 		}
+		// Persistent volume claim
+		if err = dnn.DeleteAllEntities(NalejNamespace, "", "v1", "persistentvolumeclaims"); err != nil {
+			return entities.NewErrCommand("cannot delete Nalej stateful sets", err), nil
+		}
+		// Prometheus service monitors
+		if err = dnn.DeletePrometheusEntities(); err != nil {
+			return entities.NewErrCommand("cannot delete Prometheus entities", err), nil
+		}
+		// Roles
+		if err = dnn.DeleteAllEntities(NalejNamespace, "rbac.authorization.k8s.io", "v1", "roles"); err != nil {
+			return entities.NewErrCommand("cannot delete Nalej roles", err), nil
+		}
+		// Role bindings
+		if err = dnn.DeleteAllEntities(NalejNamespace, "rbac.authorization.k8s.io", "v1", "rolebindings"); err != nil {
+			return entities.NewErrCommand("cannot delete Nalej role bindings", err), nil
+		}
+		// Events
+		if err = dnn.DeleteAllEntities(NalejNamespace, "", "v1", "events"); err != nil {
+			return entities.NewErrCommand("cannot delete Nalej events", err), nil
+		}
+		// CRD
+		if err = dnn.DeleteAllEntities("", "apiextensions.k8s.io", "v1beta1", "customresourcedefinitions", ExcludedCRDs...); err != nil {
+			return entities.NewErrCommand("cannot delete Nalej CRD", err), nil
+		}
 	}
 	return entities.NewSuccessCommand([]byte("Nalej namespace contents deleted")), nil
+}
+
+func (dnn *DeleteNalejNamespace) DeletePrometheusEntities() derrors.Error {
+	// Prometheus service monitors
+	if err := dnn.DeleteAllEntities(NalejNamespace, "monitoring.coreos.com", "v1", "servicemonitors"); err != nil {
+		return err
+	}
+	// Prometheus alert managers
+	if err := dnn.DeleteAllEntities(NalejNamespace, "monitoring.coreos.com", "v1", "alertmanagers"); err != nil {
+		return err
+	}
+	// Prometheus pod monitors
+	if err := dnn.DeleteAllEntities(NalejNamespace, "monitoring.coreos.com", "v1", "podmonitors"); err != nil {
+		return err
+	}
+	// Prometheus
+	if err := dnn.DeleteAllEntities(NalejNamespace, "monitoring.coreos.com", "v1", "prometheuses"); err != nil {
+		return err
+	}
+	// Prometheus rules
+	if err := dnn.DeleteAllEntities(NalejNamespace, "monitoring.coreos.com", "v1", "prometheusrules"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // String returns a string representation

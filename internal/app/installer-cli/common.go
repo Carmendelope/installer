@@ -51,7 +51,7 @@ func NewCLI(kubeConfigPath string) (*CLI, derrors.Error) {
 
 // PrepareInstallCommand prepares the CLI to execute an install command.
 func (c *CLI) PrepareInstallCommand(
-	installId string,
+	requestID string,
 	installK8s bool,
 	username string,
 	privateKeyPath string,
@@ -83,7 +83,7 @@ func (c *CLI) PrepareInstallCommand(
 	}
 	// Prepare the gRPC request as would have been send to the service.
 	request := &grpc_installer_go.InstallRequest{
-		InstallId:         installId,
+		RequestId:         requestID,
 		OrganizationId:    "nalej",
 		ClusterId:         "nalej-management-cluster",
 		ClusterType:       grpc_infrastructure_go.ClusterType_KUBERNETES,

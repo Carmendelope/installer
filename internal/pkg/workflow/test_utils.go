@@ -70,7 +70,7 @@ func GetTestInstallParameters(numNodes int, appCluster bool) *Parameters {
 		nodes = append(nodes, toAdd)
 	}
 	request := &grpc_installer_go.InstallRequest{
-		InstallId:         "TestInstall",
+		RequestId:         "TestInstall",
 		OrganizationId:    "orgID",
 		ClusterId:         "TestCluster",
 		ClusterType:       grpc_infrastructure_go.ClusterType_KUBERNETES,
