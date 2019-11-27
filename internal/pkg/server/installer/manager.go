@@ -204,15 +204,28 @@ func (m *Manager) logListener(msg string) {
 
 func (m *Manager) RemoveInstall(requestID string) derrors.Error {
 	m.Lock()
-	_, exitsRequest := m.InstallRequests[requestID]
-	if exitsRequest {
-		log.Debug().Str("requestID", requestID).Msg("Removing request")
-		delete(m.InstallRequests, requestID)
+	// Determine the type of operation
+	op, existsOp := m.Operations[requestID]
+	if !existsOp {
+		return derrors.NewNotFoundError("request is not managed by the installer").WithParams(requestID)
 	}
-	_, existStatus := m.Operations[requestID]
+
+	if op.OperationName == InstallOperation {
+		_, exitsRequest := m.InstallRequests[requestID]
+		if exitsRequest {
+			log.Debug().Str("requestID", requestID).Msg("Removing install request")
+			delete(m.InstallRequests, requestID)
+		}
+	} else if op.OperationName == UninstallOperation {
+		_, exitsRequest := m.UninstallRequests[requestID]
+		if exitsRequest {
+			log.Debug().Str("requestID", requestID).Msg("Removing uninstall request")
+			delete(m.InstallRequests, requestID)
+		}
+	}
 	m.Unlock()
 
-	if existStatus {
+	if existsOp {
 		err := m.ExecHandler.Stop(requestID)
 		if err != nil {
 			return err
