@@ -50,7 +50,7 @@ const basicTemplateIteration = `
 {
  "description": "basicTemplateIteration",
  "commands": [
-  {"type":"sync", "name": "exec", "cmd": "generalCmd", "args":["{{.InstallRequest.InstallId}}", "{{.InstallRequest.ClusterId}}"]}
+  {"type":"sync", "name": "exec", "cmd": "generalCmd", "args":["{{.InstallRequest.RequestId}}", "{{.InstallRequest.ClusterId}}"]}
   {{range $index, $node := .InstallRequest.Nodes }}
   ,{"type":"sync", "name": "exec", "cmd": "cmd{{$index}}", "args":["{{$node}}"]}
   {{end}}
@@ -81,7 +81,7 @@ var _ = ginkgo.Describe("Parser", func() {
 			gomega.Expect(workflow, gomega.Not(gomega.BeNil()))
 			gomega.Expect(len(workflow.Commands), gomega.Equal(numNodes+1))
 			firstCmd := (*workflow).Commands[0]
-			gomega.Expect(firstCmd.(*sync.Exec).Args[0]).To(gomega.Equal(params.InstallRequest.InstallId))
+			gomega.Expect(firstCmd.(*sync.Exec).Args[0]).To(gomega.Equal(params.InstallRequest.RequestId))
 			gomega.Expect(firstCmd.(*sync.Exec).Args[1]).To(gomega.Equal(params.InstallRequest.ClusterId))
 			for i := 0; i < numNodes; i++ {
 				toCheck := (*workflow).Commands[i+1]

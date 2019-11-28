@@ -30,6 +30,7 @@ package installer
 import (
 	"context"
 	"fmt"
+	grpc_common_go "github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-installer-go"
 	"github.com/nalej/grpc-utils/pkg/test"
@@ -180,7 +181,7 @@ var _ = ginkgo.Describe("Installer", func() {
 		ginkgo.It("should be able to install an application cluster", func() {
 			ginkgo.By("installing the cluster")
 			installRequest := &grpc_installer_go.InstallRequest{
-				InstallId:         "test-install-id",
+				RequestId:         "test-install-id",
 				OrganizationId:    "test-org-id",
 				ClusterId:         "test-cluster-id",
 				ClusterType:       grpc_infrastructure_go.ClusterType_KUBERNETES,
@@ -190,36 +191,34 @@ var _ = ginkgo.Describe("Installer", func() {
 			response, err := client.InstallCluster(context.Background(), installRequest)
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(response).ToNot(gomega.BeNil())
-			gomega.Expect(response.InstallId).Should(gomega.Equal(installRequest.InstallId))
+			gomega.Expect(response.RequestId).Should(gomega.Equal(installRequest.RequestId))
 
 			// Wait for it to finish
 			maxWait := 1000
 			finished := false
 
-			installID := &grpc_installer_go.InstallId{
-				InstallId: installRequest.InstallId,
+			requestID := &grpc_common_go.RequestId{
+				RequestId: installRequest.RequestId,
 			}
 			ginkgo.By("checking the install progress")
 			log.Info().Msg("Checking progress")
 			for i := 0; i < maxWait && !finished; i++ {
 				time.Sleep(time.Second)
-				progress, err := client.CheckProgress(context.Background(), installID)
+				progress, err := client.CheckProgress(context.Background(), requestID)
 				gomega.Expect(err).To(gomega.Succeed())
 				log.Debug().Interface("progress", progress).Msg("Check progress")
-				finished = (progress.State == grpc_installer_go.InstallProgress_FINISHED) ||
-					(progress.State == grpc_installer_go.InstallProgress_ERROR)
+				finished = (progress.Status == grpc_common_go.OpStatus_SUCCESS) ||
+					(progress.Status == grpc_common_go.OpStatus_FAILED)
 				log.Debug().Bool("finished", finished).Msg("workflow has finished?")
 			}
 			log.Info().Msg("obtain final progress")
-			progress, err := client.CheckProgress(context.Background(), installID)
+			progress, err := client.CheckProgress(context.Background(), requestID)
 			gomega.Expect(err).To(gomega.Succeed())
-			gomega.Expect(progress.State).Should(gomega.Equal(grpc_installer_go.InstallProgress_FINISHED))
+			gomega.Expect(progress.Status).Should(gomega.Equal(grpc_common_go.OpStatus_SUCCESS))
 			ginkgo.By("removing the install")
 			log.Info().Msg("removing the install")
-			removeRequest := &grpc_installer_go.RemoveInstallRequest{
-				InstallId: installRequest.InstallId,
-			}
-			client.RemoveInstall(context.Background(), removeRequest)
+
+			client.RemoveInstall(context.Background(), requestID)
 			log.Info().Msg("Finished!!!!!!")
 		})
 	})
