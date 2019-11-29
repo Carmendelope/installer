@@ -61,7 +61,7 @@ type Command interface {
 	Type() CommandType
 	// Name of the command to be executed
 	Name() string
-	// Obtain a string representation
+	// String returns a string representation
 	String() string
 	// PrettyPrint returns a simple space indexed string.
 	PrettyPrint(indentation int) string
@@ -177,10 +177,7 @@ func (cr *CommandResult) ShowResult() bool {
 
 // SyncCommand interface defines the functions synchronous commands need to implement.
 type SyncCommand interface {
-	// Run the current command.
-	//   returns:
-	//     The CommandResult
-	//     An error if the command execution fails
+	// Run the current command returning the result or an error.
 	Run(workflowID string) (*CommandResult, derrors.Error)
 }
 

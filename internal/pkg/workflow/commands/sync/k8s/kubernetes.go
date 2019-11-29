@@ -110,7 +110,6 @@ func (k *Kubernetes) ExistsNamespace(name string) (bool, derrors.Error) {
 	}
 	found := false
 	for _, n := range list.Items {
-		log.Debug().Interface("n", n).Msg("A namespace")
 		if n.Name == name {
 			found = true
 			break
@@ -152,6 +151,26 @@ func (k *Kubernetes) CreateNamespaceIfNotExists(name string) derrors.Error {
 		log.Debug().Str("namespace", name).Msg("namespace already exists")
 	}
 	return nil
+}
+
+// ExistsServiceAccount determines if a given service account exists on a namespace
+func (k *Kubernetes) ExistsServiceAccount(namespace string, serviceAccount string) (bool, derrors.Error) {
+	client := k.Client.CoreV1().ServiceAccounts(namespace)
+	_, err := client.Get(serviceAccount, metaV1.GetOptions{})
+	if err != nil {
+		return false, nil
+	}
+	return true, nil
+}
+
+// ExistsClusterRoleBinding determines if a given cluster role binding exists
+func (k *Kubernetes) ExistClusterRoleBinding(name string) (bool, derrors.Error) {
+	client := k.Client.RbacV1().ClusterRoleBindings()
+	_, err := client.Get(name, metaV1.GetOptions{})
+	if err != nil {
+		return false, derrors.NewNotFoundError("cannot retrieve service account", err)
+	}
+	return true, nil
 }
 
 func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
@@ -247,4 +266,107 @@ func getKind(obj runtime.Object) (schema.GroupVersionKind, derrors.Error) {
 	kind := kinds[0]
 
 	return kind, nil
+}
+
+//
+// Delete commands
+//
+
+// DeleteNamespace deletes a given namespace from Kubernetes and all its associated resources.
+func (k *Kubernetes) DeleteNamespace(name string) derrors.Error {
+	namespaceClient := k.Client.CoreV1().Namespaces()
+	dOpts := metaV1.DeleteOptions{}
+	err := namespaceClient.Delete(name, &dOpts)
+	if err != nil {
+		return derrors.AsError(err, "cannot delete namespace")
+	}
+	log.Debug().Str("namespace", name).Msg("deleted")
+	return nil
+}
+
+// checkIncluded checks if an element belongs to a given set.
+func checkIncluded(element string, set []string) bool {
+	for _, toCompare := range set {
+		if toCompare == element {
+			return true
+		}
+	}
+	return false
+}
+
+// ExistsEntity determines if a given Kubernetes entity exists using a dynamic client.
+// Use the following command to identify group and resource names:
+// $ kubectl --kubeconfig <kubeConfigPath> -n <namespace> api-resources
+func (k *Kubernetes) ExistsEntity(namespace string, group string, version string, resource string, name string) (bool, derrors.Error) {
+	resourceRequest := schema.GroupVersionResource{
+		Group:    group,
+		Version:  version,
+		Resource: resource,
+	}
+	var client dynamic.ResourceInterface
+	if namespace == "" {
+		client = k.dynClient.Resource(resourceRequest)
+	} else {
+		client = k.dynClient.Resource(resourceRequest).Namespace(namespace)
+	}
+	_, err := client.Get(name, metaV1.GetOptions{})
+	if err != nil {
+		return false, nil
+	}
+	return true, nil
+}
+
+// DeleteEntity deletes an entity from Kubernetes using a dynamic client.
+// Use the following command to identify group and resource names:
+// $ kubectl --kubeconfig <kubeConfigPath> -n <namespace> api-resources
+func (k *Kubernetes) DeleteEntity(namespace string, group string, version string, resource string, name string) derrors.Error {
+	resourceRequest := schema.GroupVersionResource{
+		Group:    group,
+		Version:  version,
+		Resource: resource,
+	}
+	var client dynamic.ResourceInterface
+	if namespace == "" {
+		client = k.dynClient.Resource(resourceRequest)
+	} else {
+		client = k.dynClient.Resource(resourceRequest).Namespace(namespace)
+	}
+	err := client.Delete(name, &metaV1.DeleteOptions{})
+	if err != nil {
+		return derrors.NewInternalError("cannot delete entity", err).WithParams(namespace, name)
+	}
+	return nil
+}
+
+// DeleteEntity deletes an entity from Kubernetes using a dynamic client allowing skipping some of them.
+// Use the following command to identify group and resource names:
+// $ kubectl --kubeconfig <kubeConfigPath> -n <namespace> api-resources
+func (k *Kubernetes) DeleteAllEntities(namespace string, group string, version string, resource string, excludedNames ...string) derrors.Error {
+	resourceRequest := schema.GroupVersionResource{
+		Group:    group,
+		Version:  version,
+		Resource: resource,
+	}
+	var client dynamic.ResourceInterface
+	if namespace == "" {
+		client = k.dynClient.Resource(resourceRequest)
+	} else {
+		client = k.dynClient.Resource(resourceRequest).Namespace(namespace)
+	}
+
+	list, err := client.List(metaV1.ListOptions{})
+	if err != nil {
+		return derrors.AsError(err, "cannot list entities")
+	}
+	log.Debug().Str("resource", resource).Int("numberEntities", len(list.Items)).Msg("preparing for deletion")
+	for _, element := range list.Items {
+		if !checkIncluded(element.GetName(), excludedNames) {
+			log.Debug().Str("name", element.GetName()).Str("resource", resource).Msg("deleting entity")
+			err := client.Delete(element.GetName(), &metaV1.DeleteOptions{})
+			if err != nil {
+				return derrors.NewInternalError("cannot delete entity", err).WithParams(namespace, element.GetName())
+			}
+		}
+	}
+	return nil
 }

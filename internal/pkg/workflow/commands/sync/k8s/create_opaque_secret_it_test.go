@@ -44,6 +44,11 @@ var _ = ginkgo.Describe("A Create Opaque Secret command", func() {
 		return
 	}
 
+	if !utils.RunIntegrationTest("create_opaque_secret_it") {
+		log.Warn().Msg("Integration test is skipped")
+		return
+	}
+
 	if itKubeConfigFile == "" {
 		ginkgo.Fail("missing environment variables")
 	}

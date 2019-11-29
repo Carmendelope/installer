@@ -99,6 +99,9 @@ $ ./bin/installer-cli install management --consoleLogging
 * While partial support for minikube installations is provided, this code path has not been tested in this release.
 * The install expects a set of environment variables related to docker registry secrets that are preloaded in
 order to install the proper credentials in kubernetes to access private images.
+* The installer should make use of the nalej-bus to send operation progress and completion
+messages so that it can be easily scaled. The infrastructure-manager should listen to those
+events instead of performing active coordination.
 
 ## Contributing
 

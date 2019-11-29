@@ -33,7 +33,9 @@ const DefaultManagementPort = "443"
 // Parameters required to transform a template into a workflow.
 type Parameters struct {
 	// InstallRequest with the details of the installation to be performed.
-	InstallRequest grpc_installer_go.InstallRequest
+	InstallRequest *grpc_installer_go.InstallRequest
+	// UninstallRequest with the details of the uninstall to be performed.
+	UninstallRequest *grpc_installer_go.UninstallClusterRequest
 	// Credentials required for the installation of the cluster.
 	Credentials InstallCredentials `json:"credentials"`
 	// Assets to be installed
@@ -50,8 +52,8 @@ type Parameters struct {
 	DNSClusterPort string `json:"dns_cluster_port"`
 	// TargetEnvironment defines the type of environment being installed: PRODUCTION, STAGING, DEVELOPMENT
 	TargetEnvironment string `json:"target_environment"`
-	//AppClusterInstall indicates if an application cluster is being installed.
-	AppClusterInstall bool `json:"app_cluster_install"`
+	//AppCluster indicates if an application cluster is being installed.
+	AppCluster bool `json:"app_cluster_install"`
 	// NetworkConfig contains the configuration of the networking of the cluster.
 	NetworkConfig NetworkConfig `json:"network_config"`
 	// AuthSecret contains the secret required to validate JWT tokens.
@@ -114,9 +116,9 @@ type InstallCredentials struct {
 // EmptyParameters structure that can be used whenever no parameters are passed to the parser.
 var EmptyParameters = Parameters{}
 
-// NewParameters creates a Parameters structure.
-func NewParameters(
-	request grpc_installer_go.InstallRequest,
+// NewParameters creates a Parameters structure for install operations.
+func NewInstallParameters(
+	installRequest *grpc_installer_go.InstallRequest,
 	assets Assets,
 	paths Paths,
 	managementClusterHost string,
@@ -124,23 +126,34 @@ func NewParameters(
 	dnsClusterHost string,
 	dnsClusterPort string,
 	targetEnvironment entities.TargetEnvironment,
-	appClusterInstall bool,
+	appCluster bool,
 	networkConfig NetworkConfig,
 	authxSecret string,
 	caCertPath string,
 ) *Parameters {
 	return &Parameters{
-		request,
-		InstallCredentials{},
-		assets,
-		paths,
-		managementClusterHost, managementClusterPort,
-		dnsClusterHost, dnsClusterPort,
-		entities.TargetEnvironmentToString[targetEnvironment],
-		appClusterInstall,
-		networkConfig,
-		authxSecret,
-		caCertPath,
+		InstallRequest:        installRequest,
+		Credentials:           InstallCredentials{},
+		Assets:                assets,
+		Paths:                 paths,
+		ManagementClusterHost: managementClusterHost,
+		ManagementClusterPort: managementClusterPort,
+		DNSClusterHost:        dnsClusterHost,
+		DNSClusterPort:        dnsClusterPort,
+		TargetEnvironment:     entities.TargetEnvironmentToString[targetEnvironment],
+		AppCluster:            appCluster,
+		NetworkConfig:         networkConfig,
+		AuthSecret:            authxSecret,
+		CACertPath:            caCertPath,
+	}
+}
+
+// NewUninstallParameters creates a Parameters structure for uninstalling operations.
+func NewUninstallParameters(request *grpc_installer_go.UninstallClusterRequest, appCluster bool) *Parameters {
+	return &Parameters{
+		UninstallRequest: request,
+		Credentials:      InstallCredentials{},
+		AppCluster:       appCluster,
 	}
 }
 
@@ -164,7 +177,7 @@ func (p *Parameters) Validate() derrors.Error {
 		return derrors.NewInternalError("credentials have not been loaded. Call LoadCredentials() before Validate()")
 	}
 
-	if p.Credentials.KubeConfigPath == "" && len(p.InstallRequest.Nodes) == 0 {
+	if p.InstallRequest != nil && p.Credentials.KubeConfigPath == "" && len(p.InstallRequest.Nodes) == 0 {
 		return derrors.NewInternalError(errors.InvalidNumMaster)
 	}
 
@@ -189,25 +202,33 @@ func (p *Parameters) writeTempFile(content string, prefix string) (*string, derr
 	return &tmpName, nil
 }
 
+// LoadCredentials processes the request and extracts the credentials to be used in the command.
 func (p *Parameters) LoadCredentials() derrors.Error {
-
-	p.Credentials.Username = p.InstallRequest.Username
-
-	if p.InstallRequest.PrivateKey != "" {
-		f, err := p.writeTempFile(p.InstallRequest.PrivateKey, "pk")
-		if err != nil {
-			return err
+	if p.InstallRequest != nil {
+		p.Credentials.Username = p.InstallRequest.Username
+		if p.InstallRequest.PrivateKey != "" {
+			f, err := p.writeTempFile(p.InstallRequest.PrivateKey, "pk")
+			if err != nil {
+				return err
+			}
+			p.Credentials.PrivateKeyPath = *f
 		}
-		p.Credentials.PrivateKeyPath = *f
 	}
 
-	if p.InstallRequest.KubeConfigRaw != "" {
-		f, err := p.writeTempFile(p.InstallRequest.KubeConfigRaw, "kc")
+	var kubeConfigRaw = ""
+	if p.InstallRequest != nil {
+		kubeConfigRaw = p.InstallRequest.KubeConfigRaw
+	} else if p.UninstallRequest != nil {
+		kubeConfigRaw = p.UninstallRequest.KubeConfigRaw
+	}
+
+	// Load its contents in credentials if required as some cases in the install process do not require it.
+	if kubeConfigRaw != "" {
+		f, err := p.writeTempFile(kubeConfigRaw, "kc")
 		if err != nil {
 			return err
 		}
 		p.Credentials.KubeConfigPath = *f
 	}
-
 	return nil
 }

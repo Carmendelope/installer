@@ -51,20 +51,34 @@ func (wr *WorkflowResult) Callback(workflowID string, error derrors.Error,
 	wr.State = state
 }
 
-func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
+func GetTestUninstallParameters(appCluster bool) *Parameters {
+	request := &grpc_installer_go.UninstallClusterRequest{
+		RequestId:      "requestID",
+		OrganizationId: "organizationID",
+		ClusterId:      "TestCluster",
+		ClusterType:    grpc_infrastructure_go.ClusterType_KUBERNETES,
+		KubeConfigRaw:  "kubeConfigContent",
+		TargetPlatform: grpc_installer_go.Platform_AZURE,
+	}
+	return NewUninstallParameters(request, appCluster)
+}
+
+func GetTestInstallParameters(numNodes int, appCluster bool) *Parameters {
 	nodes := make([]string, 0)
 	for i := 0; i < numNodes; i++ {
 		toAdd := fmt.Sprintf("10.1.1.%d", i)
 		nodes = append(nodes, toAdd)
 	}
-	request := grpc_installer_go.InstallRequest{
-		InstallId:         "TestInstall",
+	request := &grpc_installer_go.InstallRequest{
+		RequestId:         "TestInstall",
 		OrganizationId:    "orgID",
 		ClusterId:         "TestCluster",
 		ClusterType:       grpc_infrastructure_go.ClusterType_KUBERNETES,
 		InstallBaseSystem: false,
 		KubeConfigRaw:     "KubeConfigContent",
+		Hostname:          "mngt_hostname",
 		Nodes:             nodes,
+		TargetPlatform:    grpc_installer_go.Platform_AZURE,
 	}
 
 	assets := NewAssets(make([]string, 0), make([]string, 0))
@@ -72,14 +86,14 @@ func GetTestParameters(numNodes int, appClusterInstall bool) *Parameters {
 
 	networkParameters := NewNetworkConfig("ztPlanetSecret")
 
-	return NewParameters(
+	return NewInstallParameters(
 		request,
 		*assets,
 		*paths,
 		"mngtcluster_host", "80",
 		"dns_host", "53",
 		entities.Production,
-		appClusterInstall,
+		appCluster,
 		*networkParameters,
 		"authxSecret", "caCertPath",
 	)

@@ -80,6 +80,11 @@ var _ = ginkgo.Describe("A launch command", func() {
 		return
 	}
 
+	if !utils.RunIntegrationTest("launch_it_test") {
+		log.Warn().Msg("Integration test is skipped")
+		return
+	}
+
 	if itKubeConfigFile == "" {
 		ginkgo.Fail("missing environment variables")
 	}

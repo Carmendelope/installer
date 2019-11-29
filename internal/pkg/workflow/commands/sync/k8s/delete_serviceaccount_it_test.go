@@ -15,11 +15,6 @@
  *
  */
 
-/*
-RUN_INTEGRATION_TEST=true
-IT_K8S_KUBECONFIG=/Users/daniel/.kube/config
-*/
-
 package k8s
 
 import (
@@ -29,14 +24,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var _ = ginkgo.Describe("A create management config command", func() {
+var _ = ginkgo.Describe("A delete service account command", func() {
 
 	if !utils.RunIntegrationTests() {
 		log.Warn().Msg("Integration tests are skipped")
 		return
 	}
 
-	if !utils.RunIntegrationTest("create_management_config_it") {
+	if !utils.RunIntegrationTest("delete_serviceaccount_it_test") {
 		log.Warn().Msg("Integration test is skipped")
 		return
 	}
@@ -45,12 +40,13 @@ var _ = ginkgo.Describe("A create management config command", func() {
 		ginkgo.Fail("missing environment variables")
 	}
 
-	ginkgo.It("should be able to create the config maps", func() {
-		cmc := NewCreateManagementConfig(
-			itKubeConfigFile, "publicHost", "publicPort",
-			"MINIKUBE", "PRODUCTION")
-		result, err := cmc.Run("createManagementConfig")
+	ginkgo.It("should be able to delete a service account", func() {
+		dsa := NewDeleteServiceAccount(itKubeConfigFile, "test", "test2")
+		result, err := dsa.Run("deleteServiceAccounts")
 		gomega.Expect(err).To(gomega.Succeed())
+		if !result.Success {
+			log.Debug().Interface("result", result).Msg("failed")
+		}
 		gomega.Expect(result.Success).Should(gomega.BeTrue())
 	})
 
