@@ -21,6 +21,7 @@ import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/installer/internal/pkg/workflow"
+	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
 )
@@ -44,6 +45,7 @@ type Operation struct {
 
 // NewOperation creates a new Operation
 func NewOperation(organizationID string, requestID string, operationName string) *Operation {
+	log.Debug().Str("organizationID", organizationID).Str("requestID", requestID).Str("operationName", operationName).Msg("creating operation")
 	return &Operation{
 		OrganizationID: organizationID,
 		RequestID:      requestID,
@@ -55,13 +57,15 @@ func NewOperation(organizationID string, requestID string, operationName string)
 
 func (is *Operation) Clone() *Operation {
 	return &Operation{
-		RequestID:     is.RequestID,
-		status:        is.status,
-		Created:       is.Created,
-		Params:        is.Params,
-		Workflow:      is.Workflow,
-		error:         is.error,
-		workflowState: is.workflowState,
+		OrganizationID: is.OrganizationID,
+		RequestID:      is.RequestID,
+		OperationName:  is.OperationName,
+		status:         is.status,
+		Created:        is.Created,
+		Params:         is.Params,
+		Workflow:       is.Workflow,
+		error:          is.error,
+		workflowState:  is.workflowState,
 	}
 }
 

@@ -161,28 +161,12 @@
   version = "v0.0.54"
 
 [[projects]]
-  digest = "1:bfdcc9fecc93209e8571fbc3df0899fe1bc89337783871809b85b9fe96888c61"
-  name = "github.com/nalej/grpc-cluster-watcher-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "b3113b81356f3366b4d4534fc4bb821f1c784ae9"
-  version = "v0.0.8"
-
-[[projects]]
   digest = "1:bd7639c14ee31f2c9a7b5aee26587d7f11f8e02c8203c4173b56e9c53da29086"
   name = "github.com/nalej/grpc-common-go"
   packages = ["."]
   pruneopts = "UT"
   revision = "88afedc770cfa91e85284eeced920c2978fee8ef"
   version = "v0.0.38"
-
-[[projects]]
-  digest = "1:2e5ebf343c8192a63875be693a2a910158dd85bd49f4d4f1bafe263bc01dab3c"
-  name = "github.com/nalej/grpc-connectivity-manager-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "506a8e19e5f0c5d7d83bd08d473c1ae07439a310"
-  version = "v0.0.4"
 
 [[projects]]
   digest = "1:c90a5f65260f06d45249fae0fd5de66ffdfcd77037b436e65f1051afc42972af"
@@ -193,12 +177,12 @@
   version = "v0.0.39"
 
 [[projects]]
-  digest = "1:8a0b7494a015eb451cf7254574dfde31f4ab00f17e8bdda6c16c58622b80820b"
+  digest = "1:875c581a2dcbf760f54fb29a61a97b912651ec228789da26567d2c20ed19b084"
   name = "github.com/nalej/grpc-infrastructure-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "843be831319ae6b69bd461da970fae32b79e03f9"
-  version = "v0.0.49"
+  revision = "11415f1a09bd871ad95d2362d482562ae11014f2"
+  version = "v0.0.38"
 
 [[projects]]
   digest = "1:70d9de045515030e867eb9d138bc594e520b8876b9fc8440123a9588fe1afe04"
@@ -410,7 +394,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f0ba675f653df02fca23059294eec5a55257a5202487360695cfdc62d45b8a1e"
+  digest = "1:73eaec097280ac58e7dcf99d8a03f1d9e64139870340f6c711804a090afa33f1"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -418,7 +402,7 @@
     "windows",
   ]
   pruneopts = "UT"
-  revision = "63cb32ae39b28d6bb8e7e215c1fc39dd80dcdb02"
+  revision = "6d18c012aee9febd81bbf9806760c8c4480e870d"
 
 [[projects]]
   digest = "1:28deae5fe892797ff37a317b5bcda96d11d1c90dadd89f1337651df3bc4c586e"
