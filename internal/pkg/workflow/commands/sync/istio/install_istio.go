@@ -32,10 +32,12 @@ import (
     "github.com/rs/zerolog/log"
     "io/ioutil"
     "istio.io/api/networking/v1alpha3"
-    "k8s.io/api/core/v1"
-    metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
     istioNetworking "istio.io/client-go/pkg/apis/networking/v1alpha3"
     istioClient "istio.io/client-go/pkg/clientset/versioned"
+    "k8s.io/api/core/v1"
+    metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    "k8s.io/client-go/kubernetes"
+    "k8s.io/client-go/rest"
     "k8s.io/client-go/tools/clientcmd"
     "strings"
     "time"
@@ -51,7 +53,7 @@ const (
     // Time between checks
     IstioTimeSleep = time.Second * 5
     // Time before timeout
-    IstioTimeout = time.Second * 180
+    IstioTimeout = time.Second * 300
 )
 
 type InstallIstio struct {
@@ -149,7 +151,7 @@ func (i *InstallIstio) Run(workflowID string) (*entities.CommandResult, derrors.
     }
 
     // Wait for the gateway to have a valid ip
-    i.waitForGatewayIP()
+    // i.waitForGatewayIP()
 
     return entities.NewSuccessCommand([]byte("istio has been installed successfully")), nil
 }
@@ -158,6 +160,7 @@ func (i *InstallIstio) Run(workflowID string) (*entities.CommandResult, derrors.
 // if and only if the gateway is available and it has its own IP address.
 func (i *InstallIstio) waitForGatewayIP() derrors.Error {
 
+    log.Info().Msg("wait for Istio ingress gateway service to be available")
     ticker := time.NewTicker(IstioTimeSleep)
     timeout := make(chan bool)
     ip := make(chan string)
@@ -283,12 +286,26 @@ func (i *InstallIstio) installInMaster() derrors.Error {
 }
 
 func (i *InstallIstio) installInSlave(clusterID string) derrors.Error {
-    // TODO this operation must recover the kubeconfig for the management cluster
-    // get the master gateway service public IP
-    svc, err := i.Client.CoreV1().Services(IstioNamespace).Get(IstioIngressGateway, metaV1.GetOptions{})
+
+    // We create a local kube client to check the istio ingress ip
+
+    config, err := rest.InClusterConfig()
+    if err != nil {
+        return derrors.NewInternalError("impossible to get master cluster k8s configuration", err)
+    }
+    localClient, err := kubernetes.NewForConfig(config)
+    if err != nil {
+        return derrors.NewInternalError("impossible to instantiate k8s client for master cluster", err)
+    }
+
+    svc, err := localClient.CoreV1().Services(IstioNamespace).Get(IstioIngressGateway, metaV1.GetOptions{})
     if err != nil {
         log.Error().Err(err).Msg("impossible to find istio gateway service IP")
         return derrors.NewInternalError("impossible to find istio gateway service IP", err)
+    }
+
+    if len(svc.Status.LoadBalancer.Ingress) == 0 {
+        return derrors.NewInternalError("no available Istio ingress IP for master cluster")
     }
 
     gatewayIP := svc.Status.LoadBalancer.Ingress[0].IP
