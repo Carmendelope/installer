@@ -55,6 +55,12 @@ var tempPath string
 
 var clusterCertIssuerCACertPath string
 
+var networkingMode string
+
+var istioPath string
+
+var istioCertsPath string
+
 var environment entities.Environment
 
 var cliCmd = &cobra.Command{
@@ -112,6 +118,13 @@ func init() {
 		"Directory to store temporal files")
 	cliCmd.PersistentFlags().StringVar(&clusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "",
 		"Directory with the CA certificate")
+	cliCmd.PersistentFlags().StringVar(&networkingMode, "networkingMode", "istio",
+		"Networking mode to be used [zt, istio]")
+	cliCmd.PersistentFlags().StringVar(&istioPath, "istioPath", "/tmp/istio",
+		"Path to the folder containing the Istio project")
+	cliCmd.PersistentFlags().StringVar(&istioCertsPath, "istioCertsPath", "/tmp/istio/certs",
+		"Path where the Istio certificates are stored")
+
 
 	addRegistryOptions(cliCmd)
 
@@ -161,6 +174,20 @@ func GetPaths() (*workflow.Paths, derrors.Error) {
 }
 
 func ValidateInstallParameters() derrors.Error {
+
+	netMode, found := entities.NetworkingModeFromString[networkingMode]
+	if !found {
+		return derrors.NewInvalidArgumentError("networking mode not valid, only zt or istio are valid")
+	}
+
+	if netMode == entities.NetworkingModeIstio && istioPath == "" {
+		return derrors.NewInvalidArgumentError("the Istio path must be set if Istio networking mode is selected")
+	}
+
+	if netMode == entities.NetworkingModeIstio && istioCertsPath == "" {
+		return derrors.NewInvalidArgumentError("the IstioCertsPath must be set if Istio networking mode is selected")
+	}
+
 	if installKubernetes {
 		if username == "" || clusterCertIssuerCACertPath == "" {
 			return derrors.NewInvalidArgumentError("username and clusterCertIssuerCACertPath expected on kubernetes install mode")
@@ -179,5 +206,6 @@ func ValidateInstallParameters() derrors.Error {
 		log.Info().Str("path", clusterCertIssuerCACertPath).Msg("CA Cert path expected")
 	}
 	log.Info().Str("path", kubeConfigPath).Msg("KubeConfig")
+
 	return nil
 }

@@ -37,6 +37,7 @@ const (
 	Development
 )
 
+
 var TargetEnvironmentFromString = map[string]TargetEnvironment{
 	"production":  Production,
 	"PRODUCTION":  Production,
@@ -51,6 +52,27 @@ var TargetEnvironmentToString = map[TargetEnvironment]string{
 	Staging:     "STAGING",
 	Development: "DEVELOPMENT",
 }
+
+// NetworkingMode indicates the kind of networking solution to be used in the platform
+type NetworkingMode string
+
+const (
+	NetworkingModeZt = "zt"
+	NetworkingModeIstio = "istio"
+	// It indicates a non valid mode
+	NetworkingModeInvalid = ""
+)
+
+var NetworkingModeFromString = map[string] NetworkingMode {
+	"zt": NetworkingModeZt,
+	"istio": NetworkingModeIstio,
+}
+
+var NetworkingModeToString = map[NetworkingMode] string {
+	NetworkingModeZt: "zt",
+	NetworkingModeIstio: "istio",
+}
+
 
 type Environment struct {
 	Target            TargetEnvironment

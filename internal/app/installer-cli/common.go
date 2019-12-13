@@ -68,6 +68,9 @@ func (c *CLI) PrepareInstallCommand(
 	ipAddressVPNServer string,
 	appClusterInstall bool,
 	environment entities.Environment,
+	networkingMode string,
+	istioPath string,
+	istioCertsPath string,
 ) {
 	// load the private key content if required.
 	privateKeyContent, err := utils.GetPrivateKeyContent(privateKeyPath)
@@ -101,7 +104,8 @@ func (c *CLI) PrepareInstallCommand(
 		dnsClusterHost, dnsClusterPort,
 		environment.Target,
 		appClusterInstall,
-		*workflow.EmptyNetworkConfig, "", "")
+		workflow.NetworkConfig{NetworkingMode: networkingMode, IstioPath: istioPath, IstioCertsPath: istioCertsPath, ZTPlanetSecretPath:""},
+		"", "")
 
 	c.Params = *params
 

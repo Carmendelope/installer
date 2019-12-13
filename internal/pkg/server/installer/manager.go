@@ -19,6 +19,7 @@ package installer
 
 import (
 	"github.com/nalej/grpc-common-go"
+	"github.com/nalej/installer/internal/pkg/entities"
 	"sync"
 
 	"github.com/nalej/derrors"
@@ -111,6 +112,12 @@ func (m *Manager) launchInstall(requestID string) {
 		return
 	}
 
+	// The network configuration is taken from the running parameters of the installer service
+	networkingConfig := workflow.NetworkConfig{
+		NetworkingMode: entities.NetworkingModeToString[m.Config.NetworkingMode],
+		ZTPlanetSecretPath: "",
+	}
+
 	// Create Parameters
 	params := workflow.NewInstallParameters(
 		&request, workflow.Assets{}, m.Paths,
@@ -118,7 +125,7 @@ func (m *Manager) launchInstall(requestID string) {
 		m.Config.DNSClusterHost, m.Config.DNSClusterPort,
 		m.Config.Environment.Target,
 		true,
-		*workflow.EmptyNetworkConfig, m.Config.AuthSecret, m.Config.ClusterCertIssuerCACertPath)
+		networkingConfig, m.Config.AuthSecret, m.Config.ClusterCertIssuerCACertPath)
 
 	status.Params = params
 	err := status.Params.LoadCredentials()

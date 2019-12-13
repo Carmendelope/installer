@@ -80,7 +80,10 @@ func LaunchManagementInstall() {
 		ipAddressCoreDNS,
 		ipAddressVPNServer,
 		false,
-		environment)
+		environment,
+		networkingMode,
+		istioPath,
+		istioCertsPath)
 
 	if explainPlan {
 		inst.LoadCredentials()

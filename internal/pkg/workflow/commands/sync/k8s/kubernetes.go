@@ -235,6 +235,7 @@ func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 
 	created, err := client.Create(unstructuredObj, metaV1.CreateOptions{})
 	if err != nil {
+		log.Error().Err(err).Msg("unable to crate kubernetes object")
 		return derrors.NewInternalError("unable to create object", err).WithParams(unstructuredObj)
 	}
 

@@ -20,6 +20,7 @@
 package commands
 
 import (
+	"github.com/nalej/installer/internal/pkg/entities"
 	"github.com/nalej/installer/internal/pkg/server"
 	cfg "github.com/nalej/installer/internal/pkg/server/config"
 	"github.com/rs/zerolog/log"
@@ -44,6 +45,7 @@ var runCmd = &cobra.Command{
 func addRegistryOptions(cliCmd *cobra.Command) {
 	cliCmd.Flags().StringVar(&config.Environment.TargetEnvironment, "targetEnvironment", "PRODUCTION", "Target environment to be installed: PRODUCTION, STAGING, or DEVELOPMENT")
 }
+
 
 func init() {
 
@@ -73,6 +75,18 @@ func init() {
 	runCmd.PersistentFlags().StringVar(&config.AuthSecret, "authSecret", "",
 		"Authorization secret")
 	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "", "Cluster Cert Issuer Cert Value")
+
+	netMode := ""
+	runCmd.PersistentFlags().StringVar(&netMode, "networkingMode", "zt",
+		"Networking mode to be used [zt, istio]")
+	entry, found := entities.NetworkingModeFromString[netMode]
+	if !found {
+		entry = entities.NetworkingModeInvalid
+	}
+	config.NetworkingMode = entry
+
+	runCmd.PersistentFlags().StringVar(&config.IstioPath, "istioPath", "/istio/", "Path where the Istio project can be found")
+
 
 	rootCmd.AddCommand(runCmd)
 }
