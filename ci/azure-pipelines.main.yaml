@@ -80,6 +80,8 @@ stages:
 
     - template: k8s/configmaps/management-config.yaml@ci_templates
 
+    - template: k8s/configmaps/installer-config.yaml@ci_templates
+
     - template: k8s/secrets/authx-secret.yaml@ci_templates
 
     - template: k8s/yaml/namespace.yaml@ci_templates
