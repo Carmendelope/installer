@@ -10,7 +10,7 @@ resources:
       type: github
       name: nalej/ci-templates
       endpoint: nalej
-      #ref: refs/tags/v1.0.6
+      #ref: refs/tags/v1.0.6                                
       ref: refs/heads/feature/NP-2504_ComponentDeploy
 
 stages:
@@ -131,6 +131,31 @@ stages:
       parameters:
         kubeconfig: $(kubeconfig)
         namespace: $(namespace)
+
+    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
+      parameters:
+        kubeconfig: $(kubeconfig)
+        component: "alertmanagers.monitoring.coreos.com"
+
+    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
+      parameters:
+        kubeconfig: $(kubeconfig)
+        component: "podmonitors.monitoring.coreos.com"
+
+    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
+      parameters:
+        kubeconfig: $(kubeconfig)
+        component: "prometheuses.monitoring.coreos.com"
+
+    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
+      parameters:
+        kubeconfig: $(kubeconfig)
+        component: "prometheusrules.monitoring.coreos.com"
+
+    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
+      parameters:
+        kubeconfig: $(kubeconfig)
+        component: "servicemonitors.monitoring.coreos.com"
 
 # - stage: 'AssetPublish'
 #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
