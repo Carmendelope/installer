@@ -127,11 +127,6 @@ stages:
         kubeconfig: $(kubeconfig)
         namespace: $(namespace)   
 
-    - template: k8s/ns/delete.yaml@ci_templates
-      parameters:
-        kubeconfig: $(kubeconfig)
-        namespace: $(namespace)
-
     - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
       parameters:
         kubeconfig: $(kubeconfig)
@@ -156,6 +151,11 @@ stages:
       parameters:
         kubeconfig: $(kubeconfig)
         component: "servicemonitors.monitoring.coreos.com"
+
+    - template: k8s/ns/delete.yaml@ci_templates
+      parameters:
+        kubeconfig: $(kubeconfig)
+        namespace: $(namespace)
 
 # - stage: 'AssetPublish'
 #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
