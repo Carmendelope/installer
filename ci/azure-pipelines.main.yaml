@@ -111,22 +111,6 @@ stages:
         kubeconfig: $(kubeconfig)
         namespace: $(namespace)
 
-    - template: k8s/resources/create.yaml@ci_templates
-      parameters:
-        kubeconfig: $(kubeconfig)
-        platform: mngtcluster
-        environment: "staging"
-    
-    - template: templates/verify_deploy.yaml
-      parameters:
-        kubeconfig: $(kubeconfig)
-        namespace: $(namespace)
-
-    - template: k8s/logs/archive.yaml@ci_templates
-      parameters:
-        kubeconfig: $(kubeconfig)
-        namespace: $(namespace)   
-
     - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
       parameters:
         kubeconfig: $(kubeconfig)
@@ -151,6 +135,22 @@ stages:
       parameters:
         kubeconfig: $(kubeconfig)
         component: "servicemonitors.monitoring.coreos.com"
+
+    - template: k8s/resources/create.yaml@ci_templates
+      parameters:
+        kubeconfig: $(kubeconfig)
+        platform: mngtcluster
+        environment: "staging"
+    
+    - template: templates/verify_deploy.yaml
+      parameters:
+        kubeconfig: $(kubeconfig)
+        namespace: $(namespace)
+
+    - template: k8s/logs/archive.yaml@ci_templates
+      parameters:
+        kubeconfig: $(kubeconfig)
+        namespace: $(namespace)   
 
     - template: k8s/ns/delete.yaml@ci_templates
       parameters:
