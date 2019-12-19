@@ -132,30 +132,7 @@ stages:
         kubeconfig: $(kubeconfig)
         namespace: $(namespace)
 
-    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
-      parameters:
-        kubeconfig: $(kubeconfig)
-        component: "alertmanagers.monitoring.coreos.com"
-
-    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
-      parameters:
-        kubeconfig: $(kubeconfig)
-        component: "podmonitors.monitoring.coreos.com"
-
-    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
-      parameters:
-        kubeconfig: $(kubeconfig)
-        component: "prometheuses.monitoring.coreos.com"
-
-    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
-      parameters:
-        kubeconfig: $(kubeconfig)
-        component: "prometheusrules.monitoring.coreos.com"
-
-    - template: k8s/custom/delete-customresourcedefinition.yaml@ci_templates
-      parameters:
-        kubeconfig: $(kubeconfig)
-        component: "servicemonitors.monitoring.coreos.com"
+    - template: k8s/custom/delete-cdr-main.yaml@ci_templates
 
 # - stage: 'AssetPublish'
 #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
