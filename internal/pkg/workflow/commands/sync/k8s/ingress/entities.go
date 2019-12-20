@@ -223,6 +223,13 @@ var IngressRulesPaths = &v1beta1.HTTPIngressRuleValue{
 				ServicePort: intstr.IntOrString{IntVal: 8082},
 			},
 		},
+		v1beta1.HTTPIngressPath{
+			Path: "/v1/logs/download",
+			Backend: v1beta1.IngressBackend{
+				ServiceName: "log-download-manager",
+				ServicePort: intstr.IntOrString{IntVal: 8941},
+			},
+		},
 	},
 }
 
