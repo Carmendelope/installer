@@ -636,6 +636,50 @@ var AppClusterAPIIngressRules = v1beta1.Ingress{
 	},
 }
 
+var MonitoringIngressRules = v1beta1.Ingress{
+	TypeMeta: metaV1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "extensions/v1beta1",
+	},
+	ObjectMeta: metaV1.ObjectMeta{
+		Name:      "monitoring-ingress",
+		Namespace: "nalej",
+		Labels: map[string]string{
+			"cluster":   "management",
+			"component": "monitoring",
+		},
+		Annotations: map[string]string{
+			"kubernetes.io/ingress.class": "nginx",
+		},
+	},
+	Spec: v1beta1.IngressSpec{
+		TLS: []v1beta1.IngressTLS{
+			{
+				Hosts:      []string{"monitoring.MANAGEMENT_HOST"},
+				SecretName: tlsCertificate,
+			},
+		},
+		Rules: []v1beta1.IngressRule{
+			{
+				Host: "monitoring.MANAGEMENT_HOST",
+				IngressRuleValue: v1beta1.IngressRuleValue{
+					HTTP: &v1beta1.HTTPIngressRuleValue{
+						Paths: []v1beta1.HTTPIngressPath{
+							{
+								Path: "/metrics",
+								Backend: v1beta1.IngressBackend{
+									ServiceName: "monitoring-api",
+									ServicePort: intstr.IntOrString{IntVal: 8421},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 var DeviceControllerIngressRules = v1beta1.Ingress{
 	TypeMeta: metaV1.TypeMeta{
 		Kind:       "Ingress",

@@ -112,8 +112,12 @@ func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
 	eicApi.Spec.TLS[0].Hosts[0] = fmt.Sprintf("eic-api.%s", ii.ManagementPublicHost)
 	eicApi.Spec.Rules[0].Host = fmt.Sprintf("eic-api.%s", ii.ManagementPublicHost)
 
+	monitoringApi := MonitoringIngressRules
+	monitoringApi.Spec.TLS[0].Hosts[0] = fmt.Sprintf("monitoring.%s", ii.ManagementPublicHost)
+	monitoringApi.Spec.Rules[0].Host = fmt.Sprintf("monitoring.%s", ii.ManagementPublicHost)
+
 	return []*v1beta1.Ingress{
-		&ingress, &login, &signup, &api, &cluster, &device, &deviceLogin, &eicApi,
+		&ingress, &login, &signup, &api, &cluster, &device, &deviceLogin, &eicApi, &monitoringApi,
 	}
 
 }
