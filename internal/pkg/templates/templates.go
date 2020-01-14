@@ -34,6 +34,15 @@ const InstallManagementCluster = `
 			"minVersion":"1.11"
 		},
 		{"type":"sync", "name": "logger", "msg": "Installing components"},
+        {{if eq $.NetworkConfig.NetworkingMode "istio" }}
+            {"type":"sync", "name":"installIstio",
+                "kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+                "istio_path":"{{$.NetworkConfig.IstioPath}}",
+                "istio_certs_path":"{{$.NetworkConfig.IstioCertsPath}}",
+                "cluster_id:":"{{$.InstallRequest.ClusterId}}",
+                "is_appCluster":{{$.AppCluster}}
+            },
+        {{end}}
 		{{if $.AppCluster }}
 			{"type":"sync", "name":"createClusterConfig",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
@@ -109,15 +118,6 @@ const InstallManagementCluster = `
 				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.VpnServer}}"
 			},
 		{{end}}
-        {{if eq $.NetworkConfig.NetworkingMode "istio" }}
-            {"type":"sync", "name":"installIstio",
-                "kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
-                "istio_path":"{{$.NetworkConfig.IstioPath}}",
-                "istio_certs_path":"{{$.NetworkConfig.IstioCertsPath}}",
-                "cluster_id:":"{{$.InstallRequest.ClusterId}}",
-                "is_appCluster":{{$.AppCluster}}
-            },
-        {{end}}
 		{"type":"sync", "name": "launchComponents",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespaces":["nalej", "ingress-nginx"],

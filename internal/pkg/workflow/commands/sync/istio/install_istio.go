@@ -150,7 +150,8 @@ func (i *InstallIstio) Run(workflowID string) (*entities.CommandResult, derrors.
         i.installGateway()
     }
 
-    // Wait for the gateway to have a valid ip
+    // Wait for the gateway to have a valid ip.
+    // This operation may take quite a while. For the sake of installation speed we skip this check.
     // i.waitForGatewayIP()
 
     return entities.NewSuccessCommand([]byte("istio has been installed successfully")), nil
