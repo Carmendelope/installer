@@ -40,7 +40,8 @@ const InstallManagementCluster = `
                 "istio_path":"{{$.NetworkConfig.IstioPath}}",
                 "istio_certs_path":"{{$.NetworkConfig.IstioCertsPath}}",
                 "cluster_id:":"{{$.InstallRequest.ClusterId}}",
-                "is_appCluster":{{$.AppCluster}}
+                "is_appCluster":{{$.AppCluster}},
+                "static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}"
             },
         {{end}}
 		{{if $.AppCluster }}
@@ -102,7 +103,8 @@ const InstallManagementCluster = `
 				"management_public_host":"{{$.InstallRequest.Hostname}}",
 				"on_management_cluster":{{ not $.AppCluster}},
 				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
-				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}"
+				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}",
+                "network_mode":"{{$.NetworkConfig.NetworkingMode}}"
 		},
 		{{if not $.AppCluster }}
 			{"type":"sync", "name":"installExtDNS",

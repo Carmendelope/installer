@@ -65,9 +65,11 @@ type InstallIstio struct {
     IstioCertsPath string   `json:"istio_certs_path"`
     ClusterID string        `json:"cluster_id"`
     IsAppCluster bool       `json:"is_appCluster"`
+    StaticIpAddress string  `json:"static_ip_address"`
 }
 
-func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath string, clusterID string, isAppCluster bool) *InstallIstio {
+func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath string, clusterID string, isAppCluster bool,
+    staticIpAddress string) *InstallIstio {
 
     // use the current context in kubeconfig
     config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
@@ -92,6 +94,7 @@ func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath str
         Istio: istCli,
         ClusterID: clusterID,
         IsAppCluster: isAppCluster,
+        StaticIpAddress: staticIpAddress,
     }
 }
 
@@ -273,6 +276,12 @@ func (i *InstallIstio) installInMaster() derrors.Error {
         "manifest",
         "apply",
         fmt.Sprintf("--kubeconfig=%s", i.KubeConfigPath),
+        "--set", "values.gateways.istio-ingressgateway.sds.enabled=true",
+        "--set", "values.global.k8sIngress.enabled=true",
+        "--set", "values.global.k8sIngress.enableHttps=true",
+        "--set", "values.global.k8sIngress.gatewayName=ingressgateway",
+        "--set", "gateways.istio-ingressgateway.type=LoadBalancer",
+        "--set", fmt.Sprintf("gateways.istio-ingressgateway.loadBalancerIP=%s",i.StaticIpAddress),
         "-f",
         fmt.Sprintf("%s/install/kubernetes/operator/examples/multicluster/values-istio-multicluster-primary.yaml", i.IstioPath),
     }

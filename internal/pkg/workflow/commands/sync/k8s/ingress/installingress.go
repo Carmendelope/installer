@@ -34,6 +34,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 )
 
 // TODO Refactor using the new parameter to define the target platform instead of detecting it.
@@ -44,9 +45,11 @@ type InstallIngress struct {
 	OnManagementCluster  bool   `json:"on_management_cluster"`
 	UseStaticIP          bool   `json:"use_static_ip"`
 	StaticIPAddress      string `json:"static_ip_address"`
+	NetworkMode          string `json:"network_mode"`
 }
 
-func NewInstallIngress(kubeConfigPath string, platformType string, managementPublicHost string, useStaticIP bool, staticIPAddress string) *InstallIngress {
+func NewInstallIngress(kubeConfigPath string, platformType string, managementPublicHost string, useStaticIP bool,
+	staticIPAddress string, networkMode string) *InstallIngress {
 	return &InstallIngress{
 		Kubernetes: k8s.Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallIngress),
@@ -56,6 +59,7 @@ func NewInstallIngress(kubeConfigPath string, platformType string, managementPub
 		ManagementPublicHost: managementPublicHost,
 		UseStaticIP:          useStaticIP,
 		StaticIPAddress:      staticIPAddress,
+		NetworkMode:          networkMode,
 	}
 }
 
@@ -423,6 +427,38 @@ func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derro
 	if connectErr != nil {
 		return nil, connectErr
 	}
+
+	switch ii.NetworkMode {
+	case "istio":
+		return ii.installIstio()
+	// others...
+	}
+
+	return ii.installK8s()
+
+}
+
+// Install the equivalents to K8s using the Istio appraoch with gateways and virtual services.
+func (ii *InstallIngress) installIstio() (*entities.CommandResult, derrors.Error) {
+	// get gateways
+	gws := GetIstioGateways(ii.ManagementPublicHost)
+	// create gateways
+	gwErr := InstallIstioGateways(gws, ii.KubeConfigPath)
+	if gwErr != nil {
+		return entities.NewCommandResult(false, "impossible to create Istio gateways", gwErr), gwErr
+	}
+	// get virtualservices
+	vs := GetIstioVirtualServices(ii.ManagementPublicHost)
+	// create virtual services
+	vsErr := InstallIstioVirtualServices(vs, ii.KubeConfigPath)
+	if vsErr != nil {
+		return entities.NewCommandResult(false, "impossible to create Istio virtual services", vsErr), vsErr
+	}
+	return entities.NewCommandResult(true, "istio ingress entities created",nil), nil
+}
+
+// Install the ingresses required to run a fully compatible installation with K8s using its ingresses.
+func (ii *InstallIngress) installK8s() (*entities.CommandResult, derrors.Error) {
 	existingIngress, err := ii.GetExistingIngress()
 	if err != nil {
 		return nil, err
