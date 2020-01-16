@@ -42,7 +42,8 @@ const InstallManagementCluster = `
                 "cluster_id:":"{{$.InstallRequest.ClusterId}}",
                 "is_appCluster":{{$.AppCluster}},
                 "static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}",
-                "temp_path":"{{$.Paths.TempPath}}"
+                "temp_path":"{{$.Paths.TempPath}}",
+                "management_public_host":"{{$.ManagementClusterHost}}"
             },
         {{end}}
 		{{if $.AppCluster }}

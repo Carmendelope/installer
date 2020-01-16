@@ -36,6 +36,9 @@ import (
     istioClient "istio.io/client-go/pkg/clientset/versioned"
     "k8s.io/api/core/v1"
     metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+    "k8s.io/apimachinery/pkg/runtime"
+    "k8s.io/apimachinery/pkg/util/yaml"
     "k8s.io/client-go/kubernetes"
     "k8s.io/client-go/rest"
     "k8s.io/client-go/tools/clientcmd"
@@ -57,6 +60,7 @@ const (
     IstioTimeout = time.Second * 300
 )
 
+// Configuration for the control plane in a multiple mesh Istion configuration
 const IstioMasterConfig =
 `
 apiVersion: install.istio.io/v1alpha2
@@ -89,6 +93,31 @@ spec:
                 port: 443
 `
 
+// Certificate to be created by lets encrypt to ensure https communication.
+const IstioIngressCert =
+`
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: ingress-cert
+  namespace: istio-system
+spec:
+  secretName: ingress-cert
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  commonName: .IngressDomain
+  dnsNames:
+  - .IngressDomain
+  acme:
+    config:
+    - http01:
+        ingressClass: istio
+      domains:
+      - .IngressDomain
+`
+
+
 
 type InstallIstio struct {
     k8s.Kubernetes
@@ -101,10 +130,11 @@ type InstallIstio struct {
     IsAppCluster bool       `json:"is_appCluster"`
     StaticIpAddress string  `json:"static_ip_address"`
     TempPath string         `json:"temp_path"`
+    ManagementPublicHost string     `json:"management_public_host"`
 }
 
 func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath string, clusterID string, isAppCluster bool,
-    staticIpAddress string, tempPath string) *InstallIstio {
+    staticIpAddress string, tempPath string, managementPublicHost string) *InstallIstio {
 
     // use the current context in kubeconfig
     config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
@@ -131,6 +161,7 @@ func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath str
         IsAppCluster: isAppCluster,
         StaticIpAddress: staticIpAddress,
         TempPath: tempPath,
+        ManagementPublicHost: managementPublicHost,
     }
 }
 
@@ -312,7 +343,6 @@ func (i *InstallIstio) installInMaster() derrors.Error {
     }
     defer os.Remove(file.Name())
 
-
     log.Info().Msg("call Istioctl to install the master cluster")
     args := []string{
         "manifest",
@@ -324,7 +354,6 @@ func (i *InstallIstio) installInMaster() derrors.Error {
         "--set", "values.global.k8sIngress.gatewayName=ingressgateway",
         "--set", fmt.Sprintf("values.gateways.istio-ingressgateway.loadBalancerIP=%s",i.StaticIpAddress),
         "-f", file.Name(),
-        //fmt.Sprintf("%s/install/kubernetes/operator/examples/multicluster/values-istio-multicluster-primary.yaml", i.IstioPath),
     }
 
     log.Debug().Interface("istioctl",args).Msg("istioctl was called")
@@ -335,6 +364,40 @@ func (i *InstallIstio) installInMaster() derrors.Error {
     if err != nil {
         return err
     }
+
+    // install the certificate
+    err = i.installGatewayCertificate()
+    if err != nil {
+        return err
+    }
+
+    // patch default ingress-gateway to set sds and the certificate
+
+
+    return nil
+}
+
+func (i *InstallIstio) installGatewayCertificate() derrors.Error{
+    log.Info().Msg("install Istio gateway certificate")
+
+    domain := fmt.Sprintf("*.%s", i.ManagementPublicHost)
+    request := strings.ReplaceAll(IstioIngressCert,".IngressDomain", domain)
+
+
+    reader := strings.NewReader(request)
+
+    obj := runtime.Object(&unstructured.Unstructured{})
+    yamlDecoder := yaml.NewYAMLOrJSONDecoder(reader, 1024)
+    err := yamlDecoder.Decode(obj)
+    if err != nil {
+        return derrors.NewInvalidArgumentError("error generating Istio ingress certificate", err)
+    }
+
+    err = i.Create(obj)
+    if err != nil {
+        return derrors.NewInvalidArgumentError("error creating Istio ingress certificate in K8s", err)
+    }
+
 
     return nil
 }
