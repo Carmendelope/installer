@@ -41,7 +41,8 @@ const InstallManagementCluster = `
                 "istio_certs_path":"{{$.NetworkConfig.IstioCertsPath}}",
                 "cluster_id:":"{{$.InstallRequest.ClusterId}}",
                 "is_appCluster":{{$.AppCluster}},
-                "static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}"
+                "static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}",
+                "temp_path":"{{$.Paths.TempPath}}"
             },
         {{end}}
 		{{if $.AppCluster }}

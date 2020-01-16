@@ -120,8 +120,8 @@ func init() {
 		"Directory with the CA certificate")
 	cliCmd.PersistentFlags().StringVar(&networkingMode, "networkingMode", "istio",
 		"Networking mode to be used [zt, istio]")
-	cliCmd.PersistentFlags().StringVar(&istioPath, "istioPath", "/tmp/istio",
-		"Path to the folder containing the Istio project")
+	cliCmd.PersistentFlags().StringVar(&istioPath, "istioPath", "/tmp/",
+		"Path to the folder containing the istioctl executable file")
 	cliCmd.PersistentFlags().StringVar(&istioCertsPath, "istioCertsPath", "/tmp/istio/certs",
 		"Path where the Istio certificates are stored")
 

@@ -39,6 +39,7 @@ import (
     "k8s.io/client-go/kubernetes"
     "k8s.io/client-go/rest"
     "k8s.io/client-go/tools/clientcmd"
+    "os"
     "strings"
     "time"
 )
@@ -56,6 +57,39 @@ const (
     IstioTimeout = time.Second * 300
 )
 
+const IstioMasterConfig =
+`
+apiVersion: install.istio.io/v1alpha2
+kind: IstioControlPlane
+spec:
+  values:
+    security:
+      selfSigned: false
+    gateways:
+      istio-ingressgateway:
+        env:
+          ISTIO_META_NETWORK: "master"
+    global:
+      mtls:
+        enabled: true
+      controlPlaneSecurityEnabled: true
+      proxy:
+        accessLogFile: "/dev/stdout"
+      network: master
+      meshExpansion:
+        enabled: true
+    pilot:
+      meshNetworks:
+        networks:
+          master:
+            endpoints:
+              - fromRegistry: Kubernetes
+            gateways:
+              - address: 0.0.0.0
+                port: 443
+`
+
+
 type InstallIstio struct {
     k8s.Kubernetes
     // Istio client to create specific Istio entities
@@ -66,10 +100,11 @@ type InstallIstio struct {
     ClusterID string        `json:"cluster_id"`
     IsAppCluster bool       `json:"is_appCluster"`
     StaticIpAddress string  `json:"static_ip_address"`
+    TempPath string         `json:"temp_path"`
 }
 
 func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath string, clusterID string, isAppCluster bool,
-    staticIpAddress string) *InstallIstio {
+    staticIpAddress string, tempPath string) *InstallIstio {
 
     // use the current context in kubeconfig
     config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
@@ -95,6 +130,7 @@ func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath str
         ClusterID: clusterID,
         IsAppCluster: isAppCluster,
         StaticIpAddress: staticIpAddress,
+        TempPath: tempPath,
     }
 }
 
@@ -269,8 +305,14 @@ func (i *InstallIstio) createSecrets() derrors.Error {
 }
 
 func (i *InstallIstio) installInMaster() derrors.Error {
-    //istioctl manifest apply --context=$CTX_CLUSTER1 \
-    //  -f install/kubernetes/operator/examples/multicluster/values-istio-multicluster-primary.yaml
+    file, fErr := ioutil.TempFile(i.TempPath, "istio-control-plane")
+    log.Info().Str("filePath", file.Name()).Msg("create a temporary file with the istio control plane configuration")
+    if fErr != nil {
+        return derrors.NewInternalError("failure when creating temporary configuration file", fErr)
+    }
+    defer os.Remove(file.Name())
+
+
     log.Info().Msg("call Istioctl to install the master cluster")
     args := []string{
         "manifest",
@@ -280,14 +322,16 @@ func (i *InstallIstio) installInMaster() derrors.Error {
         "--set", "values.global.k8sIngress.enabled=true",
         "--set", "values.global.k8sIngress.enableHttps=true",
         "--set", "values.global.k8sIngress.gatewayName=ingressgateway",
-        "--set", "gateways.istio-ingressgateway.type=LoadBalancer",
-        "--set", fmt.Sprintf("gateways.istio-ingressgateway.loadBalancerIP=%s",i.StaticIpAddress),
-        "-f",
-        fmt.Sprintf("%s/install/kubernetes/operator/examples/multicluster/values-istio-multicluster-primary.yaml", i.IstioPath),
+        "--set", fmt.Sprintf("values.gateways.istio-ingressgateway.loadBalancerIP=%s",i.StaticIpAddress),
+        "-f", file.Name(),
+        //fmt.Sprintf("%s/install/kubernetes/operator/examples/multicluster/values-istio-multicluster-primary.yaml", i.IstioPath),
     }
 
-    rExec := sync.NewExec(fmt.Sprintf("%s/bin/istioctl", i.IstioPath),args)
+    log.Debug().Interface("istioctl",args).Msg("istioctl was called")
+
+    rExec := sync.NewExec(fmt.Sprintf("%s/istioctl", i.IstioPath),args)
     _, err := rExec.Run("")
+
     if err != nil {
         return err
     }
