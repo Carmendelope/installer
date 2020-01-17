@@ -19,6 +19,8 @@ package k8s
 
 import (
 	"github.com/nalej/derrors"
+	"k8s.io/apimachinery/pkg/util/yaml"
+	"strings"
 
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 
@@ -243,6 +245,48 @@ func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 
 	return nil
 }
+
+
+// This function creates a k8s object using the raw string specification.
+// params:
+//  obj the object definition
+// return:
+//  error if any
+func (k *Kubernetes) CreateRawObject(obj string) derrors.Error {
+
+	reader := strings.NewReader(obj)
+
+	unstructuredObj := runtime.Object(&unstructured.Unstructured{})
+	yamlDecoder := yaml.NewYAMLOrJSONDecoder(reader, 1024)
+	err := yamlDecoder.Decode(unstructuredObj)
+	if err != nil {
+		return derrors.NewInvalidArgumentError("error generating Istio ingress certificate", err)
+	}
+
+	gvk := unstructuredObj.GetObjectKind().GroupVersionKind()
+	log.Debug().Str("resource", gvk.String()).Msg("decoded resource")
+
+	// Now let's see if it's a resource we know and can type, so we can
+	// decide if we need to do some modifications. We ignore the error
+	// because that just means we don't have the specific implementation of
+	// the resource type and that's ok
+	clientScheme := scheme.Scheme
+	typed, _ := scheme.Scheme.New(gvk)
+	if typed != nil {
+		// Ah, we can convert this to something specific to deal with!
+		err := clientScheme.Convert(unstructuredObj, typed, nil)
+		if err != nil {
+			return derrors.NewInternalError("cannot convert resource to specific type", err)
+		}
+	}
+	err = k.Create(unstructuredObj)
+	if err != nil {
+		return derrors.NewInvalidArgumentError("error creating Istio ingress certificate in K8s", err)
+	}
+
+	return nil
+}
+
 
 // We're using this function instead of just looking at the apiVersion and
 // kind defined in the object so that we don't necessarily have to define

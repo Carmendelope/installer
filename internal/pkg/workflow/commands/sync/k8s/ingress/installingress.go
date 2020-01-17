@@ -85,61 +85,57 @@ func (ii *InstallIngress) getAppClusterIngressRules() []*v1beta1.Ingress {
 
 func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
 	ingress := IngressRules
-
-	// Set the ingress class using the networking mode
-	ingressClass := "nginx"
-	if ii.NetworkMode == "istio" {
-		ingressClass = "istio"
-	}
-	log.Debug().Str("kubernetes.io/ingress.class", ingressClass).Msg("set ingress class for ingresses")
-
-	ingress.ObjectMeta.Annotations["kubernetes.io/ingress.class"]=ingressClass
 	ingress.Spec.TLS[0].Hosts[0] = fmt.Sprintf("web.%s", ii.ManagementPublicHost)
 	ingress.Spec.Rules[0].Host = fmt.Sprintf("web.%s", ii.ManagementPublicHost)
 
 	login := LoginAPIIngressRules
-	login.ObjectMeta.Annotations["kubernetes.io/ingress.class"]=ingressClass
 	login.Spec.TLS[0].Hosts[0] = fmt.Sprintf("login.%s", ii.ManagementPublicHost)
 	login.Spec.Rules[0].Host = fmt.Sprintf("login.%s", ii.ManagementPublicHost)
 
 	signup := SignupAPIIngressRules
-	signup.ObjectMeta.Annotations["kubernetes.io/ingress.class"]=ingressClass
 	signup.Spec.TLS[0].Hosts[0] = fmt.Sprintf("signup.%s", ii.ManagementPublicHost)
 	signup.Spec.Rules[0].Host = fmt.Sprintf("signup.%s", ii.ManagementPublicHost)
 
 	api := PublicAPIIngressRules
-	api.ObjectMeta.Annotations["kubernetes.io/ingress.class"]=ingressClass
 	api.Spec.TLS[0].Hosts[0] = fmt.Sprintf("api.%s", ii.ManagementPublicHost)
 	api.Spec.Rules[0].Host = fmt.Sprintf("api.%s", ii.ManagementPublicHost)
 
 	cluster := ClusterAPIIngressRules
-	cluster.ObjectMeta.Annotations["kubernetes.io/ingress.class"]=ingressClass
 	cluster.Spec.TLS[0].Hosts[0] = fmt.Sprintf("cluster.%s", ii.ManagementPublicHost)
 	cluster.Spec.Rules[0].Host = fmt.Sprintf("cluster.%s", ii.ManagementPublicHost)
 
 	device := DeviceAPIIngressRules
-	device.ObjectMeta.Annotations["kubernetes.io/ingress.class"]=ingressClass
 	device.Spec.TLS[0].Hosts[0] = fmt.Sprintf("device.%s", ii.ManagementPublicHost)
 	device.Spec.Rules[0].Host = fmt.Sprintf("device.%s", ii.ManagementPublicHost)
 
 	deviceLogin := DeviceLoginAPIIngressRules
-	deviceLogin.ObjectMeta.Annotations["kubernetes.io/ingress.class"]=ingressClass
 	deviceLogin.Spec.TLS[0].Hosts[0] = fmt.Sprintf("device-login.%s", ii.ManagementPublicHost)
 	deviceLogin.Spec.Rules[0].Host = fmt.Sprintf("device-login.%s", ii.ManagementPublicHost)
 
 	eicApi := EICAPIIngressRules
-	eicApi.ObjectMeta.Annotations["kubernetes.io/ingress.class"]=ingressClass
 	eicApi.Spec.TLS[0].Hosts[0] = fmt.Sprintf("eic-api.%s", ii.ManagementPublicHost)
 	eicApi.Spec.Rules[0].Host = fmt.Sprintf("eic-api.%s", ii.ManagementPublicHost)
 
 	monitoringApi := MonitoringIngressRules
-	monitoringApi.ObjectMeta.Annotations["kubernetes.io/ingress.class"]=ingressClass
 	monitoringApi.Spec.TLS[0].Hosts[0] = fmt.Sprintf("monitoring.%s", ii.ManagementPublicHost)
 	monitoringApi.Spec.Rules[0].Host = fmt.Sprintf("monitoring.%s", ii.ManagementPublicHost)
 
-	return []*v1beta1.Ingress{
+	toReturn := []*v1beta1.Ingress{
 		&ingress, &login, &signup, &api, &cluster, &device, &deviceLogin, &eicApi, &monitoringApi,
 	}
+
+	// Adapt ingresses to istio requirements.
+	if ii.NetworkMode == "istio" {
+		for index, _ := range toReturn {
+			// the ingress class must be Istio
+			toReturn[index].ObjectMeta.Annotations["kubernetes.io/ingress.class"]="istio"
+			// Tls definition must be empty
+			toReturn[index].Spec.TLS = []v1beta1.IngressTLS{}
+		}
+	}
+
+
+	return toReturn
 
 }
 
