@@ -43,7 +43,7 @@ const InstallManagementCluster = `
                 "is_appCluster":{{$.AppCluster}},
                 "static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}",
                 "temp_path":"{{$.Paths.TempPath}}",
-                "management_public_host":"{{$.ManagementClusterHost}}"
+                "dns_public_host":"{{$.DNSClusterHost}}"
             },
         {{end}}
 		{{if $.AppCluster }}

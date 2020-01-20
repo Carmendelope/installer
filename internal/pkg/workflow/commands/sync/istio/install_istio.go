@@ -105,18 +105,24 @@ spec:
     name: letsencrypt
     kind: ClusterIssuer
   dnsNames:
-  - '.IngressDomain'
+  - '*..IngressDomain'
+  - '*..master.IngressDomain'
   acme:
     config:
-    - http01:
-        ingressClass: istio
+    - dns01:
+        provider: azuredns
       domains:
-      - '.IngressDomain'
+      - '*..IngressDomain'
+      - '*..master.IngressDomain'
 `
+
 
 // IstioIngressPath represents the path sentence to modify the istio default ingress gateway to use SDS in order to
 // be connected with our letsencrypt certificate issuer
-const IstioIngressPatch = `[{"op": "replace", "path": "/spec/servers/1/tls", "value": {"credentialName": "ingress-cert", "mode": "SIMPLE", "privateKey": "sds", "serverCertificate": "sds"}}]`
+const IstioIngressPatch = `[
+{"op": "replace", "path": "/spec/servers/0/tls", "value": {"httpsRedirect": true}},
+{"op": "replace", "path": "/spec/servers/1/tls", "value": {"credentialName": "ingress-cert", "mode": "SIMPLE", "privateKey": "sds", "serverCertificate": "sds"}}
+]`
 
 
 type InstallIstio struct {
@@ -124,17 +130,17 @@ type InstallIstio struct {
     // Istio client to create specific Istio entities
     Istio *istioClient.Clientset
     // Path where Istio can be found
-    IstioPath string        `json:"istio_path"`
-    IstioCertsPath string   `json:"istio_certs_path"`
-    ClusterID string        `json:"cluster_id"`
-    IsAppCluster bool       `json:"is_appCluster"`
-    StaticIpAddress string  `json:"static_ip_address"`
-    TempPath string         `json:"temp_path"`
-    ManagementPublicHost string     `json:"management_public_host"`
+    IstioPath       string `json:"istio_path"`
+    IstioCertsPath  string `json:"istio_certs_path"`
+    ClusterID       string `json:"cluster_id"`
+    IsAppCluster    bool   `json:"is_appCluster"`
+    StaticIpAddress string `json:"static_ip_address"`
+    TempPath        string `json:"temp_path"`
+    DNSPublicHost   string `json:"dns_public_host"`
 }
 
 func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath string, clusterID string, isAppCluster bool,
-    staticIpAddress string, tempPath string, managementPublicHost string) *InstallIstio {
+    staticIpAddress string, tempPath string, dnsPublicHost string) *InstallIstio {
 
     // use the current context in kubeconfig
     config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
@@ -154,14 +160,14 @@ func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath str
             GenericSyncCommand: *entities.NewSyncCommand(entities.AddClusterUser),
             KubeConfigPath:     kubeConfigPath,
         },
-        IstioPath: istioPath,
-        IstioCertsPath: istioCertsPath,
-        Istio: istCli,
-        ClusterID: clusterID,
-        IsAppCluster: isAppCluster,
+        IstioPath:       istioPath,
+        IstioCertsPath:  istioCertsPath,
+        Istio:           istCli,
+        ClusterID:       clusterID,
+        IsAppCluster:    isAppCluster,
         StaticIpAddress: staticIpAddress,
-        TempPath: tempPath,
-        ManagementPublicHost: managementPublicHost,
+        TempPath:        tempPath,
+        DNSPublicHost:   dnsPublicHost,
     }
 }
 
@@ -372,7 +378,7 @@ func (i *InstallIstio) installInMaster() derrors.Error {
     // install the certificate
     log.Info().Msg("install Istio gateway certificate")
 
-    domain := fmt.Sprintf("*.%s", i.ManagementPublicHost)
+    domain := fmt.Sprintf("*.%s", i.DNSPublicHost)
     request := strings.ReplaceAll(IstioIngressCert,".IngressDomain", domain)
 
     log.Debug().Str("cerrequest",request).Msg("generate certificate request")
