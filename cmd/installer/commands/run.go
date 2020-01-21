@@ -77,7 +77,7 @@ func init() {
 	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "", "Cluster Cert Issuer Cert Value")
 
 	netMode := ""
-	runCmd.PersistentFlags().StringVar(&netMode, "networkingMode", "zt",
+	runCmd.PersistentFlags().StringVar(&netMode, "netMode", "zt",
 		"Networking mode to be used [zt, istio]")
 	entry, found := entities.NetworkingModeFromString[netMode]
 	if !found {

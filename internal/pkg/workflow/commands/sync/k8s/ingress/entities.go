@@ -210,7 +210,7 @@ var IngressRulesPaths = &v1beta1.HTTPIngressRuleValue{
 			},
 		},
 		v1beta1.HTTPIngressPath{
-			Path: "/v1",
+			Path: "/v1/*",
 			Backend: v1beta1.IngressBackend{
 				ServiceName: "public-api",
 				ServicePort: intstr.IntOrString{IntVal: 8082},
