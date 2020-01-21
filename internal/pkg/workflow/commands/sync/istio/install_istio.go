@@ -106,14 +106,15 @@ spec:
     kind: ClusterIssuer
   dnsNames:
   - '*..IngressDomain'
-  - '*..master.IngressDomain'
+  - '*.master..IngressDomain'
+  commonName: '*..IngressDomain'
   acme:
     config:
     - dns01:
         provider: azuredns
       domains:
       - '*..IngressDomain'
-      - '*..master.IngressDomain'
+      - '*.master..IngressDomain'
 `
 
 
@@ -378,8 +379,7 @@ func (i *InstallIstio) installInMaster() derrors.Error {
     // install the certificate
     log.Info().Msg("install Istio gateway certificate")
 
-    domain := fmt.Sprintf("*.%s", i.DNSPublicHost)
-    request := strings.ReplaceAll(IstioIngressCert,".IngressDomain", domain)
+    request := strings.ReplaceAll(IstioIngressCert,".IngressDomain", i.DNSPublicHost)
 
     log.Debug().Str("cerrequest",request).Msg("generate certificate request")
     err = i.CreateRawObject(request)
