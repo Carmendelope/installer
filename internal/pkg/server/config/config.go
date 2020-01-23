@@ -149,6 +149,7 @@ func (conf *Config) Print() {
 		Str("port", conf.DNSClusterPort).Msg("DNS")
 	log.Info().Str("secret", strings.Repeat("*", len(conf.AuthSecret))).Msg("Authorization")
 	log.Info().Str("path", conf.ClusterCertIssuerCACertPath).Msg("cluster cert issuer ca cert path")
+	log.Info().Interface("networkingMode", conf.NetworkingMode).Msg("networking mode")
 
 	conf.Environment.Print()
 
