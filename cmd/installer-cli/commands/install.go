@@ -118,7 +118,7 @@ func init() {
 		"Directory to store temporal files")
 	cliCmd.PersistentFlags().StringVar(&clusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "",
 		"Directory with the CA certificate")
-	cliCmd.PersistentFlags().StringVar(&networkingMode, "networkingMode", "istio",
+	cliCmd.PersistentFlags().StringVar(&networkingMode, "networkingMode", "zt",
 		"Networking mode to be used [zt, istio]")
 	cliCmd.PersistentFlags().StringVar(&istioPath, "istioPath", "/tmp/",
 		"Path to the folder containing the istioctl executable file")
