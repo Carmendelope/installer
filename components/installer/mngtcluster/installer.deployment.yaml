@@ -80,6 +80,8 @@ spec:
           - "--targetEnvironment=$(TARGET_ENVIRONMENT)"
           - "--authSecret=$(AUTH_SECRET)"
           - "--clusterCertIssuerCACertPath=/nalej/cacert/ca.crt"
+          - "--netMode=zt"
+          - "--istioPath=/istio"
         securityContext:
           runAsUser: 2000
       volumes:

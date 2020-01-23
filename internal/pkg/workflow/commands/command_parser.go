@@ -21,15 +21,15 @@ package commands
 
 import (
 	"encoding/json"
-	"github.com/nalej/installer/internal/pkg/errors"
-	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s"
-	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s/ingress"
-	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/zerotier"
-
 	"github.com/nalej/derrors"
+	"github.com/nalej/installer/internal/pkg/errors"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/async"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/sync"
+	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/istio"
+	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s"
+	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/k8s/ingress"
 	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/rke"
+	"github.com/nalej/installer/internal/pkg/workflow/commands/sync/zerotier"
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 )
 
@@ -150,6 +150,8 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return k8s.NewDeleteDeploymentFromJSON(raw)
 	case entities.DeletePodSecurityPolicy:
 		return k8s.NewDeletePodSecurityPolicyFromJSON(raw)
+	case entities.InstallIstio:
+		return istio.NewInstallIstioFromJSON(raw)
 	default:
 		return nil, derrors.NewInvalidArgumentError(errors.UnsupportedCommand).WithParams(generic)
 	}

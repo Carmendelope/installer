@@ -42,6 +42,8 @@ type Config struct {
 	AuthSecret string
 	// clusterCertIssuerCACertPath contains the path where ca-certificate will be mounted
 	ClusterCertIssuerCACertPath string
+	NetworkingMode        entities.NetworkingMode
+	IstioPath             string
 }
 
 func NewConfiguration(
@@ -57,6 +59,8 @@ func NewConfiguration(
 	environment entities.Environment,
 	authxSecret string,
 	clusterCertIssuerCACertPath string,
+	networkingMode entities.NetworkingMode,
+	istioPath string,
 ) *Config {
 	return &Config{
 		Port:                        port,
@@ -70,6 +74,8 @@ func NewConfiguration(
 		Environment:                 environment,
 		AuthSecret:                  authxSecret,
 		ClusterCertIssuerCACertPath: clusterCertIssuerCACertPath,
+		NetworkingMode:              networkingMode,
+		IstioPath:                   istioPath,
 	}
 }
 
@@ -124,6 +130,9 @@ func (conf *Config) Validate() derrors.Error {
 	if conf.AuthSecret == "" {
 		return derrors.NewInvalidArgumentError("Authorization secret must be set")
 	}
+	if conf.NetworkingMode == entities.NetworkingModeIstio && conf.IstioPath == "" {
+		return derrors.NewInvalidArgumentError("IstioPath must be set if Istio networking mode is chosen")
+	}
 
 	return nil
 }
@@ -140,6 +149,7 @@ func (conf *Config) Print() {
 		Str("port", conf.DNSClusterPort).Msg("DNS")
 	log.Info().Str("secret", strings.Repeat("*", len(conf.AuthSecret))).Msg("Authorization")
 	log.Info().Str("path", conf.ClusterCertIssuerCACertPath).Msg("cluster cert issuer ca cert path")
+	log.Info().Interface("networkingMode", conf.NetworkingMode).Msg("networking mode")
 
 	conf.Environment.Print()
 

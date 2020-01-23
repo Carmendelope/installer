@@ -34,6 +34,18 @@ const InstallManagementCluster = `
 			"minVersion":"1.11"
 		},
 		{"type":"sync", "name": "logger", "msg": "Installing components"},
+        {{if eq $.NetworkConfig.NetworkingMode "istio" }}
+            {"type":"sync", "name":"installIstio",
+                "kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
+                "istio_path":"{{$.NetworkConfig.IstioPath}}",
+                "istio_certs_path":"{{$.NetworkConfig.IstioCertsPath}}",
+                "cluster_id:":"{{$.InstallRequest.ClusterId}}",
+                "is_appCluster":{{$.AppCluster}},
+                "static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}",
+                "temp_path":"{{$.Paths.TempPath}}",
+                "dns_public_host":"{{$.DNSClusterHost}}"
+            },
+        {{end}}
 		{{if $.AppCluster }}
 			{"type":"sync", "name":"createClusterConfig",
 				"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
@@ -93,7 +105,8 @@ const InstallManagementCluster = `
 				"management_public_host":"{{$.InstallRequest.Hostname}}",
 				"on_management_cluster":{{ not $.AppCluster}},
 				"use_static_ip":{{$.InstallRequest.StaticIpAddresses.UseStaticIp}},
-				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}"
+				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.Ingress}}",
+                "network_mode":"{{$.NetworkConfig.NetworkingMode}}"
 		},
 		{{if not $.AppCluster }}
 			{"type":"sync", "name":"installExtDNS",
@@ -109,7 +122,6 @@ const InstallManagementCluster = `
 				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.VpnServer}}"
 			},
 		{{end}}
-
 		{"type":"sync", "name": "launchComponents",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespaces":["nalej", "ingress-nginx"],

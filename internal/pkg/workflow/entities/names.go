@@ -144,3 +144,6 @@ const DeleteDeployment = "deleteDeployment"
 
 // DeletePodSecurityPolicy command to delete a Kubernetes pod security policy.
 const DeletePodSecurityPolicy = "deletePodSecurityPolicy"
+
+// InstallIstio command to run the istio installation process.
+const InstallIstio = "installIstio"

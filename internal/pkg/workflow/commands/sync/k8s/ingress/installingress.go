@@ -34,6 +34,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 )
 
 // TODO Refactor using the new parameter to define the target platform instead of detecting it.
@@ -44,9 +45,11 @@ type InstallIngress struct {
 	OnManagementCluster  bool   `json:"on_management_cluster"`
 	UseStaticIP          bool   `json:"use_static_ip"`
 	StaticIPAddress      string `json:"static_ip_address"`
+	NetworkMode          string `json:"network_mode"`
 }
 
-func NewInstallIngress(kubeConfigPath string, platformType string, managementPublicHost string, useStaticIP bool, staticIPAddress string) *InstallIngress {
+func NewInstallIngress(kubeConfigPath string, platformType string, managementPublicHost string, useStaticIP bool,
+	staticIPAddress string, networkMode string) *InstallIngress {
 	return &InstallIngress{
 		Kubernetes: k8s.Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.InstallIngress),
@@ -56,6 +59,7 @@ func NewInstallIngress(kubeConfigPath string, platformType string, managementPub
 		ManagementPublicHost: managementPublicHost,
 		UseStaticIP:          useStaticIP,
 		StaticIPAddress:      staticIPAddress,
+		NetworkMode:          networkMode,
 	}
 }
 
@@ -116,9 +120,22 @@ func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
 	monitoringApi.Spec.TLS[0].Hosts[0] = fmt.Sprintf("monitoring.%s", ii.ManagementPublicHost)
 	monitoringApi.Spec.Rules[0].Host = fmt.Sprintf("monitoring.%s", ii.ManagementPublicHost)
 
-	return []*v1beta1.Ingress{
+	toReturn := []*v1beta1.Ingress{
 		&ingress, &login, &signup, &api, &cluster, &device, &deviceLogin, &eicApi, &monitoringApi,
 	}
+
+	// Adapt ingresses to istio requirements.
+	if ii.NetworkMode == "istio" {
+		for index, _ := range toReturn {
+			// the ingress class must be Istio
+			toReturn[index].ObjectMeta.Annotations["kubernetes.io/ingress.class"]="istio"
+			// Tls definition must be empty
+			toReturn[index].Spec.TLS = []v1beta1.IngressTLS{}
+		}
+	}
+
+
+	return toReturn
 
 }
 
@@ -300,6 +317,36 @@ func (ii *InstallIngress) triggerAppClusterInstall(installType grpc_installer_go
 // Trigger the installation of the ingress infrastructure for the management cluster.
 func (ii *InstallIngress) triggerManagementInstall(installType grpc_installer_go.Platform) derrors.Error {
 
+	var err derrors.Error
+
+	// Istio has its own supporting entities. When run, Nginx has to be installed.
+	if ii.NetworkMode != "istio" {
+		err = ii.installNginxSupport(installType)
+		if err != nil {
+			log.Error().Str("trace", err.DebugReport()).Msg("error installing supporting Nginx entities")
+			return err
+		}
+	}
+
+
+	log.Debug().Msg("Installing ingress rules")
+	for _, ingressToInstall := range ii.getIngressRules() {
+		err = ii.Create(ingressToInstall)
+		if err != nil {
+			log.Error().Str("trace", err.DebugReport()).Str("name", ingressToInstall.Name).
+				Msg("error creating ingress rules")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// This is a private function to install all the elements required to support an Nginx server as the chosen
+// supporting ingress class for K8s.
+func (ii *InstallIngress) installNginxSupport(installType grpc_installer_go.Platform) derrors.Error {
+	log.Debug().Msg("Installing Nginx required entities")
+
 	err := ii.CreateNamespaceIfNotExists("nalej")
 	if err != nil {
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating nalej namespace")
@@ -375,14 +422,6 @@ func (ii *InstallIngress) triggerManagementInstall(installType grpc_installer_go
 		log.Error().Str("trace", err.DebugReport()).Msg("error creating ingress default service")
 		return err
 	}
-	log.Debug().Msg("Installing ingress rules")
-	for _, ingressToInstall := range ii.getIngressRules() {
-		err = ii.Create(ingressToInstall)
-		if err != nil {
-			log.Error().Str("trace", err.DebugReport()).Str("name", ingressToInstall.Name).Msg("error creating ingress rules")
-			return err
-		}
-	}
 
 	var ingressDeployment = IngressDeployment
 
@@ -423,6 +462,7 @@ func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derro
 	if connectErr != nil {
 		return nil, connectErr
 	}
+
 	existingIngress, err := ii.GetExistingIngress()
 	if err != nil {
 		return nil, err
@@ -447,7 +487,12 @@ func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derro
 	}
 
 	return entities.NewSuccessCommand([]byte("Ingress controller credentials have been created")), nil
+
 }
+
+
+
+
 
 func (ii *InstallIngress) String() string {
 	return fmt.Sprintf("SYNC InstallIngress on Management: %t", ii.OnManagementCluster)

@@ -203,13 +203,6 @@ var MinikubeServiceDefaultBackend = v1.Service{
 var IngressRulesPaths = &v1beta1.HTTPIngressRuleValue{
 	Paths: []v1beta1.HTTPIngressPath{
 		v1beta1.HTTPIngressPath{
-			Path: "/",
-			Backend: v1beta1.IngressBackend{
-				ServiceName: "web",
-				ServicePort: intstr.IntOrString{IntVal: 80},
-			},
-		},
-		v1beta1.HTTPIngressPath{
 			Path: "/v1/login",
 			Backend: v1beta1.IngressBackend{
 				ServiceName: "login-api",
@@ -217,7 +210,7 @@ var IngressRulesPaths = &v1beta1.HTTPIngressRuleValue{
 			},
 		},
 		v1beta1.HTTPIngressPath{
-			Path: "/v1",
+			Path: "/v1/*",
 			Backend: v1beta1.IngressBackend{
 				ServiceName: "public-api",
 				ServicePort: intstr.IntOrString{IntVal: 8082},
@@ -228,6 +221,13 @@ var IngressRulesPaths = &v1beta1.HTTPIngressRuleValue{
 			Backend: v1beta1.IngressBackend{
 				ServiceName: "log-download-manager",
 				ServicePort: intstr.IntOrString{IntVal: 8941},
+			},
+		},
+		v1beta1.HTTPIngressPath{
+			Path: "/*",
+			Backend: v1beta1.IngressBackend{
+				ServiceName: "web",
+				ServicePort: intstr.IntOrString{IntVal: 80},
 			},
 		},
 	},

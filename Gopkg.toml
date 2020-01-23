@@ -56,27 +56,31 @@
 
 [[constraint]]
     name="k8s.io/client-go"
-    version="v9.0.0"
+    version="=v12.0.0"
 
 [[constraint]]
     name = "k8s.io/api"
-    version="kubernetes-1.12.0"
+    version="kubernetes-1.15.1"
 
 [[constraint]]
    name = "k8s.io/apimachinery"
-   version="kubernetes-1.12.0"
+   version="kubernetes-1.15.1"
 
 [[override]]
    name = "k8s.io/apiextensions-apiserver"
-   version="kubernetes-1.12.0"
+   version="kubernetes-1.15.1"
 
 [[override]]
    name = "k8s.io/apiserver"
-   version="kubernetes-1.12.0"
+   version="kubernetes-1.15.1"
 
 [[override]]
    name = "k8s.io/cli-runtime"
-   version="kubernetes-1.12.0"
+   version="kubernetes-1.15.1"
+
+[[constraint]]
+    name = "istio.io/client-go"
+    version = "=1.4.2"
 
 
 # Fix vendor/k8s.io/kubernetes/pkg/kubectl/cmd/templates/markdown.go:30:5: cannot use ASCIIRenderer literal (type *ASCIIRenderer) as type blackfriday.Renderer in assignment:
