@@ -22,7 +22,13 @@
 package istio
 
 import (
+    "bytes"
+    "crypto/rand"
+    "crypto/rsa"
+    "crypto/x509"
+    "crypto/x509/pkix"
     "encoding/json"
+    "encoding/pem"
     "fmt"
     "github.com/nalej/derrors"
     "github.com/nalej/installer/internal/pkg/errors"
@@ -40,6 +46,8 @@ import (
     "k8s.io/client-go/kubernetes"
     "k8s.io/client-go/rest"
     "k8s.io/client-go/tools/clientcmd"
+    "math/big"
+    "net/url"
     "os"
     "strings"
     "time"
@@ -56,6 +64,8 @@ const (
     IstioTimeSleep = time.Second * 5
     // Time before timeout
     IstioTimeout = time.Second * 300
+    // Time validity for the Istio certificate
+    IstioCertValidity = time.Hour * 24 * 365 * 2
 )
 
 // Configuration for the control plane in a multiple mesh Istion configuration
@@ -132,7 +142,6 @@ type InstallIstio struct {
     Istio *istioClient.Clientset
     // Path where Istio can be found
     IstioPath       string `json:"istio_path"`
-    IstioCertsPath  string `json:"istio_certs_path"`
     ClusterID       string `json:"cluster_id"`
     IsAppCluster    bool   `json:"is_appCluster"`
     StaticIpAddress string `json:"static_ip_address"`
@@ -140,7 +149,7 @@ type InstallIstio struct {
     DNSPublicHost   string `json:"dns_public_host"`
 }
 
-func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath string, clusterID string, isAppCluster bool,
+func NewInstallIstio(kubeConfigPath string, istioPath string, clusterID string, isAppCluster bool,
     staticIpAddress string, tempPath string, dnsPublicHost string) *InstallIstio {
 
     // use the current context in kubeconfig
@@ -162,7 +171,6 @@ func NewInstallIstio(kubeConfigPath string, istioPath string, istioCertsPath str
             KubeConfigPath:     kubeConfigPath,
         },
         IstioPath:       istioPath,
-        IstioCertsPath:  istioCertsPath,
         Istio:           istCli,
         ClusterID:       clusterID,
         IsAppCluster:    isAppCluster,
@@ -219,7 +227,7 @@ func (i *InstallIstio) Run(workflowID string) (*entities.CommandResult, derrors.
     // Run Istioctl installer
     if i.IsAppCluster {
         // Install Istio in the application cluster
-        err = i.installInSlave(i.ClusterID)
+        err = i.installInSlave()
     } else {
         // Install Istio in the master
         err = i.installInMaster()
@@ -285,7 +293,197 @@ func (i *InstallIstio) waitForGatewayIP() derrors.Error {
     return nil
 }
 
+// createSecrets builds and generates the K8s secrets to be used by Istio components of the Istio cluster mesh
+// A generic root certificate is stored in the management cluster and used when corresponds.
+func (i *InstallIstio) createSecrets() derrors.Error {
+    log.Debug().Msg("create secrets for Istio installation")
+   // ca-cert
+   // ca-key
+   ca_cert, ca_key, err := i.createRootCA()
+   if err != nil {
+       log.Error().Err(err).Msg("there was a problem generating the cluster CA certificates for Istio")
+       return derrors.NewInternalError("there was a problem generating the cluster CA certificates for Istio", err)
+   }
+
+   // rootCert is generated from the caCert value
+    // certChain is generated from the rootCert values
+    root_cert, _, err := i.createClusterCA(ca_cert)
+    if err != nil {
+        log.Error().Err(err).Msg("there was a problem generating the cluster root certificates for Istio")
+        return derrors.NewInternalError("there was a problem generating the cluster root certificates for Istio", err)
+    }
+
+    emptyString:=""
+
+    // Store everything
+    // Generate the certificates
+    secret := &v1.Secret{
+        TypeMeta: metaV1.TypeMeta{
+            Kind:       "Secret",
+            APIVersion: "v1",
+        },
+        ObjectMeta: metaV1.ObjectMeta{
+            Name:         IstioSecretName,
+            GenerateName: "",
+            Namespace:    IstioNamespace,
+        },
+        Data: map[string][]byte{
+            "ca-cert.pem": ca_cert,
+            "ca-key.pem": ca_key,
+            "cert-chain.pem": []byte(emptyString), // cert-chain is the same as root-cert. It goes empty
+            "root-cert.pem": root_cert,
+        },
+    }
+
+    connectErr := i.Connect()
+    if connectErr != nil {
+        log.Error().Err(connectErr).Msg("there was an error connecting with the k8s client")
+        return connectErr
+    }
+
+    err = i.Create(secret)
+    if err != nil {
+        log.Error().Err(err).Msg("error creating istio cacerts secret")
+        return derrors.NewInternalError("error creating istio cacerts secret", err)
+    }
+
+    return nil
+}
+
+// Create a basic CA with its private key.
+// params:
+//  parentCa parent CA if nil it is ignored
+// return:
+//  certificate in PEM format raw bytes
+//  private key in raw bytes
+//  error if any
+func (i *InstallIstio) createRootCA()([]byte,[]byte, derrors.Error) {
+    privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "cannot create private key for Istio cluster cert")
+    }
+
+    caCert := x509.Certificate{
+
+        SerialNumber: big.NewInt(1),
+        Issuer: pkix.Name{
+            Organization: []string{"Nalej"},
+        },
+        Subject: pkix.Name{
+            Organization: []string{"Nalej"},
+        },
+        NotBefore:             time.Now(),
+        NotAfter:              time.Now().Add(IstioCertValidity),
+        KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageEncipherOnly | x509.KeyUsageCertSign | x509.KeyUsageCertSign,
+        ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+        BasicConstraintsValid: true,
+        IsCA:                  true,
+        MaxPathLen:            0,
+        MaxPathLenZero:        true,
+    }
+
+    publicKey := &privateKey.PublicKey
+
+    resultingCA, err := x509.CreateCertificate(rand.Reader, &caCert, &caCert, publicKey, privateKey)
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "cannot create CA certificate")
+    }
+
+    // Export the content to PEM
+    CAOut := &bytes.Buffer{}
+    err = pem.Encode(CAOut, &pem.Block{Type: "CERTIFICATE", Bytes: resultingCA})
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "cannot transform certificate to PEM")
+    }
+
+    // Get the private key in pem
+    PKOut := &bytes.Buffer{}
+    err = pem.Encode(PKOut, &pem.Block{
+        Type:  "RSA PRIVATE KEY",
+        Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+    })
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "cannot transform private key to PEM")
+    }
+
+    return CAOut.Bytes(), PKOut.Bytes(), nil
+}
+
+// Create the cluster CA based on the root CA for citadel
+func (i *InstallIstio) createClusterCA(rootCA []byte) ([]byte,[]byte,derrors.Error) {
+    privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "cannot create private key for Istio cluster cert")
+    }
+
+    caCert := x509.Certificate{
+
+        SerialNumber: big.NewInt(1),
+        Issuer: pkix.Name{
+            Organization: []string{"Nalej"},
+        },
+        Subject: pkix.Name{
+            Organization: []string{"Istio"},
+        },
+        NotBefore:             time.Now(),
+        NotAfter:              time.Now().Add(IstioCertValidity),
+        KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageEncipherOnly | x509.KeyUsageCertSign | x509.KeyUsageCertSign,
+        ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+        BasicConstraintsValid: true,
+        IsCA:                  true,
+        MaxPathLen:            0,
+        MaxPathLenZero:        true,
+        URIs: []*url.URL{{Host: "localhost"}},
+        DNSNames: []string{"spiffe://cluster.local/ns/istio-system/sa/citadel",
+            fmt.Sprintf("spiffe://%s/ns/istio-system/sa/citadel", i.ClusterID)},
+    }
+
+    // parse the root certificate -> PEM
+
+    b, _ := pem.Decode(rootCA)
+
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "impossible to convert rootCA from pem to X509")
+    }
+
+    rootCAX509, err := x509.ParseCertificate(b.Bytes)
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "cannot parse rootCA for Istio certificate generation")
+    }
+
+
+
+    publicKey := &privateKey.PublicKey
+
+    resultingCA, err := x509.CreateCertificate(rand.Reader, rootCAX509, &caCert, publicKey, privateKey)
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "cannot create CA certificate")
+    }
+
+    // Export the content to PEM
+    CAOut := &bytes.Buffer{}
+    err = pem.Encode(CAOut, &pem.Block{Type: "CERTIFICATE", Bytes: resultingCA})
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "cannot transform certificate to PEM")
+    }
+
+    // Get the private key in pem
+    PKOut := &bytes.Buffer{}
+    err = pem.Encode(PKOut, &pem.Block{
+        Type:  "RSA PRIVATE KEY",
+        Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+    })
+    if err != nil {
+        return nil, nil, derrors.AsError(err, "cannot transform private key to PEM")
+    }
+
+    return CAOut.Bytes(), PKOut.Bytes(), nil
+    return nil, nil, nil
+}
+
+
 // createSecrets builds and generates the K8s secrets to be used by Istio.
+/*
 func (i *InstallIstio) createSecrets() derrors.Error {
 
     var caCert []byte
@@ -345,8 +543,10 @@ func (i *InstallIstio) createSecrets() derrors.Error {
 
     return nil
 }
+*/
 
 func (i *InstallIstio) installInMaster() derrors.Error {
+    log.Debug().Msg("install Istio in master cluster")
     file, fErr := ioutil.TempFile(i.TempPath, "istio-control-plane")
     log.Info().Str("filePath", file.Name()).Msg("create a temporary file with the istio control plane configuration")
     if fErr != nil {
@@ -401,26 +601,36 @@ func (i *InstallIstio) installInMaster() derrors.Error {
 
 
 
-func (i *InstallIstio) installInSlave(clusterID string) derrors.Error {
+func (i *InstallIstio) installInSlave() derrors.Error {
+
+    log.Debug().Msg("install Istio slave")
+
 
     // We create a local kube client to check the istio ingress ip
-
+    log.Debug().Msg("create cluster config")
     config, err := rest.InClusterConfig()
     if err != nil {
+        log.Error().Err(err).Msg("impossible to get master cluster k8s configuration")
         return derrors.NewInternalError("impossible to get master cluster k8s configuration", err)
     }
+
+    log.Debug().Msg("create local client")
     localClient, err := kubernetes.NewForConfig(config)
     if err != nil {
+        log.Error().Err(err).Msg("impossible to instantiate k8s client for master cluster")
         return derrors.NewInternalError("impossible to instantiate k8s client for master cluster", err)
     }
 
+    log.Debug().Msg("get istio ingress gateway")
     svc, err := localClient.CoreV1().Services(IstioNamespace).Get(IstioIngressGateway, metaV1.GetOptions{})
     if err != nil {
         log.Error().Err(err).Msg("impossible to find istio gateway service IP")
         return derrors.NewInternalError("impossible to find istio gateway service IP", err)
     }
+    log.Debug().Interface("svc",svc).Msg("istio svc")
 
     if len(svc.Status.LoadBalancer.Ingress) == 0 {
+        log.Error().Msg("no available Istio ingress IP for master cluster")
         return derrors.NewInternalError("no available Istio ingress IP for master cluster")
     }
 
@@ -428,6 +638,7 @@ func (i *InstallIstio) installInSlave(clusterID string) derrors.Error {
     if gatewayIP == "" {
         return derrors.NewInternalError("there is no public IP for istio master gateway")
     }
+    log.Debug().Str("ip",gatewayIP).Msg("found istio ingressgateway ip")
 
      args := []string{
          "manifest",
@@ -442,14 +653,17 @@ func (i *InstallIstio) installInSlave(clusterID string) derrors.Error {
          "--set", "values.global.remotePilotAddress="+gatewayIP,
          "--set", "values.global.remotePolicyAddress="+gatewayIP,
          "--set", "values.global.remoteTelemetryAddress="+gatewayIP,
-         "--set", "values.gateways.istio-ingressgateway.env.ISTIO_META_NETWORK="+clusterID,
-         "--set", "values.global.network="+clusterID,
+         "--set", "values.gateways.istio-ingressgateway.env.ISTIO_META_NETWORK="+i.ClusterID,
+         "--set", "values.global.network="+i.ClusterID,
          "--set", "autoInjection.enabled=true",
      }
 
-    rExec := sync.NewExec(fmt.Sprintf("%s/bin/istioctl",i.IstioPath),args)
-    _, execErr := rExec.Run("")
+    log.Debug().Str("istio",fmt.Sprintf("%s/istioctl",i.IstioPath)).Interface("args",args).Msg("istioctl call")
+    rExec := sync.NewExec(fmt.Sprintf("%s/istioctl",i.IstioPath),args)
+    x, execErr := rExec.Run("")
+    log.Debug().Str("istioctl",x.Output).Msg("output from istioctl")
     if execErr != nil {
+        log.Error().Err(execErr).Msg("error when executing istioctl")
         return execErr
     }
 
