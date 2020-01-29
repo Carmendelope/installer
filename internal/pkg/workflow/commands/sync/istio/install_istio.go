@@ -517,6 +517,22 @@ func (i* InstallIstio) waitCertificate() derrors.Error {
 
 func (i *InstallIstio) installInMaster() derrors.Error {
 
+    // install the certificate
+    log.Info().Msg("install Istio gateway certificate")
+
+    request := strings.ReplaceAll(IstioIngressCert,".IngressDomain", i.DNSPublicHost)
+
+    log.Debug().Str("cerrequest",request).Msg("generate certificate request")
+    err := i.CreateRawObject(request)
+    if err != nil {
+        return err
+    }
+    // wait until the certificate is up and ready
+    err = i.waitCertificate()
+    if err != nil {
+        return err
+    }
+
 
     log.Debug().Msg("install Istio in master cluster")
     file, fErr := ioutil.TempFile(i.TempPath, "istio-control-plane")
@@ -546,28 +562,13 @@ func (i *InstallIstio) installInMaster() derrors.Error {
     log.Debug().Interface("istioctl",args).Msg("istioctl was called")
 
     rExec := sync.NewExec(fmt.Sprintf("%s/istioctl", i.IstioPath),args)
-    _, err := rExec.Run("")
+    _, err = rExec.Run("")
 
     if err != nil {
         return err
     }
 
 
-    // install the certificate
-    log.Info().Msg("install Istio gateway certificate")
-
-    request := strings.ReplaceAll(IstioIngressCert,".IngressDomain", i.DNSPublicHost)
-
-    log.Debug().Str("cerrequest",request).Msg("generate certificate request")
-    err = i.CreateRawObject(request)
-    if err != nil {
-        return err
-    }
-
-    err = i.waitCertificate()
-    if err != nil {
-        return err
-    }
 
 
     // patch default ingress-gateway to set sds and the certificate
