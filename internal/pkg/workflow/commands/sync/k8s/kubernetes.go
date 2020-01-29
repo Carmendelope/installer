@@ -21,10 +21,13 @@ import (
 	"github.com/nalej/derrors"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"strings"
+	"time"
 
 	"github.com/nalej/installer/internal/pkg/workflow/entities"
 
 	"github.com/rs/zerolog/log"
+
+	"github.com/tidwall/gjson"
 
 	"k8s.io/api/core/v1"
 
@@ -414,4 +417,50 @@ func (k *Kubernetes) DeleteAllEntities(namespace string, group string, version s
 		}
 	}
 	return nil
+}
+
+// MatchCRDStatus retrieves a non-namespaced CRD, and checks if a set of keys matches a given value.
+func (k *Kubernetes) MatchCRDStatus(namespace string, group string, version string, resource string, name string, key []string, expected string) (*bool, derrors.Error) {
+	resourceRequest := schema.GroupVersionResource{
+		Group:    group,
+		Version:  version,
+		Resource: resource,
+	}
+
+	var client dynamic.ResourceInterface
+	if namespace == "" {
+		client = k.dynClient.Resource(resourceRequest)
+	} else {
+		client = k.dynClient.Resource(resourceRequest).Namespace(namespace)
+	}
+	numRetries := 36
+	issued := false
+	for retry := 0; retry < numRetries && !issued; retry++ {
+		unstructure, err := client.Get(name, metaV1.GetOptions{})
+		if err != nil {
+			log.Warn().Err(err).Msg("unable to retrieve resource")
+		} else {
+			log.Debug().Interface("raw", unstructure.Object).Msg("resource retrieved")
+			matches := k.MatchUnstructuredField(unstructure, key, expected)
+			log.Debug().Bool("match", matches).Msg("CRD status")
+			if matches {
+				return &matches, nil
+			}
+		}
+		if !issued {
+			time.Sleep(20 * time.Second)
+		}
+	}
+
+	return &issued, nil
+}
+
+// MatchUnstructureField matches a json path as defined by the gjson package with a given expected value.
+func (k *Kubernetes) MatchUnstructuredField(obj *unstructured.Unstructured, key []string, expected string) bool {
+	json, err := obj.MarshalJSON()
+	if err != nil {
+		return false
+	}
+	result := gjson.Get(string(json), strings.Join(key, "."))
+	return result.String() == expected
 }

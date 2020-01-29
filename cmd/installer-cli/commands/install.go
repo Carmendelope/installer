@@ -59,8 +59,6 @@ var networkingMode string
 
 var istioPath string
 
-var istioCertsPath string
-
 var environment entities.Environment
 
 var cliCmd = &cobra.Command{
@@ -120,10 +118,8 @@ func init() {
 		"Directory with the CA certificate")
 	cliCmd.PersistentFlags().StringVar(&networkingMode, "networkingMode", "zt",
 		"Networking mode to be used [zt, istio]")
-	cliCmd.PersistentFlags().StringVar(&istioPath, "istioPath", "/tmp/",
+	cliCmd.PersistentFlags().StringVar(&istioPath, "istioPath", "/istio/bin",
 		"Path to the folder containing the istioctl executable file")
-	cliCmd.PersistentFlags().StringVar(&istioCertsPath, "istioCertsPath", "/tmp/istio/certs",
-		"Path where the Istio certificates are stored")
 
 
 	addRegistryOptions(cliCmd)
@@ -184,9 +180,6 @@ func ValidateInstallParameters() derrors.Error {
 		return derrors.NewInvalidArgumentError("the Istio path must be set if Istio networking mode is selected")
 	}
 
-	if netMode == entities.NetworkingModeIstio && istioCertsPath == "" {
-		return derrors.NewInvalidArgumentError("the IstioCertsPath must be set if Istio networking mode is selected")
-	}
 
 	if installKubernetes {
 		if username == "" || clusterCertIssuerCACertPath == "" {

@@ -82,6 +82,10 @@
     name = "istio.io/client-go"
     version = "=1.4.2"
 
+[[constraint]]
+  name = "github.com/tidwall/gjson"
+  version = "v1.1.4"
+
 
 # Fix vendor/k8s.io/kubernetes/pkg/kubectl/cmd/templates/markdown.go:30:5: cannot use ASCIIRenderer literal (type *ASCIIRenderer) as type blackfriday.Renderer in assignment:
 [[override]]

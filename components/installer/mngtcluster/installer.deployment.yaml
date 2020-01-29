@@ -81,7 +81,7 @@ spec:
           - "--authSecret=$(AUTH_SECRET)"
           - "--clusterCertIssuerCACertPath=/nalej/cacert/ca.crt"
           - "--netMode=zt"
-          - "--istioPath=/istio"
+          - "--istioPath=/istio/bin"
         securityContext:
           runAsUser: 2000
       volumes:

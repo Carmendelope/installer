@@ -69,17 +69,14 @@ type NetworkConfig struct {
 	NetworkingMode string `json: "networking_mode"`
 	// IstioPath where the Istio project can be found locally
 	IstioPath string `json: "istio_path"`
-	// IstioCertsPath path were the certificates to install istio can be found
-	IstioCertsPath string `json: "istio_certs_path"`
 	// Deprecated: ZT Planet Secret
 	ZTPlanetSecretPath string `json:"zt_planet_secret_path"`
 }
 
-func NewNetworkConfig(networkingMode string, istioPath string, istioCertsPath string, ztPlanetSecretPath string) *NetworkConfig {
+func NewNetworkConfig(networkingMode string, istioPath string, ztPlanetSecretPath string) *NetworkConfig {
 	return &NetworkConfig{
 		NetworkingMode: networkingMode,
 		IstioPath: istioPath,
-		IstioCertsPath: istioCertsPath,
 		ZTPlanetSecretPath: ztPlanetSecretPath,
 	}
 }

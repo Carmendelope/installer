@@ -77,7 +77,7 @@ func init() {
 	runCmd.PersistentFlags().StringVar(&config.ClusterCertIssuerCACertPath, "clusterCertIssuerCACertPath", "", "Cluster Cert Issuer Cert Value")
 
 	netMode := ""
-	runCmd.PersistentFlags().StringVar(&netMode, "netMode", "zt",
+	runCmd.PersistentFlags().StringVar(&netMode, "netMode", "istio",
 		"Networking mode to be used [zt, istio]")
 	entry, found := entities.NetworkingModeFromString[netMode]
 	if !found {
@@ -85,7 +85,7 @@ func init() {
 	}
 	config.NetworkingMode = entry
 
-	runCmd.PersistentFlags().StringVar(&config.IstioPath, "istioPath", "/istio/", "Path where the Istio project can be found")
+	runCmd.PersistentFlags().StringVar(&config.IstioPath, "istioPath", "/istio/bin", "Path where the Istio project can be found")
 
 
 	rootCmd.AddCommand(runCmd)

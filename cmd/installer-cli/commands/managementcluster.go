@@ -62,6 +62,7 @@ func LaunchManagementInstall() {
 	if err != nil {
 		log.Panic().Str("error", err.DebugReport()).Msg("cannot create CLI installer")
 	}
+
 	// Prepare the parameters.
 	inst.PrepareInstallCommand(
 		"cli-install",
@@ -82,8 +83,7 @@ func LaunchManagementInstall() {
 		false,
 		environment,
 		networkingMode,
-		istioPath,
-		istioCertsPath)
+		istioPath)
 
 	if explainPlan {
 		inst.LoadCredentials()
