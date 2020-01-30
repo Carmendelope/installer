@@ -61,6 +61,9 @@ const RKERemove = "rkeRemove"
 // LaunchComponents command to install a set of YAML Kubernetes files
 const LaunchComponents = "launchComponents"
 
+// checkComponents command to check if all components in an app cluster are ready
+const CheckComponents = "checkComponents"
+
 // CheckRequirements checks the requirements of the installer against the installed Kubernetes.
 const CheckRequirements = "checkRequirements"
 
