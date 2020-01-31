@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	maxRetries = 30
+	maxRetries = 50
 )
 
 // CheckComponents is a command that reads a directory for YAML files and checks the readiness
@@ -143,22 +143,31 @@ func (cc *CheckComponents) RetrieveResources() (*PlatformResources, derrors.Erro
 	emptyOpts := metaV1.ListOptions{}
 	resources := NewEmptyPlatformResources()
 	for _, ns := range namespaces {
-		daemonsets, dsErr := cc.Client.AppsV1().DaemonSets(ns).List(emptyOpts)
+		dsClient := cc.Client.AppsV1().DaemonSets(ns)
+		daemonsets, dsErr := dsClient.List(emptyOpts)
 		if dsErr != nil {
 			return nil, derrors.NewGenericError(dsErr.Error())
 		}
-		statefulSets, rsErr := cc.Client.AppsV1().StatefulSets(ns).List(emptyOpts)
-		if dsErr != nil {
-			return nil, derrors.NewGenericError(rsErr.Error())
+		ssClient := cc.Client.AppsV1().StatefulSets(ns)
+		statefulsets, ssErr := ssClient.List(emptyOpts)
+		if ssErr != nil {
+			return nil, derrors.NewGenericError(ssErr.Error())
 		}
-		deployments, rsErr := cc.Client.AppsV1().Deployments(ns).List(emptyOpts)
-		if dsErr != nil {
-			return nil, derrors.NewGenericError(rsErr.Error())
+		dClient := cc.Client.AppsV1().Deployments(ns)
+		deployments, dErr := dClient.List(emptyOpts)
+		if dErr != nil {
+			return nil, derrors.NewGenericError(dErr.Error())
 		}
 
-		resources.Daemonsets = append(resources.Daemonsets, daemonsets.Items...)
-		resources.StatefulSets = append(resources.StatefulSets, statefulSets.Items...)
-		resources.Deployments = append(resources.Deployments, deployments.Items...)
+		if len(daemonsets.Items) > 0 {
+			resources.Daemonsets = append(resources.Daemonsets, daemonsets.Items...)
+		}
+		if len(statefulsets.Items) > 0 {
+			resources.StatefulSets = append(resources.StatefulSets, statefulsets.Items...)
+		}
+		if len(deployments.Items) > 0 {
+			resources.Deployments = append(resources.Deployments, deployments.Items...)
+		}
 	}
 	return resources, nil
 }
@@ -193,6 +202,8 @@ func (cc *CheckComponents) checkStatefulset(ss v1.StatefulSet) derrors.Error {
 
 func (cc *CheckComponents) checkDeployment(d v1.Deployment) derrors.Error {
 	for i := 0; i < maxRetries; i++ {
+		log.Debug().Int32("replicas", d.Status.Replicas).Msg("expected replicas")
+		log.Debug().Int32("ready replicas", d.Status.ReadyReplicas).Msg("ready replicas")
 		if d.Status.Replicas == d.Status.ReadyReplicas {
 			log.Debug().Str("deployment", d.Name).Msg("deployment ready")
 			return nil
@@ -201,6 +212,7 @@ func (cc *CheckComponents) checkDeployment(d v1.Deployment) derrors.Error {
 			time.Sleep(30 * time.Second)
 			i += 1
 		}
+		log.Debug().Int("iteration", i).Msg("retry number")
 	}
 	return derrors.NewUnavailableError("deployment unavailable")
 }

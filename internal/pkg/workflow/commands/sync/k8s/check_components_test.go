@@ -25,20 +25,14 @@ import (
 )
 
 var _ = ginkgo.Describe("A Check Components command", func() {
-	ginkgo.It("should check components if no platform-dependent are present", func() {
+	ginkgo.FIt("should check components if no platform-dependent are present", func() {
 		numYAML := 5
 		componentsDir := CreateTempYAML(numYAML, 0)
-		ccCmd := NewCheckComponents("kubeConfigPath", []string{})
+		ns := []string{itAuxNamespace}
+		ccCmd := NewCheckComponents("kubeConfigPath", ns)
+
 		log.Debug().Msg("retrieving resources")
 		toCheck, err := ccCmd.RetrieveResources()
-		for _, ds := range toCheck.Daemonsets {
-			log.Debug().Str("daemonsets", ds.Name).Msg("daemonset resources")
-
-		}
-		for _, ss := range toCheck.StatefulSets {
-			log.Debug().Str("ss", ss.Name).Msg("ss resources")
-
-		}
 		for _, d := range toCheck.Deployments {
 			log.Debug().Str("deploy", d.Name).Msg("deploy resources")
 
