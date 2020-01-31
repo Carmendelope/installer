@@ -121,7 +121,7 @@ const InstallManagementCluster = `
 				"static_ip_address":"{{$.InstallRequest.StaticIpAddresses.VpnServer}}"
 			},
 		{{end}}
-		{"type":"sync", "name": "launchComponents",
+		[{"type":"sync", "name": "launchComponents",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespaces":["nalej", "ingress-nginx"],
 			"componentsDir":"{{$.Paths.ComponentsPath}}",
@@ -131,7 +131,7 @@ const InstallManagementCluster = `
 		{"type":"sync", "name": "checkComponents",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespaces":["nalej", "ingress-nginx"]
-		}
+		}]
 	]
 }
 `
