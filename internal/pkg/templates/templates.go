@@ -276,7 +276,7 @@ const UninstallCluster = `
 			"deployment_name":"default-http-backend",
 			"fail_if_not_exists":false
 		},
-		{"type":"sync", "name":"deleteDeployment",
+		[{"type":"sync", "name":"deleteDeployment",
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"namespace":"kube-system",
 			"deployment_name":"nginx-ingress-controller",
@@ -286,7 +286,7 @@ const UninstallCluster = `
 			"kubeConfigPath":"{{$.Credentials.KubeConfigPath}}",
 			"policy_name":"node-exporter",
 			"fail_if_not_exists":false
-		}
+		}]
 	]
 }
 `

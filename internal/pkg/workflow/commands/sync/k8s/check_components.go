@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Nalej
+ * Copyright 2020 Nalej
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,20 +39,16 @@ const (
 type CheckComponents struct {
 	Kubernetes
 	Namespaces    []string `json:"namespaces"`
-	//ComponentsDir string   `json:"componentsDir"`
-	//PlatformType  string   `json:"platform_type"`
 }
 
 // NewCheckComponents creates a new CheckComponents command.
-func NewCheckComponents(kubeConfigPath string, namespaces []string, componentsDir string, targetPlatform string) *CheckComponents {
+func NewCheckComponents(kubeConfigPath string, namespaces []string) *CheckComponents {
 	return &CheckComponents{
 		Kubernetes: Kubernetes{
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CheckComponents),
 			KubeConfigPath:     kubeConfigPath,
 		},
 		Namespaces:    namespaces,
-		//ComponentsDir: componentsDir,
-		//PlatformType:  targetPlatform,
 	}
 }
 

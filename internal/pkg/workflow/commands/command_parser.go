@@ -96,6 +96,8 @@ func (cp *CmdParser) parseSyncCommand(generic entities.GenericCommand, raw []byt
 		return sync.NewCheckAssetFromJSON(raw)
 	case entities.LaunchComponents:
 		return k8s.NewLaunchComponentsFromJSON(raw)
+	case entities.CheckComponents:
+		return k8s.NewCheckComponentsFromJSON(raw)
 	case entities.CheckRequirements:
 		return k8s.NewCheckRequirementsFromJSON(raw)
 	case entities.CreateClusterConfig:
