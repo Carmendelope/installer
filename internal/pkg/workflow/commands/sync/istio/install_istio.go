@@ -182,26 +182,35 @@ func NewInstallIstioFromJSON(raw []byte) (*entities.Command, derrors.Error) {
 		return nil, derrors.NewInvalidArgumentError(errors.UnmarshalError, err)
 	}
 
-	// instantiate the Istio client
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", lc.KubeConfigPath)
-	if err != nil {
-		return nil, derrors.NewInternalError("impossible to get kubeconfig path", err)
-	}
-
-	istCli, err := istioClient.NewForConfig(config)
-	if err != nil {
-		return nil, derrors.NewInternalError("impossible to instantiate istio client")
-	}
-
-	lc.Istio = istCli
-
 	lc.CommandID = entities.GenerateCommandID(lc.Name())
 	var r entities.Command = lc
 	return &r, nil
 }
 
+func (i *InstallIstio) InstantiateIstioClient () derrors.Error {
+	// instantiate the Istio client
+	// use the current context in kubeconfig
+	config, err := clientcmd.BuildConfigFromFlags("", i.KubeConfigPath)
+	if err != nil {
+		return derrors.NewInternalError("impossible to get kubeconfig path", err)
+	}
+
+	istCli, err := istioClient.NewForConfig(config)
+	if err != nil {
+		return derrors.NewInternalError("impossible to instantiate istio client")
+	}
+
+	i.Istio = istCli
+	return nil
+}
+
 func (i *InstallIstio) Run(workflowID string) (*entities.CommandResult, derrors.Error) {
+	// Instantiate Istio client
+	iErr := i.InstantiateIstioClient()
+	if iErr != nil {
+		return nil, derrors.NewInternalError("impossible to instantiate istio client", iErr)
+	}
+
 	// Create namespace
 	connectErr := i.Connect()
 	if connectErr != nil {
