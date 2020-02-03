@@ -46,7 +46,6 @@ func addRegistryOptions(cliCmd *cobra.Command) {
 	cliCmd.Flags().StringVar(&config.Environment.TargetEnvironment, "targetEnvironment", "PRODUCTION", "Target environment to be installed: PRODUCTION, STAGING, or DEVELOPMENT")
 }
 
-
 func init() {
 
 	runCmd.Flags().IntVar(&config.Port, "port", 8900, "Port to launch the Installer")
@@ -86,7 +85,6 @@ func init() {
 	config.NetworkingMode = entry
 
 	runCmd.PersistentFlags().StringVar(&config.IstioPath, "istioPath", "/istio/bin", "Path where the Istio project can be found")
-
 
 	rootCmd.AddCommand(runCmd)
 }

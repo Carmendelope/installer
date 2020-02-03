@@ -114,8 +114,8 @@ func (m *Manager) launchInstall(requestID string) {
 
 	// The network configuration is taken from the running parameters of the installer service
 	networkingConfig := workflow.NetworkConfig{
-		NetworkingMode: entities.NetworkingModeToString[m.Config.NetworkingMode],
-		IstioPath: m.Config.IstioPath,
+		NetworkingMode:     entities.NetworkingModeToString[m.Config.NetworkingMode],
+		IstioPath:          m.Config.IstioPath,
 		ZTPlanetSecretPath: "",
 	}
 

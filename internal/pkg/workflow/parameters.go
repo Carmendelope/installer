@@ -75,8 +75,8 @@ type NetworkConfig struct {
 
 func NewNetworkConfig(networkingMode string, istioPath string, ztPlanetSecretPath string) *NetworkConfig {
 	return &NetworkConfig{
-		NetworkingMode: networkingMode,
-		IstioPath: istioPath,
+		NetworkingMode:     networkingMode,
+		IstioPath:          istioPath,
 		ZTPlanetSecretPath: ztPlanetSecretPath,
 	}
 }

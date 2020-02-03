@@ -31,14 +31,14 @@ import (
 )
 
 const (
-	maxRetries = 50
+	maxRetries = 25
 )
 
 // CheckComponents is a command that reads a directory for YAML files and checks the readiness
 // of those entities in Kubernetes.
 type CheckComponents struct {
 	Kubernetes
-	Namespaces    []string `json:"namespaces"`
+	Namespaces []string `json:"namespaces"`
 }
 
 // NewCheckComponents creates a new CheckComponents command.
@@ -48,17 +48,17 @@ func NewCheckComponents(kubeConfigPath string, namespaces []string) *CheckCompon
 			GenericSyncCommand: *entities.NewSyncCommand(entities.CheckComponents),
 			KubeConfigPath:     kubeConfigPath,
 		},
-		Namespaces:    namespaces,
+		Namespaces: namespaces,
 	}
 }
 
 type PlatformResources struct {
-	Daemonsets []v1.DaemonSet
+	Daemonsets   []v1.DaemonSet
 	StatefulSets []v1.StatefulSet
-	Deployments []v1.Deployment
+	Deployments  []v1.Deployment
 }
 
-func NewEmptyPlatformResources () *PlatformResources {
+func NewEmptyPlatformResources() *PlatformResources {
 	return &PlatformResources{
 		Daemonsets:   make([]v1.DaemonSet, 0),
 		StatefulSets: make([]v1.StatefulSet, 0),
@@ -91,45 +91,73 @@ func (cc *CheckComponents) Run(workflowID string) (*entities.CommandResult, derr
 			return nil, createErr
 		}
 	}
-	// Get the preprocessed list of resources to be checked on the target platform.
+
+	// Check daemonsets
 	resources, err := cc.RetrieveResources()
 	if err != nil {
 		return nil, err
 	}
-
-	// Check daemonsets
 	daemonsetsChecked := 0
-	for _, daemonset := range resources.Daemonsets {
+	for i, daemonset := range resources.Daemonsets {
 		log.Info().Str("daemonsetName", daemonset.Name).Msg("checking daemonset")
-		err := cc.checkDaemonset(daemonset)
-		if err != nil {
-			return entities.NewCommandResult(false, "cannot check daemonset", err), nil
+		for j := 0; j < maxRetries; j++ {
+			resources, err := cc.RetrieveResources()
+			if err != nil {
+				return nil, err
+			}
+			found := cc.checkDaemonset(resources.Daemonsets[i])
+			if found {break}
+			if j == maxRetries {
+				return nil, derrors.NewUnavailableError("daemonset unavailable")
+			}
 		}
 		daemonsetsChecked++
 	}
 	dsMsg := fmt.Sprintf("%d daemonsets have been checked\n", daemonsetsChecked)
 
 	// Check statefulsets
+	resources, err = cc.RetrieveResources()
+	if err != nil {
+		return nil, err
+	}
 	statefulsetsChecked := 0
-	for _, statefulset := range resources.StatefulSets {
+	for i, statefulset := range resources.StatefulSets {
 		log.Info().Str("statefulsetName", statefulset.Name).Msg("checking statefulset")
-		err := cc.checkStatefulset(statefulset)
-		if err != nil {
-			return entities.NewCommandResult(false, "cannot check statefulset", err), nil
+		for j := 0; j < maxRetries; j++ {
+			resources, err := cc.RetrieveResources()
+			if err != nil {
+				return nil, err
+			}
+			found := cc.checkStatefulset(resources.StatefulSets[i])
+			if found {break}
+			if j == maxRetries {
+				return nil, derrors.NewUnavailableError("statefulset unavailable")
+			}
 		}
 		statefulsetsChecked++
 	}
 	ssMsg := fmt.Sprintf("%d statefulsets have been checked\n", statefulsetsChecked)
 
 	// Check deployments
+	resources, err = cc.RetrieveResources()
+	if err != nil {
+		return nil, err
+	}
 	deploymentsChecked := 0
-	for _, deployment := range resources.Deployments {
+	for i, deployment := range resources.Deployments {
 		log.Info().Str("deploymentName", deployment.Name).Msg("checking deployment")
-		err := cc.checkDeployment(deployment)
-		if err != nil {
-			return entities.NewCommandResult(false, "cannot check deployment", err), nil
+		for j := 0; j < maxRetries; j++ {
+			resources, err := cc.RetrieveResources()
+			if err != nil {
+				return nil, err
+			}
+			found := cc.checkDeployment(resources.Deployments[i])
+			if found {break}
+			if j == maxRetries {
+				return nil, derrors.NewUnavailableError("deployment unavailable")
+			}
 		}
-		statefulsetsChecked++
+		deploymentsChecked++
 	}
 	dMsg := fmt.Sprintf("%d deployments have been checked\n", deploymentsChecked)
 
@@ -159,6 +187,9 @@ func (cc *CheckComponents) RetrieveResources() (*PlatformResources, derrors.Erro
 			return nil, derrors.NewGenericError(dErr.Error())
 		}
 
+		log.Debug().Interface("daemonsets", daemonsets).Msg("available daemonsets")
+		log.Debug().Interface("statefulsets", statefulsets).Msg("available statefulsets")
+		log.Debug().Interface("deployments", deployments).Msg("available deployments")
 		if len(daemonsets.Items) > 0 {
 			resources.Daemonsets = append(resources.Daemonsets, daemonsets.Items...)
 		}
@@ -172,49 +203,41 @@ func (cc *CheckComponents) RetrieveResources() (*PlatformResources, derrors.Erro
 	return resources, nil
 }
 
-func (cc *CheckComponents) checkDaemonset(ds v1.DaemonSet) derrors.Error {
-	for i := 0; i < maxRetries; i++ {
-		if ds.Status.NumberAvailable == ds.Status.NumberReady {
-			log.Debug().Str("daemonset", ds.Name).Msg("daemonset ready")
-			return nil
-		} else {
-			log.Debug().Str("daemonset", ds.Name).Msg("daemonset not ready, waiting 30s")
-			time.Sleep(30 * time.Second)
-			i += 1
-		}
+func (cc *CheckComponents) checkDaemonset(ds v1.DaemonSet) bool {
+	log.Debug().Int32("number unavailable", ds.Status.NumberUnavailable).Msg("number unavailable")
+	if ds.Status.NumberUnavailable == 0 {
+		log.Debug().Str("daemonset", ds.Name).Msg("daemonset ready")
+		return true
+	} else {
+		log.Debug().Str("daemonset", ds.Name).Msg("daemonset not ready, waiting 30s")
+		time.Sleep(30 * time.Second)
 	}
-	return derrors.NewUnavailableError("daemonset unavailable")
+	return false
 }
 
-func (cc *CheckComponents) checkStatefulset(ss v1.StatefulSet) derrors.Error {
-	for i := 0; i < maxRetries; i++ {
-		if ss.Status.Replicas == ss.Status.ReadyReplicas {
-			log.Debug().Str("statefulset", ss.Name).Msg("statefulset ready")
-			return nil
-		} else {
-			log.Debug().Str("statefulset", ss.Name).Msg("statefulset not ready, waiting 30s")
-			time.Sleep(30 * time.Second)
-			i += 1
-		}
+func (cc *CheckComponents) checkStatefulset(ss v1.StatefulSet) bool {
+	log.Debug().Int32("replicas", ss.Status.Replicas).Msg("expected replicas")
+	log.Debug().Int32("current replicas", ss.Status.CurrentReplicas).Msg("current replicas")
+	if ss.Status.Replicas == ss.Status.CurrentReplicas {
+		log.Debug().Str("statefulset", ss.Name).Msg("statefulset ready")
+		return true
+	} else {
+		log.Debug().Str("statefulset", ss.Name).Msg("statefulset not ready, waiting 30s")
+		time.Sleep(30 * time.Second)
 	}
-	return derrors.NewUnavailableError("statefulset unavailable")
+	return false
 }
 
-func (cc *CheckComponents) checkDeployment(d v1.Deployment) derrors.Error {
-	for i := 0; i < maxRetries; i++ {
-		log.Debug().Int32("replicas", d.Status.Replicas).Msg("expected replicas")
-		log.Debug().Int32("ready replicas", d.Status.ReadyReplicas).Msg("ready replicas")
-		if d.Status.Replicas == d.Status.ReadyReplicas {
-			log.Debug().Str("deployment", d.Name).Msg("deployment ready")
-			return nil
-		} else {
-			log.Debug().Str("deployment", d.Name).Msg("deployment not ready, waiting 30s")
-			time.Sleep(30 * time.Second)
-			i += 1
-		}
-		log.Debug().Int("iteration", i).Msg("retry number")
+func (cc *CheckComponents) checkDeployment(d v1.Deployment) bool {
+	log.Debug().Int32("unavailable replicas", d.Status.UnavailableReplicas).Msg("unavailable replicas")
+	if d.Status.UnavailableReplicas == 0 {
+		log.Debug().Str("deployment", d.Name).Msg("deployment ready")
+		return true
+	} else {
+		log.Debug().Str("deployment", d.Name).Msg("deployment not ready, waiting 30s")
+		time.Sleep(30 * time.Second)
 	}
-	return derrors.NewUnavailableError("deployment unavailable")
+	return false
 }
 
 func (cc *CheckComponents) String() string {

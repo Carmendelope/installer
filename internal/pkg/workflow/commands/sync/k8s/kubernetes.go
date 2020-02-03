@@ -249,7 +249,6 @@ func (k *Kubernetes) Create(obj runtime.Object) derrors.Error {
 	return nil
 }
 
-
 // This function creates a k8s object using the raw string specification.
 // params:
 //  obj the object definition
@@ -289,7 +288,6 @@ func (k *Kubernetes) CreateRawObject(obj string) derrors.Error {
 
 	return nil
 }
-
 
 // We're using this function instead of just looking at the apiVersion and
 // kind defined in the object so that we don't necessarily have to define

@@ -42,8 +42,8 @@ type Config struct {
 	AuthSecret string
 	// clusterCertIssuerCACertPath contains the path where ca-certificate will be mounted
 	ClusterCertIssuerCACertPath string
-	NetworkingMode        entities.NetworkingMode
-	IstioPath             string
+	NetworkingMode              entities.NetworkingMode
+	IstioPath                   string
 }
 
 func NewConfiguration(

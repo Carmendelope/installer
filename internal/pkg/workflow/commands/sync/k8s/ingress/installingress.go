@@ -34,7 +34,6 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 )
 
 // TODO Refactor using the new parameter to define the target platform instead of detecting it.
@@ -128,12 +127,11 @@ func (ii *InstallIngress) getIngressRules() []*v1beta1.Ingress {
 	if ii.NetworkMode == "istio" {
 		for index, _ := range toReturn {
 			// the ingress class must be Istio
-			toReturn[index].ObjectMeta.Annotations["kubernetes.io/ingress.class"]="istio"
+			toReturn[index].ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "istio"
 			// Tls definition must be empty
 			toReturn[index].Spec.TLS = []v1beta1.IngressTLS{}
 		}
 	}
-
 
 	return toReturn
 
@@ -328,7 +326,6 @@ func (ii *InstallIngress) triggerManagementInstall(installType grpc_installer_go
 		}
 	}
 
-
 	log.Debug().Msg("Installing ingress rules")
 	for _, ingressToInstall := range ii.getIngressRules() {
 		err = ii.Create(ingressToInstall)
@@ -489,10 +486,6 @@ func (ii *InstallIngress) Run(workflowID string) (*entities.CommandResult, derro
 	return entities.NewSuccessCommand([]byte("Ingress controller credentials have been created")), nil
 
 }
-
-
-
-
 
 func (ii *InstallIngress) String() string {
 	return fmt.Sprintf("SYNC InstallIngress on Management: %t", ii.OnManagementCluster)

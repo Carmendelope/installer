@@ -49,7 +49,6 @@ func NewCLI(kubeConfigPath string) (*CLI, derrors.Error) {
 	return &CLI{kubeConfigContent: kubeConfigContent}, nil
 }
 
-
 // PrepareInstallCommand prepares the CLI to execute an install command.
 func (c *CLI) PrepareInstallCommand(
 	requestID string,
@@ -104,7 +103,7 @@ func (c *CLI) PrepareInstallCommand(
 		dnsClusterHost, dnsClusterPort,
 		environment.Target,
 		appClusterInstall,
-		workflow.NetworkConfig{NetworkingMode: networkingMode, IstioPath: istioPath, ZTPlanetSecretPath:""},
+		workflow.NetworkConfig{NetworkingMode: networkingMode, IstioPath: istioPath, ZTPlanetSecretPath: ""},
 		"", "")
 
 	c.Params = *params

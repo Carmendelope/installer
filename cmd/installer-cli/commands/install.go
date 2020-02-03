@@ -121,7 +121,6 @@ func init() {
 	cliCmd.PersistentFlags().StringVar(&istioPath, "istioPath", "/istio/bin",
 		"Path to the folder containing the istioctl executable file")
 
-
 	addRegistryOptions(cliCmd)
 
 	rootCmd.AddCommand(cliCmd)
@@ -179,7 +178,6 @@ func ValidateInstallParameters() derrors.Error {
 	if netMode == entities.NetworkingModeIstio && istioPath == "" {
 		return derrors.NewInvalidArgumentError("the Istio path must be set if Istio networking mode is selected")
 	}
-
 
 	if installKubernetes {
 		if username == "" || clusterCertIssuerCACertPath == "" {

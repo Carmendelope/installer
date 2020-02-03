@@ -84,7 +84,7 @@ func GetTestInstallParameters(numNodes int, appCluster bool) *Parameters {
 	assets := NewAssets(make([]string, 0), make([]string, 0))
 	paths := NewPaths("assestPath", "binPath", "confPath")
 
-	networkParameters := NewNetworkConfig("istio","/tmp/istio","ztPlanetSecret")
+	networkParameters := NewNetworkConfig("istio", "/tmp/istio", "ztPlanetSecret")
 
 	return NewInstallParameters(
 		request,
